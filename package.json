@@ -1,0 +1,30 @@
+{
+  "name": "sori-korean-learning",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:web": "SORI_WEB_DIST_DIR=.next-live npm --workspace @sori/web run build && SORI_WEB_DIST_DIR=.next-live PORT=3016 npm --workspace @sori/web run start",
+    "dev:api": "npm --workspace @sori/api run build && PORT=4004 npm --workspace @sori/api run start:prod",
+    "build": "npm run build:web && npm run build:api",
+    "build:web": "npm --workspace @sori/web run build",
+    "build:api": "npm --workspace @sori/api run build",
+    "start:web": "npm --workspace @sori/web run start",
+    "start:api": "npm --workspace @sori/api run start:prod",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:seed:words": "npm --workspace @sori/api run db:seed:words"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "neon": "^8.3.4"
+  },
+  "dependencies": {
+    "@neon/config": "^1.8.6",
+    "@neon/env": "^1.5.3"
+  }
+}

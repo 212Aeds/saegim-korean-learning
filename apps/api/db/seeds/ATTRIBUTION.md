@@ -1,0 +1,27 @@
+# Korean dictionary data attribution
+
+The checked-in reference inventory contains **5,000 distinct Korean headwords**: 1,050 rows in `cc-kedict-words.json`, 250 rows in `curated-vocabulary.json`, 3,646 additional cc-kedict rows in `cc-kedict-expansion-words.json`, and 54 original Sori entries in `sori-original-vocabulary.json`. The source manifest records row counts, SHA-256 checksums, and the upstream commit used for the expansion. All reference rows remain `unreviewed`; they are not eligible for lessons until reviewed. The 10,000-entry target has 5,000 entries outstanding.
+
+The data is adapted from [cc-kedict: Creative Commons Korean-English Dictionary](https://github.com/mhagiwara/cc-kedict), by Michael Hagiwara and cc-kedict contributors. The official upstream README states that the dictionary is licensed under [Creative Commons Attribution-ShareAlike 3.0](https://creativecommons.org/licenses/by-sa/3.0/) and that most data is based on English Wiktionary. These official source and license pages were inspected on 2026-10-09. The user requested expansion on 2026-10-09; this batch preserves the same source attribution and license. This confirms source terms, not editorial quality.
+
+Sori selected and reformatted the entries, selected examples/glosses, and added learning categories and source metadata. Adaptations to these entries are distributed under the same CC BY-SA 3.0 terms. Preserve the source title, authors/contributors, source and license links, and notice of adaptations when redistributing this dataset. Attribution is also displayed in the Words view, with source and license on imported cards. No endorsement by the original authors is implied.
+
+`curated-vocabulary.json` is a 250-entry, example-backed reference selection. The filename describes selection only: its `reviewStatus` is `unreviewed`. Glosses, examples and romanizations have not received a Korean-fluent editorial pass. Only `editor_reviewed` records are eligible for curriculum, generated exercises or review queues. The legacy `curated` status is not proof of editor approval. New original Sori lesson content needs its own source and review record.
+
+`cc-kedict-expansion-words.json` contains 3,646 unique headwords selected from the upstream `kedict.yml` at the exact revision in `source-manifest.json`. The selection keeps rows with Hangul headwords, revised romanization, a supported part of speech, and a short first gloss; it excludes glosses marked archaic, obsolete, rare, slang, misspellings, dialect forms, and pronunciation-only cross references. The upstream YAML has malformed quoting in several entries; extraction therefore uses the first definition line from each record instead of importing the file wholesale. The resulting rows are references, have no added examples, and remain `unreviewed`. A Korean-fluent editor should review glosses and romanization before these records enter lessons.
+
+`sori-original-vocabulary.json` contains beginner words and example sentences authored for Sori and dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). The entries have not received Korean-fluent editorial review; they remain marked `unreviewed` and are kept out of lesson content until a reviewer approves them.
+
+## Import and identity policy
+
+`source-manifest.json` records source approval, license evidence, attribution, review policy and SHA-256/row count for each batch. The user-requested cc-kedict expansion records the upstream Git commit and source-file checksum. The Sori-authored batch has its own `sori-original:` stable IDs and CC0 license. Direct Wiktionary and NIKL dictionary imports remain unverified and unapproved.
+
+`validateVocabulary(rows)` rejects missing Korean/gloss/source/license, invalid review status, duplicate stable IDs/headwords and IDs outside the source namespace before the seed opens any database connection. Existing `cc-kedict-` IDs are retained; legacy rows lacking IDs receive the same headword-codepoint IDs already used by the local reference cards. Future source records use `source:record` IDs and require a new approved batch manifest.
+
+The seed upserts by stable ID, attaches stable IDs to older rows with a null ID, and stops/rolls back on conflicting headword identities. It preserves existing editor review flags and reviewed content: the audited unreviewed batches update only existing `unreviewed` rows. No reference row is automatically promoted.
+
+Migration `004-vocabulary-review-metadata.sql` provides `stable_id`, `source_license`, `review_status`, a partial unique stable-ID index and the status check constraint. The live Neon branch is queried by the API; the seeder reports whether the audited reference records were imported.
+
+## Words API contract
+
+Authenticated `GET /v1/words` preserves query/category filtering, limit/offset pagination and total counts. Returned records include `id`, `source`, `license` and `reviewStatus`, mapped from the source-aware database columns. `reviewStatus` can filter any valid status for reference inspection; curriculum/exercise/review consumers must request `reviewedOnly=true`, which restricts results and totals to `editor_reviewed`. Combining that flag with another status returns no rows. The client requests 60 rows at a time and keeps the local fallback. Database state and end-to-end authenticated pagination require verification in an authorized environment.

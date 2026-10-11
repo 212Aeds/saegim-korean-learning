@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "verifiedOn": "2026-10-09",
+  "targetDistinctEntries": 10000,
+  "auditedDistinctEntries": 5000,
+  "sources": [
+    {
+      "source": "cc-kedict",
+      "name": "cc-kedict: Creative Commons Korean-English Dictionary",
+      "url": "https://github.com/mhagiwara/cc-kedict",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "licenseEvidence": "The official upstream README explicitly licenses the dictionary under CC BY-SA 3.0 and identifies English Wiktionary as the basis of most data.",
+      "approval": "user-requested-additional-cc-kedict-batch",
+      "attributionText": "Adapted from cc-kedict: Creative Commons Korean-English Dictionary, by Michael Hagiwara and cc-kedict contributors, based largely on English Wiktionary. Selected and reformatted for Sori; categories and example selections are adaptations. Licensed under CC BY-SA 3.0; adaptations to these entries retain the same license.",
+      "attributionLocations": [
+        "apps/api/db/seeds/ATTRIBUTION.md",
+        "apps/web/app/page.tsx (Words credit and source cards)"
+      ],
+      "sourceRecordIdStrategy": "Preserve existing cc-kedict- IDs; append the Korean headword's Unicode scalar values in lowercase hexadecimal joined by hyphens for legacy rows lacking IDs. NFC-normalized upstream source record IDs must be separately audited before any future source:record import. One headword per row is required by the current schema.",
+      "reviewPolicy": "Existing reference batches remain unreviewed. Only editor_reviewed records may feed curriculum, generated exercises or review queues; curated is a legacy selection label and is not editor approval.",
+      "defaultReviewStatus": "unreviewed",
+      "batches": [
+        {
+          "file": "cc-kedict-words.json",
+          "rows": 1050,
+          "sha256": "d842ad964d93d58e3674e4836369188be19b2be72ecf80c5370f44aefdbcea9a"
+        },
+        {
+          "file": "curated-vocabulary.json",
+          "rows": 250,
+          "sha256": "1bcc036faccca1fe6b35f468b51e386414f5224b549122a1eaef3196905a6b8f"
+        },
+        {
+          "file": "cc-kedict-expansion-words.json",
+          "rows": 3646,
+          "sha256": "cd9d40420ea5a9cd29be5e9fc50b7d2c92969745f0bd44485c055a783216fd0c",
+          "sourceRevision": "625a7556e7579d415727358d5b6e873aa5a50338",
+          "sourceFile": "kedict.yml",
+          "sourceSha256": "378a7c7aa5f2773ef91b3a4336912b04cb1bf3203f21d4db460af65263280821",
+          "selection": "Unique Hangul headwords with romanization, supported part of speech, and a short first gloss; archaic, slang, misspelling, and cross-reference glosses excluded. Derived definitions remain unreviewed."
+        }
+      ]
+    },
+    {
+      "source": "sori-original",
+      "name": "Sori original beginner vocabulary",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenseEvidence": "These entries and example sentences were written for Sori and dedicated to the public domain under CC0 1.0.",
+      "approval": "user-requested-original-content",
+      "attributionText": "Original Korean vocabulary and example sentences written for Sori; dedicated to the public domain under CC0 1.0.",
+      "attributionLocations": [
+        "apps/api/db/seeds/ATTRIBUTION.md",
+        "apps/web/app/page.tsx (Words source cards)"
+      ],
+      "reviewPolicy": "These original reference entries remain unreviewed until a Korean editor reviews them. They do not feed lessons or review queues.",
+      "defaultReviewStatus": "unreviewed",
+      "batches": [
+        {
+          "file": "sori-original-vocabulary.json",
+          "rows": 54,
+          "sha256": "166457415a7fa6bc391c9225c34b0696d280f01a7d7594375adcc21866a7b216"
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "name": "Additional upstream cc-kedict records",
+      "url": "https://github.com/mhagiwara/cc-kedict",
+      "status": "approved-for-this-user-requested-batch",
+      "boundary": "The user requested expansion toward 5,000 entries on 2026-10-09. This batch uses the verified cc-kedict CC BY-SA 3.0 source at the recorded commit; its imported rows remain unreviewed."
+    },
+    {
+      "name": "Direct English Wiktionary imports",
+      "url": "https://en.wiktionary.org/",
+      "status": "unverified-and-unapproved",
+      "boundary": "Do not infer direct-import terms from cc-kedict's license; verify official license, attribution, revisions and record IDs before requesting source approval."
+    },
+    {
+      "name": "National Institute of Korean Language Korean-English Learners' Dictionary",
+      "url": "https://krdict.korean.go.kr/eng/",
+      "status": "unverified-and-unapproved",
+      "boundary": "Redistribution, API terms, attribution and per-record provenance need official verification and source approval. No data imported."
+    }
+  ]
+}

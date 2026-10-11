@@ -1,0 +1,31 @@
+{
+  "name": "Sori web",
+  "mode": "operate",
+  "tokens": {
+    "color": {
+      "canvas": "#FFFAF3",
+      "surface": "#FFFDF9",
+      "surfaceMuted": "#FCF8F1",
+      "ink": "#27322C",
+      "inkSoft": "#48534D",
+      "inkMuted": "#626B63",
+      "forest": "#314F42",
+      "forestDeep": "#233B31",
+      "sage": "#DFE8D7",
+      "leaf": "#91A584",
+      "coral": "#E98167",
+      "butter": "#F7DA72",
+      "line": "#E9E3DA"
+    },
+    "radius": {
+      "control": "9px",
+      "panel": "16px",
+      "feature": "24px"
+    },
+    "spacingBase": "4px",
+    "motion": {
+      "standard": "180ms",
+      "reducedMotion": "near-zero"
+    }
+  }
+}

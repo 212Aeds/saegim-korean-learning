@@ -1,0 +1,221 @@
+"use client";
+
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Microphone, SpeakerHigh, Stop } from "./icons";
+import { SoriMascot } from "./sori-mascot";
+import { encodeWav, maxClipSeconds, releaseCapture, type OpenRouterCapture } from "./openrouter-audio-capture";
+import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, type ElevenLabsVoice } from "./speech";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+function savedSpeechRate() {
+  if (typeof window === "undefined") return 1;
+  const rate = Number(window.localStorage.getItem("sori-speech-rate"));
+  return rate >= 0.65 && rate <= 1.1 ? rate : 1;
+}
+function compareHangul(expected: string, heard: string) {
+  const target = [...expected.normalize("NFC").replace(/\s/gu, "")];
+  const result = [...heard.normalize("NFC").replace(/\s/gu, "")];
+  let firstDifference = -1;
+  for (let index = 0; index < Math.max(target.length, result.length); index += 1) {
+    if (target[index] !== result[index]) { firstDifference = index; break; }
+  }
+  return { matches: firstDifference < 0, targetBlock: firstDifference >= 0 ? target[firstDifference] : "", heardBlock: firstDifference >= 0 ? result[firstDifference] ?? "(no syllable heard)" : "" };
+}
+
+export function OpenRouterListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange }: {
+  korean: string;
+  english?: string;
+  expectedRomanization?: string;
+  variant?: "combined" | "lesson-speaking";
+  onResult?: (transcript: string, matches: boolean) => void;
+  onVoiceChange?: (voice: ElevenLabsVoice) => void;
+  onPaceChange?: (rate: number) => void;
+}) {
+  const [synthesisAvailable, setSynthesisAvailable] = useState(false);
+  const [transcriptionAvailable, setTranscriptionAvailable] = useState(false);
+  const [statusReady, setStatusReady] = useState(false);
+  const [voice, setVoice] = useState<ElevenLabsVoice>("jessica");
+  const [rate, setRate] = useState(savedSpeechRate);
+  const [busy, setBusy] = useState<"tts" | "recording" | "transcribing" | null>(null);
+  const [heard, setHeard] = useState("");
+  const [micLevel, setMicLevel] = useState(0);
+  const [notice, setNotice] = useState("");
+  const [writeInstead, setWriteInstead] = useState(false);
+  const [written, setWritten] = useState("");
+  const captureRef = useRef<OpenRouterCapture | null>(null);
+  const attemptRef = useRef(0);
+
+  useEffect(() => setVoice(selectedElevenLabsVoice()), []);
+  useEffect(() => saveSpeechRate(rate), [rate]);
+
+  useEffect(() => {
+    let active = true;
+    if (!apiUrl) { setStatusReady(true); return; }
+    void fetch(`${apiUrl}/v1/speech/status`, { credentials: "include", cache: "no-store", signal: AbortSignal.timeout(4_000) })
+      .then(async (response) => response.ok ? response.json() as Promise<{ synthesis?: boolean; transcription?: boolean }> : null)
+      .then((result) => { if (active) { setSynthesisAvailable(result?.synthesis === true); setTranscriptionAvailable(result?.transcription === true); setStatusReady(true); } })
+      .catch(() => { if (active) setStatusReady(true); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => () => {
+    attemptRef.current += 1;
+    releaseCapture(captureRef.current ?? undefined);
+  }, []);
+
+  async function listen() {
+    if (!synthesisAvailable || !apiUrl || busy) return;
+    setBusy("tts"); setNotice("Creating natural Korean audio…");
+    try {
+      const result = await playElevenLabsKorean(korean, voice, rate);
+      setNotice(result.source === "elevenlabs"
+        ? `${voice === "jessica" ? "Jessica" : "Chris"} is speaking. Listen once, then say the phrase.`
+        : result.source === "device"
+          ? "Natural audio is unavailable right now; Yuna’s device voice is speaking. Then say the phrase."
+          : "Audio could not be played. Check the server connection and try again.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Natural Korean audio could not be created.");
+    } finally { setBusy(null); }
+  }
+
+  function startCapture() {
+    if (!transcriptionAvailable || !apiUrl || busy) return;
+    const attempt = ++attemptRef.current;
+    setHeard(""); setBusy("recording");
+    setNotice("Requesting microphone permission…");
+    void navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 }, video: false }).then(async (stream) => {
+      if (attempt !== attemptRef.current) { stream.getTracks().forEach((track) => track.stop()); return; }
+      const context = new AudioContext({ sampleRate: 16_000 });
+      const source = context.createMediaStreamSource(stream);
+      const processor = context.createScriptProcessor(4096, 1, 1);
+      const mute = context.createGain(); mute.gain.value = 0;
+      const capture: OpenRouterCapture = { stream, context, source, processor, mute, chunks: [], samples: 0 };
+      captureRef.current = capture;
+      const sampleLimit = Math.min(context.sampleRate * maxClipSeconds, Math.floor((2 * 1024 * 1024 - 44) / 2));
+      processor.onaudioprocess = (event) => {
+        if (captureRef.current !== capture) return;
+        const samples = event.inputBuffer.getChannelData(0);
+        let energy = 0;
+        for (const sample of samples) energy += sample * sample;
+        setMicLevel(Math.min(100, Math.round(Math.sqrt(energy / samples.length) * 1_000)));
+        const count = Math.min(samples.length, sampleLimit - capture.samples);
+        if (count > 0) { capture.chunks.push(samples.slice(0, count)); capture.samples += count; }
+        if (capture.samples >= sampleLimit) void stopAndTranscribe(capture, attempt);
+      };
+      source.connect(processor); processor.connect(mute); mute.connect(context.destination);
+      capture.timer = window.setTimeout(() => void stopAndTranscribe(capture, attempt), maxClipSeconds * 1_000);
+      await context.resume();
+      setNotice("Listening · say the Korean phrase, then tap Stop. A live mic meter confirms sound is reaching the browser.");
+    }).catch(() => {
+      releaseCapture(captureRef.current ?? undefined);
+      captureRef.current = null;
+      if (attempt === attemptRef.current) { setBusy(null); setNotice("Microphone access is unavailable. Allow access for this site, or use the typed/local practice below."); }
+    });
+  }
+
+  async function stopAndTranscribe(capture: OpenRouterCapture, attempt: number) {
+    if (captureRef.current !== capture || attempt !== attemptRef.current) return;
+    captureRef.current = null;
+    setMicLevel(0);
+    window.clearTimeout(capture.timer);
+    setBusy("transcribing"); setNotice("Transcribing your recording with Whisper…");
+    let wav: ArrayBuffer | undefined;
+    try {
+      wav = encodeWav(capture); releaseCapture(capture);
+      const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
+        method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(20_000),
+        headers: { "Content-Type": "audio/wav", "X-Sori-Speech-Consent": "true" }, body: wav,
+      });
+      if (!response.ok) throw new Error(response.status === 429 ? "The speech provider is temporarily busy. Please try again or type your phrase." : "Whisper could not transcribe this clip. Try again or type your phrase.");
+      const result = await response.json() as { transcript?: unknown };
+      if (typeof result.transcript !== "string" || !result.transcript.trim()) throw new Error("No words were detected. Check the live mic level, speak a little closer, and try again.");
+      setHeard(result.transcript.trim());
+      const comparison = compareHangul(korean, result.transcript);
+      onResult?.(result.transcript.trim(), comparison.matches);
+      setNotice(comparison.matches
+        ? "Whisper transcribed the target syllables. This checks the words it recognized; it is not an acoustic accent score."
+        : `Compare the first differing block: target ${comparison.targetBlock || "(ending)"} · Whisper heard ${comparison.heardBlock}. Transcription is a practice clue, not an acoustic accent score.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The clip could not be transcribed.");
+    } finally {
+      releaseCapture(capture);
+      if (wav) new Uint8Array(wav).fill(0);
+      setBusy(null);
+    }
+  }
+
+  function submitWriting(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = written.trim();
+    if (!value) return;
+    const targetHangul = [...korean.normalize("NFC").replace(/\s/gu, "")];
+    const answerHangul = [...value.normalize("NFC").replace(/\s/gu, "")];
+    const hasHangul = /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(value);
+    const matches = hasHangul
+      ? targetHangul.join("") === answerHangul.join("")
+      : value.toLocaleLowerCase().replace(/[^a-z]/gu, "") === (expectedRomanization ?? "").toLocaleLowerCase().replace(/[^a-z]/gu, "");
+    onResult?.(value, matches);
+    setNotice(matches ? "That matches the target." : `Compare what you wrote with the target ${korean}, then try again.`);
+  }
+
+  return (
+    <section className={`openrouter-practice ${variant === "lesson-speaking" ? "lesson-speaking-exercise" : ""}`} aria-label={variant === "lesson-speaking" ? "Speaking exercise" : "Natural listening and pronunciation practice"} data-listening={busy === "recording" || busy === "transcribing"}>
+      {variant === "lesson-speaking" ? (
+        <>
+          <div className="lesson-speaking-meter">
+            <SoriMascot className="lesson-speaking-mascot" />
+            <div>
+              <div className="speech-input-meter-label"><span>Microphone input</span><strong>{busy === "recording" ? micLevel >= 4 ? "Sound detected" : "Listening…" : busy === "transcribing" ? "Checking speech…" : "Ready"}</strong></div>
+              <div className="speech-input-meter-track" role="meter" aria-label="Microphone input level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={micLevel}><span style={{ transform: `scaleX(${micLevel / 100})` }} /></div>
+            </div>
+          </div>
+          {!writeInstead ? (
+            <div className="speech-practice-actions">
+              {busy === "recording" ? <button type="button" className="button button-dark" onClick={() => { if (captureRef.current) void stopAndTranscribe(captureRef.current, attemptRef.current); }}><Stop size={16} /> Stop & check</button> :
+                <button type="button" className="button button-dark" onClick={startCapture} disabled={!transcriptionAvailable || busy !== null}><Microphone size={16} /> {busy === "transcribing" ? "Checking speech…" : "Record my answer"}</button>}
+              <button type="button" className="button button-quiet" onClick={() => { setWriteInstead(true); setNotice(""); }} disabled={busy !== null}>Can’t use your mic right now? Write instead</button>
+            </div>
+          ) : (
+            <form className="speech-typed lesson-speaking-write" onSubmit={submitWriting}>
+              <label><span>Write the Korean or its romanization</span><input value={written} onChange={(event) => setWritten(event.target.value)} autoComplete="off" autoCapitalize="none" /></label>
+              <div className="speech-practice-actions"><button className="button button-dark" type="submit" disabled={!written.trim()}>Check writing</button><button type="button" className="button button-quiet" onClick={() => { setWriteInstead(false); setWritten(""); setNotice(""); }}>Use microphone</button></div>
+            </form>
+          )}
+          <p className="openrouter-practice-note">Microphone audio is sent to OpenRouter for transcription when you record. You can switch to writing at any time.</p>
+          {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
+          {heard && <div className="speech-transcript"><span className="micro-label">SORI HEARD</span><p lang="ko">{heard}</p></div>}
+          {statusReady && !transcriptionAvailable && <small>Speech recognition is unavailable right now. Switch to writing to continue this exercise.</small>}
+        </>
+      ) : (
+        <>
+      <h4><SpeakerHigh size={16} /> Listen, then speak</h4>
+      <div className="openrouter-practice-body">
+        <p className="openrouter-practice-note">Listen to the model, then record your pronunciation. When you record, your audio is sent to OpenRouter for transcription; Sori compares the transcript with the target.</p>
+        <p className="openrouter-practice-target"><strong lang="ko">{korean}</strong>{english && <span>{english}</span>}</p>
+        <label className="openrouter-voice-picker">Korean voice
+          <select value={voice} onChange={(event) => { const next = event.target.value as ElevenLabsVoice; setVoice(next); saveElevenLabsVoice(next); onVoiceChange?.(next); }}>
+            <option value="jessica">Jessica</option><option value="chris">Chris</option>
+          </select>
+        </label>
+        <label className="openrouter-pace-picker"><span>Speaking pace <strong>{rate.toFixed(2)}×</strong></span><input type="range" min="0.65" max="1.1" step="0.05" value={rate} onChange={(event) => { const next = Number(event.target.value); setRate(next); onPaceChange?.(next); }} aria-label="Speaking pace" /></label>
+        <div className="speech-practice-actions">
+          <button type="button" className="button button-soft" onClick={() => void listen()} disabled={!synthesisAvailable || busy !== null}>
+            <SpeakerHigh size={16} /> {busy === "tts" ? "Preparing voice…" : `Listen with ${voice === "jessica" ? "Jessica" : "Chris"}`}
+          </button>
+          {busy === "recording" ? <button type="button" className="button button-dark" onClick={() => { if (captureRef.current) void stopAndTranscribe(captureRef.current, attemptRef.current); }}><Stop size={16} /> Stop & transcribe</button> :
+            <button type="button" className="button button-quiet" onClick={startCapture} disabled={!transcriptionAvailable || busy !== null}><Microphone size={16} /> Record my Korean</button>}
+        </div>
+        {busy === "recording" && <div className="speech-input-meter" data-heard={micLevel >= 4}>
+          <div className="speech-input-meter-label"><span>Live microphone level</span><strong>{micLevel >= 4 ? "Sound reaching mic" : "Quiet · no sound yet"}</strong></div>
+          <div className="speech-input-meter-track" role="meter" aria-label="Live microphone input level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={micLevel}><span style={{ transform: `scaleX(${micLevel / 100})` }} /></div>
+        </div>}
+        {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
+        {heard && <div className="speech-transcript"><span className="micro-label">WHISPER HEARD</span><p lang="ko">{heard}</p><small>Target: <span lang="ko">{korean}</span></small></div>}
+        {!statusReady ? <small>Checking audio availability…</small> : !synthesisAvailable || !transcriptionAvailable ? <small>Natural voice or Whisper transcription is temporarily unavailable. The lesson remains available; try again later.</small> : <small>Sori stays free to learners. Whisper compares recognized text with the target; it cannot measure pitch, sound quality, or accent from transcription alone.</small>}
+      </div>
+        </>
+      )}
+    </section>
+  );
+}

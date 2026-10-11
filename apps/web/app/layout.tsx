@@ -1,0 +1,25 @@
+import type { Metadata, Viewport } from "next";
+import "./styles.css";
+
+export const metadata: Metadata = {
+  title: "Sori — Korean, remembered",
+  description:
+    "A free, friendly place to learn Korean one small step at a time.",
+  applicationName: "Sori",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#fffaf3",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}

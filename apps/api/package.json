@@ -1,0 +1,28 @@
+{
+  "name": "@sori/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start:dev": "nest start --watch",
+    "build": "nest build",
+    "start:prod": "node dist/main.js",
+    "db:seed:words": "npm run build && node dist/seed-words.js",
+    "audio:generate": "npm run build && node dist/generate-audio.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.1.2",
+    "@nestjs/core": "^12.1.2",
+    "@nestjs/platform-express": "^12.1.2",
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.12",
+    "@types/node": "^24.7.2",
+    "@types/pg": "^8.15.5",
+    "typescript": "^5.9.3"
+  }
+}
