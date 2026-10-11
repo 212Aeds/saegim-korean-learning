@@ -10,9 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - sori-postgres:/var/lib/postgresql/data
-      - ./apps/api/db/001-initial.sql:/docker-entrypoint-initdb.d/001-initial.sql:ro
-      - ./apps/api/db/002-accounts.sql:/docker-entrypoint-initdb.d/002-accounts.sql:ro
-      - ./apps/api/db/003-content.sql:/docker-entrypoint-initdb.d/003-content.sql:ro
+      - ./apps/api/db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sori -d sori"]
       interval: 5s

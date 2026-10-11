@@ -8,13 +8,14 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,magenta \"npm:dev:web\" \"npm:dev:api\"",
-    "dev:web": "SORI_WEB_DIST_DIR=.next-live npm --workspace @sori/web run build && SORI_WEB_DIST_DIR=.next-live PORT=3016 npm --workspace @sori/web run start",
-    "dev:api": "npm --workspace @sori/api run build && PORT=4004 npm --workspace @sori/api run start:prod",
+    "dev:web": "node scripts/local-run.cjs web",
+    "dev:api": "node scripts/local-run.cjs api",
     "build": "npm run build:web && npm run build:api",
     "build:web": "npm --workspace @sori/web run build",
     "build:api": "npm --workspace @sori/api run build",
     "start:web": "npm --workspace @sori/web run start",
     "start:api": "npm --workspace @sori/api run start:prod",
+    "db:migrate": "node scripts/migrate.cjs",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "db:seed:words": "npm --workspace @sori/api run db:seed:words"

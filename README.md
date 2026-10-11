@@ -8,18 +8,18 @@ Requires Node.js 20.9 or newer.
 
 1. Install dependencies: `npm install`
 2. Copy `.env.example` to `.env` and set `DATABASE_URL` plus the allowed frontend origins in `WEB_ORIGINS`.
-3. Copy `apps/web/.env.example` to `apps/web/.env.local`; set `NEXT_PUBLIC_API_URL=http://localhost:4000` for local API development.
-4. Start PostgreSQL and apply the SQL files in `apps/api/db/` in numeric order.
+3. Copy `apps/web/.env.example` to `apps/web/.env.local`; set `NEXT_PUBLIC_API_URL=http://localhost:4004` for local API development.
+4. Start PostgreSQL (or use your existing Neon connection) and run `npm run db:migrate`. This applies all numbered idempotent SQL migrations in one transaction; existing accounts and progress are preserved.
 5. Seed the dictionary with `npm run db:seed:words`.
-6. Run `npm run dev` and open `http://localhost:3000`.
+6. Run `npm run dev` and open `http://localhost:3016`. The launcher works on Windows, macOS, and Linux and builds the current source before serving it.
 
-For the included local database, run `npm run db:up` before the API. Docker Compose applies the migrations automatically for a fresh volume. For an existing volume, apply the next unapplied migration manually, for example:
+For the included local database, run `npm run db:up` before the API. Docker Compose applies the migrations automatically for a fresh volume. For an existing volume, use `npm run db:migrate` with DATABASE_URL configured, or apply the next unapplied migration manually, for example:
 
 ```sh
 docker compose exec -T db psql -U sori -d sori -f /docker-entrypoint-initdb.d/003-content.sql
 ```
 
-The API listens on port `4000`, requires `DATABASE_URL`, and verifies its database connection at startup. The frontend gates study screens on an authenticated account and needs `NEXT_PUBLIC_API_URL` configured. Without a reachable account service, sign-in is unavailable and study content stays locked.
+The API listens on port `4004`, requires `DATABASE_URL`, and verifies its database connection at startup. The frontend gates study screens on an authenticated account and needs `NEXT_PUBLIC_API_URL` configured. Without a reachable account service, sign-in is unavailable and study content stays locked.
 
 ## Neon
 
@@ -37,4 +37,21 @@ Accounts use salted scrypt password hashes, random 30-day HttpOnly sessions, COR
 
 Run `npm run build` to compile both the Next.js app and NestJS API. Start production processes with `npm run start:web` and `npm run start:api` after setting production environment variables.
 
-Speaking uses the best Korean voice available from the learner's device, with voice and pace controls; quality depends on browser and operating-system voices. There is no AI conversation, pronunciation scoring, social feature, or subscription.
+Speaking supports Jessica and Chris through OpenRouter, with cached audio in PostgreSQL, and device speech as a fallback. Whisper provides transcription; transcript comparison does not measure accent quality. The tutor uses a server-side OpenRouter provider. Configure DATABASE_URL and the server-only provider settings in the ignored root .env.local to enable these services. Sori is free for learners; hosted providers use project-funded credit.
+
+## Restore hosted services on another laptop
+
+Set these values in the ignored root `.env.local`:
+
+```dotenv
+DATABASE_URL=<existing Neon connection string>
+WEB_ORIGINS=http://localhost:3016
+OPENROUTER_API_KEY=<current project API key>
+OPENROUTER_AUDIO_ENABLED=true
+PROVIDER_TERMS_REVIEWED=true
+PROVIDER_MONTHLY_SPEND_CAP_CENTS=500
+```
+
+Set `PROVIDER_TERMS_REVIEWED=true` after reviewing the provider terms for speech processing. The current tutor adapter uses OpenRouter directly; legacy Azure, storage, and OpenAI options are not needed. Jessica and Chris speech clips are cached in PostgreSQL, so no separate object-storage credentials are required. Tutor requests use the shared monthly project budget. Speech has no Sori-side usage quota; provider charges still use the project's OpenRouter balance.
+
+Run `npm run db:migrate`, then `npm run dev:api`. The API is ready when `http://localhost:4004/v1/health` reports the database connected. Start the frontend with `npm run dev:web`; accounts, synced progress, tutor, and speech require the API. To populate a fresh dictionary, run `npm run db:seed:words`.
