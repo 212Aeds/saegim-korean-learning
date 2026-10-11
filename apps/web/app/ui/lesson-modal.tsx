@@ -17,6 +17,8 @@ import { wordBank, type KoreanWord } from "../word-bank";
 import type { LearningPreferences } from "../progress";
 import { OpenRouterListeningPractice } from "./openrouter-listening-practice";
 import { SoriMascot } from "./sori-mascot";
+import { KoreanInput } from "./korean-keyboard";
+import { WordReference } from "./word-reference";
 import { speakKorean } from "./speech";
 import { playCorrectAnswerSound } from "./feedback-sound";
 
@@ -110,6 +112,7 @@ function generatedQuestions(lesson: Lesson): LessonQuestion[] {
       return [
         makeChoice(`letter-sound-${lesson.id}-${index}`, word.korean, "Which sound cue matches this letter?", word.meaning, shuffle(otherSounds).slice(0, 3), note),
         makeText(`letter-write-${lesson.id}-${index}`, word.korean, "Type the letter’s romanized name or sound.", word.romanization, note, "Romanized sound"),
+        makeText(`letter-build-${lesson.id}-${index}`, word.korean, `Write the Hangul letter for “${word.meaning}”.`, word.korean, note, "Hangul letter"),
         makeChoice(`letter-find-${lesson.id}-${index}`, word.korean, `Which letter matches “${word.meaning}”?`, word.korean, shuffle(otherLetters).slice(0, 3), note),
         makeChoice(`letter-syllable-${lesson.id}-${index}`, word.korean, "Which example block includes this letter?", word.example, shuffle(otherSamples).slice(0, 3), note),
       ];
@@ -128,6 +131,7 @@ function generatedQuestions(lesson: Lesson): LessonQuestion[] {
       makeChoice(`word-choice-${lesson.id}-${index}`, word.korean, "Choose the closest meaning.", word.meaning, distractorMeanings, answerNote),
       makeText(`word-write-${lesson.id}-${index}`, word.korean, "Write the English meaning from memory.", word.meaning, answerNote, "Meaning in English", meaningAlternatives),
       makeText(`word-spell-${lesson.id}-${index}`, word.korean, "Write the Korean pronunciation in roman letters.", word.romanization, answerNote, "Romanized pronunciation"),
+      makeText(`word-hangul-${lesson.id}-${index}`, word.korean, `Write “${word.meaning}” in Korean.`, word.korean, answerNote, "Your answer in Hangul"),
       makeChoice(`word-syllable-${lesson.id}-${index}`, word.korean, "Guess the first Hangul block.", sampleSyllable, shuffle(distractors.flatMap((item) => Array.from(item.korean).filter((letter) => /[가-힣]/.test(letter)))), answerNote),
     ];
   });
@@ -207,7 +211,7 @@ export function LessonModal({
     ? question.type === "choice"
       ? choice === question.answer
       : isCorrectTextAnswer(question, typed) || Boolean(
-          /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer) && romanization &&
+          !question.id.startsWith("word-hangul-") && !question.id.startsWith("letter-build-") && /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer) && romanization &&
           normalizeRomanizedAnswer(typed) === normalizeRomanizedAnswer(romanization),
         )
     : false;
@@ -332,12 +336,13 @@ export function LessonModal({
             <span className="question-count">
               {phase === "practice" ? "PRACTICE" : "QUIZ"} {String(step + 1).padStart(2, "0")} / {String(questions.length).padStart(2, "0")}
             </span>
-            <div className="letter-stage"><span lang="ko">{question.korean}</span></div>
+            <div className="letter-stage"><span lang="ko">{!speechPracticeTurn && (question.id.startsWith("word-hangul-") || question.id.startsWith("letter-build-")) ? "?" : question.korean}</span></div>
+            <WordReference word={question.korean} source={currentWord?.source} license={currentWord?.license} reviewStatus={currentWord?.reviewStatus} />
             <div className="lesson-audio-actions">
               <button type="button" className="lesson-listen-button" aria-label="Hear this Korean phrase at the selected pace" onClick={() => speakKorean(question.korean)}><SpeakerHigh size={17} weight="fill" /><span>Listen · {preferences.speechPace.toFixed(2)}×</span></button>
               <button type="button" className="lesson-listen-button lesson-slow-listen" aria-label="Hear this Korean phrase more slowly" onClick={() => speakKorean(question.korean, { rate: 0.75 })}>Slower · 0.75×</button>
             </div>
-            {preferences.romanization && romanization && (showTip || (phase !== "quiz" && !romanizationRevealsAnswer)) && (
+            {preferences.romanization && romanization && !question.id.startsWith("word-hangul-") && !question.id.startsWith("letter-build-") && (showTip || (phase !== "quiz" && !romanizationRevealsAnswer)) && (
               <p className="lesson-romanization" lang="ko-Latn">{romanization}</p>
             )}
             <h2 id="lesson-title">{speechPracticeTurn ? "Say this Korean aloud." : question.prompt}</h2>
@@ -376,7 +381,9 @@ export function LessonModal({
             ) : !speechPracticeTurn && question.type === "text" ? (
               <label className="text-answer-field">
                 <span>Your answer</span>
-                <input autoComplete="off" autoCapitalize="none" value={typed} onChange={(event) => { setTyped(event.target.value); setShowTip(false); }} onKeyDown={(event) => { if (event.key === "Enter" && readyToCheck) checkOrContinue(); }} placeholder={romanization && /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer) ? `${question.placeholder} (Hangul or romanization)` : question.placeholder} aria-label={question.prompt} />
+                {/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer)
+                  ? <KoreanInput value={typed} onChange={(value) => { setTyped(value); setShowTip(false); }} label={question.prompt} placeholder="Type Korean" onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} />
+                  : <input autoComplete="off" autoCapitalize="none" value={typed} onChange={(event) => { setTyped(event.target.value); setShowTip(false); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} placeholder={question.placeholder} aria-label={question.prompt} />}
               </label>
             ) : null}
             {!speechPracticeTurn && showTip && (

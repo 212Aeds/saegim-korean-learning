@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Microphone, SpeakerHigh, Stop } from "./icons";
 import { SoriMascot } from "./sori-mascot";
+import { KoreanInput } from "./korean-keyboard";
+import { WordReference } from "./word-reference";
+import { compareSpeech, silenceDecision } from "./speech-check";
 import { encodeWav, maxClipSeconds, releaseCapture, type OpenRouterCapture } from "./openrouter-audio-capture";
 import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, type ElevenLabsVoice } from "./speech";
 
@@ -14,13 +17,7 @@ function savedSpeechRate() {
   return rate >= 0.65 && rate <= 1.1 ? rate : 1;
 }
 function compareHangul(expected: string, heard: string) {
-  const target = [...expected.normalize("NFC").replace(/\s/gu, "")];
-  const result = [...heard.normalize("NFC").replace(/\s/gu, "")];
-  let firstDifference = -1;
-  for (let index = 0; index < Math.max(target.length, result.length); index += 1) {
-    if (target[index] !== result[index]) { firstDifference = index; break; }
-  }
-  return { matches: firstDifference < 0, targetBlock: firstDifference >= 0 ? target[firstDifference] : "", heardBlock: firstDifference >= 0 ? result[firstDifference] ?? "(no syllable heard)" : "" };
+  return compareSpeech(expected, heard);
 }
 
 export function OpenRouterListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange }: {
@@ -43,6 +40,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
   const [notice, setNotice] = useState("");
   const [writeInstead, setWriteInstead] = useState(false);
   const [written, setWritten] = useState("");
+  const [feedback, setFeedback] = useState<"match" | "retry" | null>(null);
   const captureRef = useRef<OpenRouterCapture | null>(null);
   const attemptRef = useRef(0);
 
@@ -82,9 +80,9 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
   function startCapture() {
     if (!transcriptionAvailable || !apiUrl || busy) return;
     const attempt = ++attemptRef.current;
-    setHeard(""); setBusy("recording");
+    setHeard(""); setFeedback(null); setBusy("recording");
     setNotice("Requesting microphone permission…");
-    void navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 }, video: false }).then(async (stream) => {
+    void navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false }).then(async (stream) => {
       if (attempt !== attemptRef.current) { stream.getTracks().forEach((track) => track.stop()); return; }
       const context = new AudioContext({ sampleRate: 16_000 });
       const source = context.createMediaStreamSource(stream);
@@ -93,20 +91,28 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
       const capture: OpenRouterCapture = { stream, context, source, processor, mute, chunks: [], samples: 0 };
       captureRef.current = capture;
       const sampleLimit = Math.min(context.sampleRate * maxClipSeconds, Math.floor((2 * 1024 * 1024 - 44) / 2));
+      const startedAt = performance.now();
+      let lastSpeechMs = 0;
+      let noiseFloor = 0.001;
       processor.onaudioprocess = (event) => {
         if (captureRef.current !== capture) return;
         const samples = event.inputBuffer.getChannelData(0);
         let energy = 0;
         for (const sample of samples) energy += sample * sample;
-        setMicLevel(Math.min(100, Math.round(Math.sqrt(energy / samples.length) * 1_000)));
+        const rms = Math.sqrt(energy / samples.length);
+        const elapsedMs = performance.now() - startedAt;
+        if (!capture.speechDetected && elapsedMs < 400) noiseFloor = Math.min(0.006, noiseFloor * 0.9 + rms * 0.1);
+        if (rms > Math.max(0.003, noiseFloor * 2.5)) { capture.speechDetected = true; lastSpeechMs = elapsedMs; }
+        setMicLevel(Math.min(100, Math.round(rms * 1_000)));
         const count = Math.min(samples.length, sampleLimit - capture.samples);
         if (count > 0) { capture.chunks.push(samples.slice(0, count)); capture.samples += count; }
-        if (capture.samples >= sampleLimit) void stopAndTranscribe(capture, attempt);
+        const decision = silenceDecision(elapsedMs, lastSpeechMs, capture.speechDetected === true);
+        if (capture.samples >= sampleLimit || decision !== "continue") void stopAndTranscribe(capture, attempt);
       };
       source.connect(processor); processor.connect(mute); mute.connect(context.destination);
       capture.timer = window.setTimeout(() => void stopAndTranscribe(capture, attempt), maxClipSeconds * 1_000);
       await context.resume();
-      setNotice("Listening · say the Korean phrase, then tap Stop. A live mic meter confirms sound is reaching the browser.");
+      setNotice("Listening · say the Korean phrase. Recording stops automatically after a short silence; you can also tap Stop.");
     }).catch(() => {
       releaseCapture(captureRef.current ?? undefined);
       captureRef.current = null;
@@ -122,6 +128,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
     setBusy("transcribing"); setNotice("Transcribing your recording with Whisper…");
     let wav: ArrayBuffer | undefined;
     try {
+      if (!capture.speechDetected) throw new Error("No speech detected. Try again closer to your microphone, or switch to writing.");
       wav = encodeWav(capture); releaseCapture(capture);
       const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
         method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(20_000),
@@ -132,10 +139,11 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
       if (typeof result.transcript !== "string" || !result.transcript.trim()) throw new Error("No words were detected. Check the live mic level, speak a little closer, and try again.");
       setHeard(result.transcript.trim());
       const comparison = compareHangul(korean, result.transcript);
+      setFeedback(comparison.matches ? "match" : "retry");
       onResult?.(result.transcript.trim(), comparison.matches);
       setNotice(comparison.matches
-        ? "Whisper transcribed the target syllables. This checks the words it recognized; it is not an acoustic accent score."
-        : `Compare the first differing block: target ${comparison.targetBlock || "(ending)"} · Whisper heard ${comparison.heardBlock}. Transcription is a practice clue, not an acoustic accent score.`);
+        ? "Nice work! The recognized Korean matches the target."
+        : `Try again. Target ${comparison.targetBlock || "(ending)"} · heard ${comparison.heardBlock}. For a short word, speak clearly after recording starts.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The clip could not be transcribed.");
     } finally {
@@ -149,13 +157,12 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
     event.preventDefault();
     const value = written.trim();
     if (!value) return;
-    const targetHangul = [...korean.normalize("NFC").replace(/\s/gu, "")];
-    const answerHangul = [...value.normalize("NFC").replace(/\s/gu, "")];
     const hasHangul = /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(value);
     const matches = hasHangul
-      ? targetHangul.join("") === answerHangul.join("")
+      ? compareSpeech(korean, value).matches
       : value.toLocaleLowerCase().replace(/[^a-z]/gu, "") === (expectedRomanization ?? "").toLocaleLowerCase().replace(/[^a-z]/gu, "");
     onResult?.(value, matches);
+    setFeedback(matches ? "match" : "retry");
     setNotice(matches ? "That matches the target." : `Compare what you wrote with the target ${korean}, then try again.`);
   }
 
@@ -178,11 +185,11 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
             </div>
           ) : (
             <form className="speech-typed lesson-speaking-write" onSubmit={submitWriting}>
-              <label><span>Write the Korean or its romanization</span><input value={written} onChange={(event) => setWritten(event.target.value)} autoComplete="off" autoCapitalize="none" /></label>
+              <span>Write the Korean or its romanization</span><KoreanInput value={written} onChange={setWritten} label="Write the Korean or its romanization" />
               <div className="speech-practice-actions"><button className="button button-dark" type="submit" disabled={!written.trim()}>Check writing</button><button type="button" className="button button-quiet" onClick={() => { setWriteInstead(false); setWritten(""); setNotice(""); }}>Use microphone</button></div>
             </form>
           )}
-          <p className="openrouter-practice-note">Microphone audio is sent to OpenRouter for transcription when you record. You can switch to writing at any time.</p>
+          <p className="openrouter-practice-note">Recording stops after a short silence. Microphone audio is sent to OpenRouter for transcription; you can switch to writing.</p>
           {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
           {heard && <div className="speech-transcript"><span className="micro-label">SORI HEARD</span><p lang="ko">{heard}</p></div>}
           {statusReady && !transcriptionAvailable && <small>Speech recognition is unavailable right now. Switch to writing to continue this exercise.</small>}
@@ -216,6 +223,8 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
       </div>
         </>
       )}
+      <WordReference word={korean} />
+      {feedback && <div className={`speech-feedback ${feedback}`} role="status"><SoriMascot className="speech-feedback-mascot" thumbsUp={feedback === "match"} /><strong>{feedback === "match" ? "You got it!" : "Try again — you’re learning."}</strong></div>}
     </section>
   );
 }

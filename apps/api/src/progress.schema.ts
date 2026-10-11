@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const progressSchema = z.object({
+  dailyPractice: z.object({ date: z.union([z.string().date(), z.literal("")]), lessons: z.array(z.string().min(1).max(80)).max(500), reviews: z.array(z.string().min(1).max(80)).max(500), speaking: z.array(z.string().min(1).max(80)).max(500) }).default({ date: "", lessons: [], reviews: [], speaking: [] }),
   completed: z.number().int().min(0).max(500),
   dailyGoalMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(20), z.literal(30), z.literal(45), z.literal(60)]).default(15),
   speakingCardIds: z.array(z.string().min(1).max(80)).max(200).default([]),

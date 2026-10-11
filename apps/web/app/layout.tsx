@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./styles.css";
+import "./practice.css";
 
 export const metadata: Metadata = {
   title: "Sori — Korean, remembered",

@@ -1,6 +1,7 @@
 import { normalizeAnswer, type LessonQuestion } from "./curriculum";
 
 export type SavedProgress = {
+  dailyPractice: { date: string; lessons: string[]; reviews: string[]; speaking: string[] };
   completed: number;
   dailyGoalMinutes: 5 | 10 | 15 | 20 | 30 | 45 | 60;
   speakingCardIds: string[];
@@ -66,6 +67,7 @@ export function deduplicateReviewItems(items: ReviewItem[]) {
 }
 
 export const initialProgress: SavedProgress = {
+  dailyPractice: { date: "", lessons: [], reviews: [], speaking: [] },
   completed: 0,
   dailyGoalMinutes: 15,
   speakingCardIds: [],
@@ -87,6 +89,12 @@ export function localDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function recordDailyPractice(progress: SavedProgress, kind: "lessons" | "reviews" | "speaking", id: string, date = new Date()): SavedProgress {
+  const today = localDateKey(date);
+  const daily = progress.dailyPractice?.date === today ? progress.dailyPractice : { date: today, lessons: [], reviews: [], speaking: [] };
+  return { ...progress, dailyPractice: { ...daily, [kind]: [...new Set([...daily[kind], id])].slice(0, 500) } };
 }
 
 export function recordActivity(
@@ -220,7 +228,7 @@ export function rateReviewItem(
   });
   const next = { ...progress, reviewItems };
   return recordActivity(
-    { ...next, reviewsDone: progress.reviewsDone + (remembered ? 1 : 0) },
+    recordDailyPractice({ ...next, reviewsDone: progress.reviewsDone + (remembered ? 1 : 0) }, "reviews", id, now),
     now,
   );
 }

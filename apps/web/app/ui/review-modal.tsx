@@ -7,6 +7,7 @@ import { deduplicateReviewItems } from "../progress";
 import { shuffle } from "../curriculum";
 import { useDialogFocus } from "./use-dialog-focus";
 import { playCorrectAnswerSound } from "./feedback-sound";
+import { WordReference } from "./word-reference";
 
 export function ReviewModal({
   items,
@@ -63,6 +64,7 @@ export function ReviewModal({
         <div className="review-question">
           <span className="question-label">{revealed ? "ANSWER" : card.question}</span>
           <h2 id="review-title" lang="ko">{revealed ? card.answer : card.front}</h2>
+          <WordReference word={card.front} />
           {revealed ? (
             <>
               <p>{card.note}</p>

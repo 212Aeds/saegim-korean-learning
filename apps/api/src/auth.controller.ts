@@ -274,7 +274,7 @@ export class AuthController {
       const result = await this.database.query(
         `SELECT completed_lessons, completed_lesson_ids, words_learned,
                 daily_goal_minutes, speaking_card_ids, speaking_card_id,
-                learning_preferences,
+                learning_preferences, daily_practice,
                 reviews_done, quiz_attempts, quiz_correct, streak,
                 last_activity, activity_dates, review_items
          FROM learner_progress WHERE account_id = $1`,
@@ -288,6 +288,7 @@ export class AuthController {
         speakingCardIds: row.speaking_card_ids,
         speakingCardId: row.speaking_card_id,
         learningPreferences: row.learning_preferences,
+        dailyPractice: row.daily_practice,
         completedLessonIds: row.completed_lesson_ids,
         wordsLearned: row.words_learned,
         reviewsDone: row.reviews_done,
@@ -368,7 +369,7 @@ export class AuthController {
       const progress = await this.database.query(
         `SELECT completed_lessons, completed_lesson_ids, words_learned,
                 daily_goal_minutes, speaking_card_ids, speaking_card_id,
-                learning_preferences,
+                learning_preferences, daily_practice,
                 reviews_done, quiz_attempts, quiz_correct, streak,
                 last_activity, activity_dates, review_items
          FROM learner_progress WHERE account_id = $1`,
@@ -512,8 +513,8 @@ export class AuthController {
        (learner_id, completed_lessons, completed_lesson_ids, words_learned, daily_goal_minutes, speaking_card_ids,
         speaking_card_id, learning_preferences,
         account_id, reviews_done, quiz_attempts, quiz_correct, streak, last_activity,
-        activity_dates, review_items)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15::date[],$16::jsonb)
+        activity_dates, review_items, daily_practice)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15::date[],$16::jsonb,$17::jsonb)
        ON CONFLICT (account_id) DO UPDATE SET
          completed_lessons = EXCLUDED.completed_lessons,
          completed_lesson_ids = EXCLUDED.completed_lesson_ids,
@@ -529,6 +530,7 @@ export class AuthController {
          last_activity = EXCLUDED.last_activity,
          activity_dates = EXCLUDED.activity_dates,
          review_items = EXCLUDED.review_items,
+         daily_practice = EXCLUDED.daily_practice,
          updated_at = now()`,
       [
         accountId,
@@ -547,6 +549,7 @@ export class AuthController {
         progress.lastActivity,
         progress.activityDates,
         JSON.stringify(progress.reviewItems),
+        JSON.stringify(progress.dailyPractice),
       ],
     );
   }

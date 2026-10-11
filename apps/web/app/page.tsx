@@ -29,6 +29,8 @@ import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards
 import { TutorPage } from "./ui/tutor-page";
 import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
+import { DailyPractice } from "./ui/daily-practice";
+import { WordReference } from "./ui/word-reference";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
 import {
@@ -51,6 +53,7 @@ import {
   localDateKey,
   rateReviewItem,
   recordActivity,
+  recordDailyPractice,
   type SavedProgress,
   type LearningPreferences,
 } from "./progress";
@@ -58,11 +61,11 @@ import {
 type Tab = "today" | "learn" | "review" | "words" | "speak" | "tutor";
 const tabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "today", label: "Today", Icon: House },
-  { id: "tutor", label: "AI Tutor", Icon: ChatCircleDots },
   { id: "learn", label: "Learn", Icon: Compass },
   { id: "review", label: "Review", Icon: Lightning },
   { id: "words", label: "Words", Icon: BookOpenText },
   { id: "speak", label: "Speak", Icon: Microphone },
+  { id: "tutor", label: "AI Tutor", Icon: ChatCircleDots },
 ];
 
 function nextAvailableLesson(completedLessonIds: string[]) {
@@ -80,6 +83,7 @@ function normalizeProgress(
   return {
     ...initialProgress,
     ...value,
+    dailyPractice: value?.dailyPractice && Array.isArray(value.dailyPractice.lessons) && Array.isArray(value.dailyPractice.reviews) && Array.isArray(value.dailyPractice.speaking) ? value.dailyPractice : initialProgress.dailyPractice,
     speakingCardIds: Array.isArray(value?.speakingCardIds)
       ? normalizeSpeakingCardIds(value.speakingCardIds.filter((id): id is string => typeof id === "string"))
       : [],
@@ -280,7 +284,7 @@ export default function Home() {
       const completedLessonIds = current.completedLessonIds.includes(lesson.id)
         ? current.completedLessonIds
         : [...current.completedLessonIds, lesson.id];
-      return recordActivity({
+      return recordDailyPractice(recordActivity({
         ...current,
         completedLessonIds,
         completed: completedLessonIds.length,
@@ -291,7 +295,7 @@ export default function Home() {
           ...(current.reviewItems.length ? current.reviewItems : createStarterReviewItems()),
           ...freshReviewItems,
         ]),
-      });
+      }), "lessons", lesson.id);
     });
     setLessonOpen(false);
     setTab("today");
@@ -523,6 +527,7 @@ export default function Home() {
               todayDate={todayDate}
               onLesson={startLesson}
               onReview={() => setReviewOpen(true)}
+              onSpeak={() => setTab("speak")}
           onTab={navigateTo}
               onGoalChange={(minutes) =>
                 setProgress((current) => ({
@@ -568,13 +573,13 @@ export default function Home() {
               }
               onComplete={(completedId, nextCardId) =>
                 setProgress((current) =>
-                  recordActivity({
+                  recordDailyPractice(recordActivity({
                     ...current,
                     speakingCardIds: [
                       ...new Set([...current.speakingCardIds, completedId]),
                     ],
                     speakingCardId: nextCardId,
-                  }),
+                  }), "speaking", completedId),
                 )
               }
             />
@@ -656,6 +661,7 @@ function TodayView({
   todayDate,
   onLesson,
   onReview,
+  onSpeak,
   onTab,
   onGoalChange,
 }: {
@@ -663,6 +669,7 @@ function TodayView({
   todayDate: Date;
   onLesson: (lesson?: Lesson) => void;
   onReview: () => void;
+  onSpeak: () => void;
   onTab: (tab: Tab) => void;
   onGoalChange: (minutes: SavedProgress["dailyGoalMinutes"]) => void;
 }) {
@@ -706,6 +713,7 @@ function TodayView({
           </select>
         </label>
       </div>
+      <DailyPractice progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
       <div className="dashboard-grid">
         <div className="primary-column">
           <section className="continue-panel">
@@ -1248,15 +1256,6 @@ function WordsView({
         {filtered.map((word) => (
           <article className="word-card" key={word.id}>
             <span className="word-category">{word.category}</span>
-            {word.reviewStatus && (
-              <span className="word-reference-flag">
-                {word.reviewStatus === "editor_reviewed"
-                  ? "Editor reviewed"
-                  : word.reviewStatus === "unreviewed"
-                    ? "Reference · unreviewed"
-                    : "Reference · awaiting editor review"}
-              </span>
-            )}
             <strong lang="ko">{word.korean}</strong>
             <span className="word-roman">{word.romanization}</span>
             <span className="word-meaning">{word.meaning}</span>
@@ -1268,11 +1267,7 @@ function WordsView({
                 </span>
               )}
             </span>
-            {word.source && word.license && (
-              <span className="word-source">
-                {word.source} · {word.license}
-              </span>
-            )}
+            <WordReference word={word.korean} source={word.source} license={word.license} reviewStatus={word.reviewStatus} />
             <button
               className="word-audio"
               onClick={() => onHear(word.korean)}

@@ -48,6 +48,7 @@ export class OpenRouterKoreanSpeechProvider extends KoreanSpeechProvider {
     const result = await this.request("/audio/transcriptions", {
       model: transcriptionModel,
       language: locale === "ko-KR" ? "ko" : "ko",
+      temperature: 0,
       input_audio: { data: Buffer.from(audio).toString("base64"), format: "wav" },
     });
     const parsed = result as { text?: unknown };
