@@ -1,6 +1,6 @@
-# Sori
+# Saegim
 
-Sori is a free, mobile-first Korean-learning app. Korean studies require an account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 20 lessons, a 1,050-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
+Saegim is a free, mobile-first Korean-learning app. Korean studies require an account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 57+ lessons, a 5,000+-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
 
 ## Run locally
 
@@ -23,11 +23,11 @@ The API listens on port `4000`, requires `DATABASE_URL`, and verifies its databa
 
 ## Neon
 
-This workspace is linked to Neon project `withered-morning-17483094`, branch `production`. `neon.ts` declares Postgres only; `neon deploy` currently reports no policy changes. Neon CLI writes branch connection variables to the ignored root `.env.local`; the API loads that file for local development and deployment commands. Apply all SQL migrations in order, then run `npm run db:seed:words` to populate the 1,050-entry dictionary. Neon CLI context and credentials are local setup data; keep them out of source control.
+This workspace is linked to Neon project `withered-morning-17483094`, branch `production`. `neon.ts` declares Postgres only; `neon deploy` currently reports no policy changes. Neon CLI writes branch connection variables to the ignored root `.env.local`; the API loads that file for local development and deployment commands. Apply all SQL migrations in order, then run `npm run db:seed:words` to populate the 5,000+-entry dictionary. Neon CLI context and credentials are local setup data; keep them out of source control.
 
 ## Learning content and source
 
-The 1,050-entry dictionary adaptation is generated from [cc-kedict](https://github.com/mhagiwara/cc-kedict), under CC BY-SA 3.0. See [the attribution and reuse notes](apps/api/db/seeds/ATTRIBUTION.md). The corpus has not been individually reviewed by a Korean-fluent editor, so it is a broad reference bank rather than a validated beginner frequency list. Lesson vocabulary is curated separately in the web app.
+The 5,000+-entry dictionary adaptation is generated from [cc-kedict](https://github.com/mhagiwara/cc-kedict), under CC BY-SA 3.0. See [the attribution and reuse notes](apps/api/db/seeds/ATTRIBUTION.md). The corpus has not been individually reviewed by a Korean-fluent editor, so it is a broad reference bank rather than a validated beginner frequency list. Lesson vocabulary is curated separately in the web app.
 
 ## Account and operations
 
