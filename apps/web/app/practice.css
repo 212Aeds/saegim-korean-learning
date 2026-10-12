@@ -122,3 +122,35 @@
 
 .lesson-voice-picker { display: flex; align-items: center; justify-content: end; gap: 8px; padding: 8px 24px; color: var(--muted); font-size: 12px; }
 .lesson-voice-picker select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-strong); }
+
+.conversation-form { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-strong); gap: 10px; }
+.conversation-composer-label { font-size: 13px; font-weight: 650; }
+.conversation-form textarea { display: block; box-sizing: border-box; width: 100%; min-height: 88px; max-height: 180px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf9; color: var(--forest-deep); font: inherit; line-height: 1.6; resize: vertical; transition: height 120ms ease; }
+.conversation-form textarea:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+.conversation-composer-footer { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
+.conversation-composer-footer small { font-size: inherit; }
+.practice-intro h2 { font-size: clamp(25px, 4vw, 38px); }
+.practice-intro p, .practice-footnote { color: var(--muted); line-height: 1.7; }
+.practice-focus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; margin: 24px 0; }
+.practice-focus { display: grid; gap: 10px; padding: 22px; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-strong); color: var(--forest-deep); font: inherit; cursor: pointer; }
+.practice-focus strong { font-size: 16px; }
+.practice-focus span, .practice-focus small { font-size: 12px; line-height: 1.6; color: var(--muted); }
+.practice-focus.is-selected { border-color: var(--forest); background: #eef2e7; }
+.practice-focus:disabled { opacity: .6; cursor: default; }
+.practice-start { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; }
+.practice-start label { display: grid; gap: 8px; font-size: 12px; }
+.practice-start select { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-strong); }
+.practice-session-card { max-width: 780px; margin: 0 auto; padding: clamp(18px, 4vw, 36px); border: 1px solid var(--line); border-radius: 22px; background: var(--paper-strong); }
+.practice-session-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.practice-question { display: grid; justify-items: center; gap: 16px; padding-top: 24px; }
+.practice-target { color: var(--forest-deep); font-size: clamp(38px, 8vw, 66px); }
+.practice-question h2 { text-align: center; font-size: 21px; }
+.practice-question .choice-list, .practice-question .text-answer-field { width: 100%; }
+.practice-question .word-reference { justify-self: stretch; }
+@media (max-width: 900px) {
+ .mobile-nav { display: flex; overflow-x: auto; overscroll-behavior-inline: contain; gap: 2px; }
+ .mobile-nav button { flex: 1 0 64px; min-height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) { .conversation-form textarea { transition: none; } }
+
+.practice-question .answer-tip { font-size: 14px; line-height: 1.6; text-align: center; }

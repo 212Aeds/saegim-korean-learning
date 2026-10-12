@@ -1,5 +1,6 @@
 import { consonantAnswers, consonantNameQuestion } from "./ui/hangul-answers";
 import { moreLessons } from "./more-lessons";
+import { foundationLessons } from "./foundation-lessons";
 import { newLessons } from "./new-lessons";
 
 export type MultipleChoiceQuestion = {
@@ -56,6 +57,7 @@ export type Lesson = {
   prerequisiteLessonIds?: string[];
   practiceOnlyQuestionIds?: string[];
   generatedPracticeOnly?: boolean;
+  authoredOnly?: boolean;
 };
 
 export const lessons: Lesson[] = [
@@ -65,15 +67,16 @@ export const lessons: Lesson[] = [
     detail: "Meet your first letters and syllable block",
     category: "Hangul",
     minutes: 6,
-    words: ["가방", "안녕"],
+    words: ["ㄱ", "ㅏ", "가"],
+    authoredOnly: true,
     pathwayId: "hangul",
     level: "foundation",
     briefing: {
       focus: "Meet the consonant ㄱ, vowel ㅏ, and the block 가.",
       explanation: "ㄱ begins with a light sound between English g and k. ㅏ is an open ah vowel. Put them together in one square block and read 가 as ga.",
       useWhen: "Use this consonant-plus-vowel pattern to sound out each Hangul block before reading a whole word.",
-      example: "가방",
-      translation: "bag (가 + 방)",
+      example: "ㄱ",
+      translation: "giyeok — an approximate g / k cue",
       watchFor: "The Korean sound does not map perfectly to an English letter; treat g/k as a pronunciation guide, not two different answers.",
     },
     questions: [
@@ -106,24 +109,6 @@ export const lessons: Lesson[] = [
         placeholder: "Romanized sound",
         tip: "You built 가: ㄱ plus ㅏ, read together as one syllable block.",
       },
-      {
-        id: "first-bag",
-        type: "choice",
-        korean: "가방",
-        prompt: "What does this useful word mean?",
-        choices: ["bag", "water", "friend"],
-        answer: "bag",
-        tip: "가방 means bag. Two Hangul blocks join to make one word.",
-      },
-      {
-        id: "first-hello",
-        type: "choice",
-        korean: "안녕",
-        prompt: "What does this greeting mean?",
-        choices: ["hi / hello", "thank you", "good night"],
-        answer: "hi / hello",
-        tip: "안녕 is an informal hello used with friends.",
-      },
     ],
   },
   {
@@ -132,7 +117,8 @@ export const lessons: Lesson[] = [
     detail: "Recognize three more everyday letters",
     category: "Hangul",
     minutes: 5,
-    words: ["나", "너", "미소"],
+    words: ["ㄴ", "ㅁ", "ㅓ", "나", "너"],
+    authoredOnly: true,
     pathwayId: "hangul",
     level: "foundation",
     prerequisiteLessonIds: ["hangul-first-sounds"],
@@ -140,8 +126,8 @@ export const lessons: Lesson[] = [
       focus: "A consonant and vowel join to make one syllable block.",
       explanation: "ㄴ gives the n sound. Pair it with ㅏ for 나 (na), or ㅓ for 너 (neo). A vowel that follows the consonant is placed to its right or underneath depending on its shape.",
       useWhen: "Use the block layout to decode a new word from left to right, one syllable at a time.",
-      example: "미소",
-      translation: "smile (mi-so)",
+      example: "나",
+      translation: "Reading sample: na",
       watchFor: "ㅓ is written eo in standard romanization, but its sound is closer to a relaxed uh than a long English e-o sequence.",
     },
     questions: [
@@ -174,14 +160,7 @@ export const lessons: Lesson[] = [
         tip: "ㄴ (n) plus ㅏ (a) gives 나 (na).",
       },
       {
-        id: "sound-mi",
-        type: "text",
-        korean: "미소",
-        prompt: "미소 means smile. Type its first syllable.",
-        answer: "mi",
-        accepted: ["미"],
-        placeholder: "First syllable",
-        tip: "미소 means smile. 미 is the first syllable; 소 is the second.",
+        id: "sound-mieum", type: "text", korean: "ㅁ", prompt: "Type this letter’s name or sound cue.", answer: "mieum", accepted: ["m", "미음"], placeholder: "Letter name or sound", tip: "ㅁ is mieum, with an m sound cue.",
       },
     ],
   },
@@ -191,10 +170,11 @@ export const lessons: Lesson[] = [
     detail: "Put consonants and vowels in their places",
     category: "Hangul",
     minutes: 6,
-    words: ["나무", "바다", "우유"],
+    words: ["가", "나", "너", "마", "바"],
+    authoredOnly: true,
     pathwayId: "hangul",
     level: "foundation",
-    prerequisiteLessonIds: ["hangul-first-sounds", "hangul-more-sounds"],
+    prerequisiteLessonIds: ["hangul-more-sounds", "hangul-air-consonants"],
     briefing: {
       focus: "Build a square syllable from one starting consonant and a vowel.",
       explanation: "In a Hangul block, the consonant comes first. A vertical vowel goes beside it; a horizontal vowel sits below it. Read the finished block as one beat.",
@@ -213,35 +193,10 @@ export const lessons: Lesson[] = [
         answer: "나",
         tip: "The consonant comes first, with the vowel beside or below it.",
       },
-      {
-        id: "block-tree",
-        type: "text",
-        korean: "나무",
-        prompt: "나무 means tree. Type the word in roman letters.",
-        answer: "namu",
-        accepted: ["na-mu", "na mu"],
-        placeholder: "Romanized word",
-        tip: "나무 is na-mu. Each of its two syllables is one block.",
-      },
-      {
-        id: "block-water",
-        type: "choice",
-        korean: "바다",
-        prompt: "Which meaning matches 바다?",
-        choices: ["sea", "milk", "tree"],
-        answer: "sea",
-        tip: "바다 (bada) means sea. Say each block smoothly: ba-da.",
-      },
-      {
-        id: "block-milk",
-        type: "text",
-        korean: "우유",
-        prompt: "Type what 우유 means in English.",
-        answer: "milk",
-        accepted: [],
-        placeholder: "Meaning in English",
-        tip: "우유 (uyu) means milk.",
-      },
+      { id: "block-na", type: "text", korean: "나", prompt: "Read this block in roman letters.", answer: "na", accepted: [], placeholder: "Romanized block", tip: "ㄴ + ㅏ builds 나, read as na. This is a reading sample." },
+      { id: "block-neo", type: "text", korean: "너", prompt: "Read this block in roman letters.", answer: "neo", accepted: [], placeholder: "Romanized block", tip: "ㄴ + ㅓ builds 너, read as neo." },
+      { id: "block-ma", type: "text", korean: "ㅁ + ㅏ", prompt: "Build one block from these letters.", answer: "마", accepted: [], placeholder: "Hangul block", tip: "ㅁ + ㅏ builds 마, read as ma." },
+      { id: "block-ba", type: "text", korean: "ㅂ + ㅏ", prompt: "Build one block from these letters.", answer: "바", accepted: [], placeholder: "Hangul block", tip: "ㅂ + ㅏ builds 바, read as ba." },
     ],
   },
   {
@@ -424,6 +379,7 @@ export const lessons: Lesson[] = [
   },
   ...moreLessons,
   ...newLessons,
+  ...foundationLessons,
 ];
 
 export function shuffle<T>(items: T[]): T[] {

@@ -144,20 +144,6 @@ export function createStarterReviewItems(now = new Date()): ReviewItem[] {
       answer: "ga",
       note: "ㄱ plus ㅏ form 가, read as one syllable block.",
     },
-    {
-      id: "word-gabang",
-      front: "가방",
-      question: "WHAT DOES THIS WORD MEAN?",
-      answer: "bag",
-      note: "가방 means bag. Hear it in 가방 있어요 (I have a bag).",
-    },
-    {
-      id: "word-annyeong",
-      front: "안녕",
-      question: "WHAT DOES THIS GREETING MEAN?",
-      answer: "Hi / hello",
-      note: "안녕 is an informal hello used with friends.",
-    },
   ];
 
   return items.map((item) => ({

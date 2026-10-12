@@ -254,21 +254,22 @@ function course(
 }
 
 export const moreLessons: Lesson[] = [
-  course("hangul-consonants", "Hangul consonants", "Recall all 19 basic consonant sounds", "Hangul", 20, hangulLetters.slice(0, 19).map((letter) => letter.korean), {
+  course("hangul-consonants", "Hangul consonants", "Review all 19 consonant letters", "Hangul", 20, hangulLetters.slice(0, 19).map((letter) => letter.korean), {
     pathwayId: "hangul",
     level: "foundation",
-    briefing: { focus: "Consonants are the starting sounds in a Hangul block.", explanation: "Each consonant has a Korean name and a sound that can shift slightly with its position. ㄱ is a light sound between English g and k; ㅁ is m; ㅅ is s.", useWhen: "Use consonants with a vowel to build a readable syllable. At the beginning of a block, ㅇ is silent; at the end, it sounds like ng.", example: "가방", translation: "bag", watchFor: "Roman letters are only guides. Listen for the Korean sound rather than treating g/k spellings as separate letters." },
+    prerequisiteLessonIds: ["hangul-air-consonants", "hangul-tense-consonants"],
+    briefing: { focus: "Consonants are the starting sounds in a Hangul block.", explanation: "Each consonant has a Korean name and a sound that can shift slightly with its position. ㄱ is a light sound between English g and k; ㅁ is m; ㅅ is s.", useWhen: "Use consonants with a vowel to build a readable syllable. At the beginning of a block, ㅇ is silent; at the end, it sounds like ng.", example: "ㄱ", translation: "giyeok — letter name", watchFor: "Roman letters are only guides. Listen for the Korean sound rather than treating g/k spellings as separate letters." },
   }),
   course("hangul-vowels", "Hangul vowels", "Practice all 21 vowels and their syllables", "Hangul", 22, hangulLetters.slice(19).map((letter) => letter.korean), {
     pathwayId: "hangul",
     level: "foundation",
-    prerequisiteLessonIds: ["hangul-first-sounds"],
+    prerequisiteLessonIds: ["hangul-wo-vowels", "hangul-wa-vowels", "hangul-ae-e-vowels"],
     briefing: { focus: "A Hangul syllable needs a vowel.", explanation: "Vowel strokes combine with a starting consonant. A tall vowel such as ㅏ sits to the right; a wide vowel such as ㅗ sits underneath. At the start of a vowel-only syllable, silent ㅇ holds the place.", useWhen: "Use the vowel shape to tell where the consonant and vowel belong in a syllable block.", example: "아", translation: "a (ㅇ holds the starting position; ㅏ is the vowel)", watchFor: "ㅓ (eo) and ㅗ (o) are different vowels even though romanization can feel unfamiliar." },
   }),
   course("hangul-syllable-blocks", "Build syllable blocks", "Combine consonants and vowels, then read complete blocks", "Hangul", 12, ["ㄱ", "ㄴ", "ㅏ", "ㅓ", "가", "너"], {
     pathwayId: "hangul",
     level: "foundation",
-    prerequisiteLessonIds: ["hangul-first-sounds", "hangul-more-sounds"],
+    prerequisiteLessonIds: ["build-a-syllable"],
     briefing: { focus: "Consonant first, vowel beside or below.", explanation: "Hangul is grouped into square syllable blocks. A block starts with a consonant and then places the vowel beside it or underneath it; each block is read as one syllable.", useWhen: "Use this pattern whenever you decode or spell a Korean word, one block at a time.", example: "ㄱ + ㅏ → 가", translation: "g/k + a → ga", watchFor: "Do not read the consonant and vowel as separate words; combine them into one spoken syllable." },
   }),
   course("hangul-batchim", "Final consonants · batchim", "Hear and recognize consonants at the bottom of a block", "Hangul", 14, ["ㄱ", "ㄴ", "ㄹ", "ㅁ", "ㅂ", "ㅇ", "집", "물", "강"], {

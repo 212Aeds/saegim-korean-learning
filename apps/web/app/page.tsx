@@ -26,6 +26,7 @@ import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { SpeakDeck } from "./ui/speak-deck";
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
+import { PracticePage } from "./ui/practice-page";
 import { TutorPage } from "./ui/tutor-page";
 import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
@@ -33,7 +34,7 @@ import { DailyPractice } from "./ui/daily-practice";
 import { WordReference } from "./ui/word-reference";
 import { LearningRoadmap } from "./ui/learning-roadmap";
 import { accountAvatar, weeklyProgress } from "./account-personalization";
-import { recommendedLessons, placementKnowledge, defaultLearningProfile, type LearningProfile } from "./learning-profile";
+import { recommendedLessons, learningRoute, placementKnowledge, defaultLearningProfile, type LearningProfile } from "./learning-profile";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
 import {
@@ -61,10 +62,11 @@ import {
   type LearningPreferences,
 } from "./progress";
 
-type Tab = "today" | "learn" | "review" | "words" | "speak" | "tutor";
+type Tab = "today" | "learn" | "review" | "words" | "speak" | "tutor" | "practice";
 const tabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "today", label: "Today", Icon: House },
   { id: "learn", label: "Learn", Icon: Compass },
+  { id: "practice", label: "Practice", Icon: Target },
   { id: "review", label: "Review", Icon: Lightning },
   { id: "words", label: "Words", Icon: BookOpenText },
   { id: "speak", label: "Speak", Icon: Microphone },
@@ -213,6 +215,7 @@ export default function Home() {
         words: "A little word goes a long way",
         speak: "Find your Korean voice",
         tutor: "Your Korean tutor",
+        practice: "Your practice space",
       })[tab],
     [tab],
   );
@@ -288,11 +291,11 @@ export default function Home() {
         ...current,
         completedLessonIds,
         completed: completedLessonIds.length,
-        wordsLearned: [...new Set([...current.wordsLearned, ...lesson.words])],
+        wordsLearned: [...new Set([...current.wordsLearned, ...(lesson.category === "Hangul" ? [] : lessonWords.map((word) => word.korean))])],
         quizAttempts: current.quizAttempts + score.total,
         quizCorrect: current.quizCorrect + score.correct,
         reviewItems: deduplicateReviewItems([
-          ...(current.reviewItems.length ? current.reviewItems : createStarterReviewItems()),
+          ...(current.reviewItems.length ? current.reviewItems : lesson.id === "hangul-first-sounds" ? createStarterReviewItems() : []),
           ...freshReviewItems,
         ]),
       }), "lessons", lesson.id);
@@ -588,6 +591,7 @@ export default function Home() {
               }
             />
           )}
+          {tab === "practice" && <PracticePage key={account.learningProfile?.level ?? "new"} progress={progress} profile={account.learningProfile ?? defaultLearningProfile} preferences={progress.learningPreferences} onSessionComplete={() => setProgress((current) => recordActivity(current))} />}
           {tab === "tutor" && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
           </div>
 
@@ -698,7 +702,8 @@ function TodayView({
   const dueCount = dueReviewItems(progress).length;
   const nextLesson = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   const weekly = weeklyProgress(progress.activityDates, learningProfile.weeklyGoal ?? 5, todayDate);
-  const hangulProgress = pathwayProgress("hangul", progress.completedLessonIds);
+  const levelRoute = learningRoute(learningProfile).filter((lesson) => !placementKnowledge(learningProfile).includes(lesson.id));
+  const hangulProgress = { completed: levelRoute.filter((lesson) => progress.completedLessonIds.includes(lesson.id)).length, total: levelRoute.length };
   return (
     <>
       <div className="daily-goal-row">
@@ -880,9 +885,9 @@ function TodayView({
             <div className="section-heading">
               <div>
                 <h3>
-                  Hangul
+                  Your next
                   <br />
-                  foundations
+                  learning steps
                 </h3>
               </div>
               <div className="path-count">
@@ -898,7 +903,7 @@ function TodayView({
                   }}
                 />
               </div>
-              {lessons.slice(0, 5).map((lesson, index) => {
+              {learningRoute(learningProfile).filter((lesson) => !placementKnowledge(learningProfile).includes(lesson.id) && !progress.completedLessonIds.includes(lesson.id)).slice(0, 5).map((lesson, index) => {
                 const complete = progress.completedLessonIds.includes(lesson.id);
                 const available = isLessonUnlocked(lesson, progress.completedLessonIds, placementKnowledge(learningProfile));
                 const state = complete
@@ -1016,6 +1021,8 @@ function LearnView({
   progress: SavedProgress;
   onLesson: (lesson?: Lesson) => void;
 }) {
+  const routeOrder = new Map(learningRoute(learningProfile).map((lesson, index) => [lesson.id, index]));
+  const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "stretch"] : learningProfile.level === "intermediate" ? ["stretch", "grammar", "everyday", "hangul"] : ["everyday", "grammar", "hangul", "stretch"];
   const recommendation = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   return (
     <div className="content-page">
@@ -1028,8 +1035,8 @@ function LearnView({
       <div className="learning-pathways">
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
-        {learningPathways.map((pathway) => {
-          const pathwayLessons = lessonsForPathway(pathway.id);
+        {[...learningPathways].sort((left, right) => pathwayOrder.indexOf(left.id) - pathwayOrder.indexOf(right.id)).map((pathway) => {
+          const pathwayLessons = lessonsForPathway(pathway.id).sort((left, right) => (routeOrder.get(left.id) ?? 0) - (routeOrder.get(right.id) ?? 0));
           const pathwayStats = pathwayProgress(pathway.id, progress.completedLessonIds);
           return (
             <section className="learning-pathway" key={pathway.id} aria-labelledby={`pathway-${pathway.id}`}>
@@ -1054,7 +1061,7 @@ function LearnView({
                       key={lesson.id}
                       number={String(index + 1).padStart(2, "0")}
                       title={lesson.title}
-                      detail={`${lesson.detail} · ${lesson.words.length} concepts${lesson.prerequisiteLessonIds?.length ? ` · ${prerequisite}` : ""}`}
+                      detail={`${lesson.detail} · ${lesson.words.length} concepts${(!unlocked || lesson.prerequisiteLessonIds?.length) ? ` · ${prerequisite}` : ""}`}
                       tag={complete ? "COMPLETE · REVIEW" : next ? "START HERE" : unlocked ? `${lesson.minutes} MIN · READY` : "LOCKED"}
                       state={complete ? "complete" : unlocked ? "active" : "locked"}
                       onClick={() => onLesson(lesson)}
@@ -1404,7 +1411,7 @@ function ReviewView({
         <div className="queue-examples">
           {(due.length
             ? due.slice(0, 4).map((item) => item.front)
-            : ["가", "방", "안녕"]
+            : ["ㄱ", "ㅏ", "가"]
           ).map((word, index) => (
             <span key={`${word}-${index}`}>{word}</span>
           ))}

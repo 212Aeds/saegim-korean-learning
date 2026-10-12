@@ -1,3 +1,4 @@
+import { basicReadingPrerequisites } from "./foundation-lessons";
 import { lessons, type Lesson } from "./curriculum";
 
 export type LearningPathway = {
@@ -68,14 +69,15 @@ export function pathwayProgress(
 
 export function isLessonUnlocked(lesson: Lesson, completedLessonIds: string[], assumedKnowledge: string[] = []) {
   if (completedLessonIds.includes(lesson.id)) return true;
-  const prerequisites = lesson.prerequisiteLessonIds ?? [];
+  const prerequisites = [...(lesson.prerequisiteLessonIds ?? []), ...(lesson.category !== "Hangul" ? basicReadingPrerequisites : [])];
   // Bad or stale IDs must never make a learner lose access to the course.
-  const knownPrerequisites = prerequisites.filter((id) => knownLessonIds.has(id));
+  const knownPrerequisites = [...new Set(prerequisites)].filter((id) => knownLessonIds.has(id));
   return knownPrerequisites.every((id) => completedLessonIds.includes(id) || assumedKnowledge.includes(id));
 }
 
 export function prerequisiteLabel(lesson: Lesson, completedLessonIds: string[], assumedKnowledge: string[] = []) {
-  const pending = (lesson.prerequisiteLessonIds ?? [])
+  if (lesson.category !== "Hangul" && basicReadingPrerequisites.some((id) => !completedLessonIds.includes(id) && !assumedKnowledge.includes(id))) return "Complete the basic letter and reading lessons first.";
+  const pending = [...new Set([...(lesson.prerequisiteLessonIds ?? []), ...(lesson.category !== "Hangul" ? basicReadingPrerequisites : [])])]
     .filter((id) => knownLessonIds.has(id) && !completedLessonIds.includes(id) && !assumedKnowledge.includes(id))
     .map((id) => lessons.find((item) => item.id === id)?.title)
     .filter((title): title is string => Boolean(title));

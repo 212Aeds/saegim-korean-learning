@@ -1,3 +1,4 @@
+import { coreLetterLessonIds } from "./foundation-lessons";
 import { lessons } from "./curriculum";
 import { isLessonUnlocked } from "./learning-pathways";
 export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7 };
@@ -12,7 +13,7 @@ export function placementKnowledge(profile = defaultLearningProfile) {
 }
 export function learningRoute(profile = defaultLearningProfile) {
   const foundations = profile.level === "new"
-    ? ["hangul-first-sounds", "hangul-more-sounds", "build-a-syllable", "hangul-consonants", "hangul-vowels", "hangul-syllable-blocks", "hangul-batchim", "hello-there", "introductions", "sentence-order"]
+    ? ["hangul-first-sounds", ...coreLetterLessonIds, "hangul-more-sounds", "build-a-syllable", "hangul-syllable-blocks", "hangul-batchim", "first-readable-words", "hello-there", "introductions", "sentence-order"]
     : profile.level === "hangul" ? ["hello-there", "family-and-friends", "at-the-cafe", "introductions", "sentence-order"]
     : profile.level === "basic" ? ["at-the-cafe", "shopping-prices", "everyday-actions", "ask-a-question"]
     : ["conversation-weekend", "conversation-cafe", "conversation-plans", "descriptive-comparisons", "stretch-sentence-lab"];

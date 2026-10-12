@@ -19,4 +19,6 @@ export function consonantName(letter: string) { return consonants[letter]?.[1]; 
 export function consonantNameQuestion(letter: string, answer: string) {
   return consonants[letter]?.[0] === answer.trim().toLowerCase();
 }
-export function naturalSpeechText(text: string) { return consonantName(text.trim()) ?? text; }
+const vowelNames: Record<string, string> = { "ㅏ":"아", "ㅓ":"어", "ㅗ":"오", "ㅜ":"우", "ㅡ":"으", "ㅣ":"이", "ㅑ":"야", "ㅕ":"여", "ㅛ":"요", "ㅠ":"유", "ㅐ":"애", "ㅔ":"에", "ㅒ":"얘", "ㅖ":"예", "ㅘ":"와", "ㅙ":"왜", "ㅚ":"외", "ㅝ":"워", "ㅞ":"웨", "ㅟ":"위", "ㅢ":"의" };
+export function hangulName(letter: string) { return consonantName(letter) ?? vowelNames[letter]; }
+export function naturalSpeechText(text: string) { return hangulName(text.trim()) ?? text; }

@@ -5,7 +5,7 @@ import type { LearningProfile } from "../learning-profile";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { transcriptRomanization } from "./transcript-romanization";
-import { conversationHistory, type ConversationTurn } from "./conversation-history";
+import { conversationHistory, shouldSendConversationKey, type ConversationTurn } from "./conversation-history";
 import { playElevenLabsKorean, selectedElevenLabsVoice, saveElevenLabsVoice, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 
 type Reply = { korean: string; english: string; feedback: string };
@@ -81,7 +81,11 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       {thinking && <p className="conversation-thinking" role="status">Your partner is replying…</p>}
     </div>
     <form className="conversation-form" onSubmit={(event) => void send(event)}>
-      <KoreanInput value={draft} onChange={(value) => setDraft(value.slice(0, 600))} label="Your conversation message" placeholder="안녕하세요! Or ask for help in English…" />
+      <span className="conversation-composer-label">Your message</span>
+      <KoreanInput multiline openOnFocus={false} maxLength={600} value={draft} onChange={(value) => setDraft(value.slice(0, 600))} label="Your conversation message" placeholder="Write a Korean reply, or ask for help in English…" onKeyDown={(event) => {
+        if (shouldSendConversationKey(event.key, event.shiftKey, event.nativeEvent.isComposing, event.keyCode)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
+      }} />
+      <div className="conversation-composer-footer"><small>Enter to send · Shift+Enter for a new line</small><span aria-label="Message characters">{draft.length}/600</span></div>
       <button type="submit" className="button button-dark" disabled={thinking || !draft.trim()}>{thinking ? "Waiting for reply…" : "Send message"}</button>
     </form>
     {notice && <p role="status" className="tutor-service-message is-error">{notice}</p>}
