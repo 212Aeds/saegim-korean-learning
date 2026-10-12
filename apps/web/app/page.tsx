@@ -32,6 +32,7 @@ import { SoriMascot } from "./ui/sori-mascot";
 import { DailyPractice } from "./ui/daily-practice";
 import { WordReference } from "./ui/word-reference";
 import { LearningRoadmap } from "./ui/learning-roadmap";
+import { accountAvatar, weeklyProgress } from "./account-personalization";
 import { recommendedLessons, defaultLearningProfile, type LearningProfile } from "./learning-profile";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
@@ -459,7 +460,7 @@ export default function Home() {
               onClick={() => setAccountOpen(true)}
             >
               <UserCircle size={17} />
-              <span>{account ? "My account" : "Create account"}</span>
+              <span>{account ? `${accountAvatar(account.learningProfile)} My Account` : "Create Account"}</span>
             </button>
           </div>
         </header>
@@ -553,6 +554,7 @@ export default function Home() {
           )}
           {tab === "words" && (
             <WordsView
+              learnedWords={progress.wordsLearned}
               apiUrl={process.env.NEXT_PUBLIC_API_URL}
               onHear={(text) => speakKorean(text)}
             />
@@ -585,7 +587,7 @@ export default function Home() {
               }
             />
           )}
-          {tab === "tutor" && <TutorPage />}
+          {tab === "tutor" && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
           </div>
 
           {loadingSection && (
@@ -692,6 +694,7 @@ function TodayView({
   });
   const dueCount = dueReviewItems(progress).length;
   const nextLesson = nextAvailableLesson(progress.completedLessonIds, learningProfile);
+  const weekly = weeklyProgress(progress.activityDates, learningProfile.weeklyGoal ?? 5, todayDate);
   const hangulProgress = pathwayProgress("hangul", progress.completedLessonIds);
   return (
     <>
@@ -719,6 +722,7 @@ function TodayView({
         </label>
       </div>
       <DailyPractice progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
+      <section className="weekly-plan"><div><span className="micro-label">YOUR WEEK, YOUR PACE</span><h3>{weekly.complete ? "Your weekly goal is met!" : `${weekly.studied} of ${weekly.goal} study days this week`}</h3><p>{weekly.complete ? "Keep exploring or take a well-earned break. Your progress stays here." : `${weekly.remaining} more study ${weekly.remaining === 1 ? "day" : "days"} to your goal. A lesson, review, or speaking practice counts.`}</p></div><progress value={Math.min(weekly.studied, weekly.goal)} max={weekly.goal} aria-label="Weekly study goal" /></section>
       <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
       {progress.reviewItems.some((item) => item.lastResult === "again") && <section className="recovery-practice"><div><span className="micro-label">A SECOND CHANCE</span><h3>Turn a missed answer into a remembered one.</h3><p>{progress.reviewItems.filter((item) => item.lastResult === "again").length} cards you marked Again. Practice now, even before the next scheduled review.</p></div><button type="button" className="button button-dark" onClick={onMissedReview}>Practice missed cards</button></section>}
       <div className="dashboard-grid">
@@ -1014,7 +1018,7 @@ function LearnView({
     <div className="content-page">
       <div className="page-intro">
         <p>
-          Your starting level and interests guide the recommended next lesson. Change them in My account whenever you need to.
+          Your starting level and interests guide the recommended next lesson. Change them in My Account whenever you need to.
           Every step stays free.
         </p>
       </div>
@@ -1047,7 +1051,7 @@ function LearnView({
                       key={lesson.id}
                       number={String(index + 1).padStart(2, "0")}
                       title={lesson.title}
-                      detail={`${lesson.detail}${lesson.prerequisiteLessonIds?.length ? ` · ${prerequisite}` : ""}`}
+                      detail={`${lesson.detail} · ${lesson.words.length} concepts${lesson.prerequisiteLessonIds?.length ? ` · ${prerequisite}` : ""}`}
                       tag={complete ? "COMPLETE · REVIEW" : next ? "START HERE" : unlocked ? `${lesson.minutes} MIN · READY` : "LOCKED"}
                       state={complete ? "complete" : unlocked ? "active" : "locked"}
                       onClick={() => onLesson(lesson)}
@@ -1107,13 +1111,16 @@ function CourseRow({
 }
 
 function WordsView({
+  learnedWords,
   apiUrl,
   onHear,
 }: {
+  learnedWords: string[];
   apiUrl?: string;
   onHear: (text: string) => boolean;
 }) {
   const [category, setCategory] = useState("All words");
+  const [collection, setCollection] = useState<"all" | "learned">("all");
   const [search, setSearch] = useState("");
   const [remoteWords, setRemoteWords] = useState<KoreanWord[]>([]);
   const [remoteTotal, setRemoteTotal] = useState(0);
@@ -1194,7 +1201,7 @@ function WordsView({
     const matchesCategory =
       category === "All words" || word.category === category;
     const query = search.trim().toLocaleLowerCase();
-    return matchesCategory && (!query ||
+    return (collection === "all" || learnedWords.includes(word.korean)) && matchesCategory && (!query ||
       `${word.korean} ${word.romanization} ${word.meaning}`
         .toLocaleLowerCase()
         .includes(query));
@@ -1202,6 +1209,7 @@ function WordsView({
   const localWords = [
     ...wordBank,
     ...additionalVocabulary,
+    ...hangulLetters,
     ...offlineReferenceWords,
   ].filter(matchesFilter);
   const visibleRemote = remoteWords.filter(matchesFilter);
@@ -1233,6 +1241,7 @@ function WordsView({
           placeholder="Search Korean, romanization, or meaning"
         />
       </label>
+      <div className="collection-tabs" role="group" aria-label="Word collection"><button type="button" aria-pressed={collection === "all"} onClick={() => setCollection("all")}>Explore all words</button><button type="button" aria-pressed={collection === "learned"} onClick={() => setCollection("learned")}>Words from your lessons · {new Set(learnedWords).size}</button></div>
       <div
         className="word-filters"
         role="group"

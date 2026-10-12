@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Sparkle } from "./icons";
 import { SoriMascot } from "./sori-mascot";
+import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
 
 type TutorAnswer = { explanation: string; hint: string; nextExercise: string };
 type TutorState = "idle" | "thinking" | "error";
@@ -15,7 +16,8 @@ const starters = [
   "How do 에 and 에서 differ?",
 ];
 
-export function TutorPage() {
+export function TutorPage({ learningProfile = defaultLearningProfile }: { learningProfile?: LearningProfile }) {
+  const suggestedStarters = learningProfile.level === "new" ? ["How do I build a Hangul syllable?", "What is the difference between ㅓ and ㅗ?", "How do I introduce myself politely?", "Help me remember a new Korean word."] : learningProfile.level === "intermediate" ? ["How do I connect two Korean actions with -고?", "Explain -(으)ㄹ 거예요 with examples.", "When does 은/는 express contrast?", "Give me a short everyday dialogue to practice."] : starters;
   const [question, setQuestion] = useState("");
   const [state, setState] = useState<TutorState>("idle");
   const [notice, setNotice] = useState("");
@@ -43,7 +45,7 @@ export function TutorPage() {
         body: JSON.stringify({
           question: clean,
           lessonId: "general-korean-tutor",
-          lessonContext: "This is an open Korean-learning question, separate from any speaking exercise. Explain Korean grammar, vocabulary, writing, pronunciation, or usage in the learner’s language. Keep examples accurate and beginner-friendly; distinguish pronunciation guides from exact sounds.",
+          lessonContext: `This is a Korean-learning question. Learner's self-reported starting level: ${learningProfile.level}. Goals: ${learningProfile.reasons.join(", ")}. Tailor difficulty to this level, treating it as self-assessment rather than a tested ability. Explain Korean grammar, vocabulary, writing, pronunciation, or usage with a short example and practice prompt. Keep examples accurate; distinguish pronunciation guides from exact sounds.`,
           consent: true,
         }),
         signal: AbortSignal.timeout(65_000),
@@ -103,7 +105,7 @@ export function TutorPage() {
 
         <div className="tutor-starter-questions" aria-label="Suggested questions">
           <span className="micro-label">TRY ASKING</span>
-          {starters.map((item) => <button type="button" key={item} disabled={state === "thinking"} onClick={() => { setQuestion(item); void ask(undefined, item); }}>{item}</button>)}
+          {suggestedStarters.map((item) => <button type="button" key={item} disabled={state === "thinking"} onClick={() => { setQuestion(item); void ask(undefined, item); }}>{item}</button>)}
         </div>
         {notice && <p className={`tutor-service-message ${state === "error" ? "is-error" : ""}`} role="status">{notice}</p>}
         {answer && (

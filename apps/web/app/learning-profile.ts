@@ -1,6 +1,6 @@
 import { lessons } from "./curriculum";
 import { isLessonUnlocked } from "./learning-pathways";
-export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study"> };
+export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7 };
 export const defaultLearningProfile: LearningProfile = { level: "new", reasons: ["culture"] };
 export function learningRoute(profile = defaultLearningProfile) {
   const foundations = profile.level === "new"

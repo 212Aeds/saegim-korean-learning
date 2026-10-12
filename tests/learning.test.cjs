@@ -9,6 +9,7 @@ const { initialProgress, recordDailyPractice, rateReviewItem } = require('../app
 const { encodeWav } = require('../apps/web/app/ui/openrouter-audio-capture.ts');
 const { recommendedLessons, learningRoute } = require('../apps/web/app/learning-profile.ts');
 const { transcriptRomanization } = require('../apps/web/app/ui/transcript-romanization.ts');
+const { weeklyProgress, accountAvatar } = require('../apps/web/app/account-personalization.ts');
 const { lessons } = require('../apps/web/app/curriculum.ts');
 const { speakingCards } = require('../apps/web/app/speak-cards.ts');
 const { dailyPlan } = require('../apps/web/app/daily-plan.ts');
@@ -116,4 +117,12 @@ test('missed-card practice tracks actual ratings and clears the missed flag afte
   const recovered = rateReviewItem(missed,'test',true);
   assert.equal(recovered.reviewItems[0].lastResult,'remembered');
   assert.equal(recovered.reviewsDone,1);
+});
+test('weekly goal counts unique local study dates and ignores future and previous-week activity', () => {
+  const result = weeklyProgress(['2026-10-04','2026-10-05','2026-10-05','2026-10-06','2026-10-11','2026-10-12'],3,new Date(2026,9,11,12));
+  assert.equal(result.studied,3);
+  assert.equal(result.complete,true);
+  assert.equal(result.remaining,0);
+  assert.equal(accountAvatar(),'🌱');
+  assert.equal(accountAvatar({level:'basic',reasons:['travel'],avatar:'cat'}),'🐱');
 });

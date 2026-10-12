@@ -17,9 +17,7 @@ function firstUncompletedCard(completedIds: string[]) {
 
 function cardForCursor(currentCardId: string | null, completedIds: string[]) {
   const cursorCard = speakingCards.find((item) => item.id === currentCardId);
-  return cursorCard && !completedIds.includes(cursorCard.id)
-    ? cursorCard
-    : firstUncompletedCard(completedIds);
+  return cursorCard ?? firstUncompletedCard(completedIds);
 }
 
 function nextUncompletedCard(currentId: string, completedIds: string[]) {
@@ -110,6 +108,7 @@ export function SpeakDeck({
       <div className={`speak-deck-progress ${completing ? "is-completing" : ""}`} aria-label={`${index + 1} of ${speakingCards.length}`}>
         <i style={{ transform: `scaleX(${(index + 1) / speakingCards.length})` }} />
       </div>
+      <label className="phrase-picker">Choose a useful phrase<select value={card.id} disabled={completing} onChange={(event) => { setFlipped(false); onNavigate(event.target.value); }}>{speakingCards.map((phrase) => <option key={phrase.id} value={phrase.id}>{completedIds.includes(phrase.id) ? "✓ " : ""}{phrase.meaning}</option>)}</select></label>
 
       <article className={`speak-flashcard ${flipped ? "is-flipped" : ""}`}>
         <div className="speak-card-top">

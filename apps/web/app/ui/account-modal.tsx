@@ -6,6 +6,7 @@ import { useDialogFocus } from "./use-dialog-focus";
 import type { LearningPreferences } from "../progress";
 import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
 import { LearningProfileFields } from "./learning-profile-fields";
+import { avatars, accountAvatar } from "../account-personalization";
 
 export type LearnerAccount = {
   id: string;
@@ -179,19 +180,19 @@ export function AccountModal({
       >
         <div className="account-modal-top">
           <span className="account-mark" aria-hidden="true">
-            한
+            {accountAvatar(learningProfile)}
           </span>
           <button
             className="modal-close"
             onClick={onClose}
-            aria-label="Close account"
+            aria-label="Close Account"
           >
             <X size={19} />
           </button>
         </div>
         {account ? (
           <div className="account-content">
-            <h2 id="account-title">Your progress, together.</h2>
+            <h2 id="account-title">Your Account, your pace.</h2>
             <p>
               Signed in as <strong>{account.displayName}</strong> ·{" "}
               {account.email}
@@ -211,6 +212,7 @@ export function AccountModal({
                 </button>
               </div>
               <LearningProfileFields profile={learningProfile} onChange={setLearningProfile} />
+              <fieldset className="learning-profile-fields"><legend>Make it yours</legend><span>Choose your avatar</span><div className="avatar-choices">{Object.entries(avatars).map(([id, symbol]) => <button key={id} type="button" aria-label={`Choose ${id} avatar`} aria-pressed={(learningProfile.avatar ?? "sprout") === id} onClick={() => setLearningProfile({ ...learningProfile, avatar: id as NonNullable<LearningProfile["avatar"]> })}>{symbol}</button>)}</div><label>Your weekly study goal<select value={learningProfile.weeklyGoal ?? 5} onChange={(event) => setLearningProfile({ ...learningProfile, weeklyGoal: Number(event.target.value) as 3 | 5 | 7 })}><option value={3}>3 days · a gentle start</option><option value={5}>5 days · a steady rhythm</option><option value={7}>7 days · a daily habit</option></select></label></fieldset>
             </form>
             {preferences && onPreferencesChange && (
               <section className="learning-preferences" aria-labelledby="learning-preferences-title">
@@ -321,7 +323,7 @@ export function AccountModal({
                 className={mode === "create" ? "selected" : ""}
                 onClick={() => setMode("create")}
               >
-                Create account
+                Create Account
               </button>
               <button
                 type="button"

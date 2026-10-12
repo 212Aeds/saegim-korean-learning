@@ -23,23 +23,22 @@ export function ReviewModal({
   const [sessionItems] = useState(() => shuffle(deduplicateReviewItems(items)));
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [rememberedCount, setRememberedCount] = useState(0);
   const card = sessionItems[index];
 
   function finishCard(remembered: boolean) {
     if (!card) return;
     onRate(card.id, remembered);
-    if (index >= sessionItems.length - 1) {
-      onClose();
-      return;
-    }
+    if (remembered) setRememberedCount((count) => count + 1);
     setIndex((current) => current + 1);
     setRevealed(false);
   }
 
   if (!card) {
+    if (sessionItems.length) return <div className="modal-backdrop"><section ref={dialogRef} className="lesson-modal review-modal" role="dialog" aria-modal="true" aria-labelledby="review-title"><button className="modal-close" onClick={onClose} aria-label="Close review"><X size={20} /></button><div className="review-question"><span className="micro-label">REVIEW SESSION COMPLETE</span><h2 id="review-title">A little recall, a little stronger.</h2><div className="review-summary"><strong>{sessionItems.length}<span>cards practiced</span></strong><strong>{rememberedCount}<span>marked remembered</span></strong><strong>{sessionItems.length - rememberedCount}<span>to revisit</span></strong></div><p>Remembered cards return later. Cards marked Again stay in your recovery practice on Today.</p><button type="button" className="button button-dark" onClick={onClose}>Back to my learning</button></div></section></div>;
     return (
       <div className="modal-backdrop" role="presentation">
-        <section className="lesson-modal review-modal" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <section ref={dialogRef} className="lesson-modal review-modal" role="dialog" aria-modal="true" aria-labelledby="review-title">
           <button className="modal-close" onClick={onClose} aria-label="Close review"><X size={20} /></button>
           <div className="review-question">
             <span className="question-label">ALL CAUGHT UP</span>
