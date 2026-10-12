@@ -31,6 +31,7 @@ import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
 import { DailyPractice } from "./ui/daily-practice";
 import { WordReference } from "./ui/word-reference";
+import { recommendedLessons, defaultLearningProfile, type LearningProfile } from "./learning-profile";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
 import {
@@ -68,12 +69,8 @@ const tabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "tutor", label: "AI Tutor", Icon: ChatCircleDots },
 ];
 
-function nextAvailableLesson(completedLessonIds: string[]) {
-  return lessons.find(
-    (lesson) =>
-      !completedLessonIds.includes(lesson.id) &&
-      isLessonUnlocked(lesson, completedLessonIds),
-  ) ?? lessons[0];
+function nextAvailableLesson(completedLessonIds: string[], profile = defaultLearningProfile) {
+  return recommendedLessons(completedLessonIds, profile)[0] ?? lessons[0];
 }
 
 function normalizeProgress(
@@ -226,7 +223,7 @@ export default function Home() {
     .toUpperCase();
 
   function startLesson(lesson?: Lesson) {
-    setSelectedLesson(lesson ?? nextAvailableLesson(progress.completedLessonIds));
+    setSelectedLesson(lesson ?? nextAvailableLesson(progress.completedLessonIds, account?.learningProfile));
     setLessonOpen(true);
   }
 
@@ -523,6 +520,7 @@ export default function Home() {
           <div className="section-view" key={tab}>
           {tab === "today" && (
             <TodayView
+              learningProfile={account.learningProfile ?? defaultLearningProfile}
               progress={progress}
               todayDate={todayDate}
               onLesson={startLesson}
@@ -538,7 +536,7 @@ export default function Home() {
             />
           )}
           {tab === "learn" && (
-            <LearnView progress={progress} onLesson={startLesson} />
+            <LearnView progress={progress} onLesson={startLesson} learningProfile={account.learningProfile ?? defaultLearningProfile} />
           )}
           {tab === "review" && (
             <ReviewView
@@ -657,6 +655,7 @@ export default function Home() {
 }
 
 function TodayView({
+  learningProfile,
   progress,
   todayDate,
   onLesson,
@@ -665,6 +664,7 @@ function TodayView({
   onTab,
   onGoalChange,
 }: {
+  learningProfile: LearningProfile;
   progress: SavedProgress;
   todayDate: Date;
   onLesson: (lesson?: Lesson) => void;
@@ -686,7 +686,7 @@ function TodayView({
     };
   });
   const dueCount = dueReviewItems(progress).length;
-  const nextLesson = nextAvailableLesson(progress.completedLessonIds);
+  const nextLesson = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   const hangulProgress = pathwayProgress("hangul", progress.completedLessonIds);
   return (
     <>
@@ -718,6 +718,7 @@ function TodayView({
         <div className="primary-column">
           <section className="continue-panel">
             <div className="continue-copy">
+              <span className="micro-label">FOR YOUR LEVEL · {learningProfile.reasons.map((reason) => reason === "work-study" ? "work & study" : reason).join(" + ")}</span>
               <h2>{nextLesson.title}</h2>
               <p>{nextLesson.detail}. A short practice session, always free.</p>
               <div className="lesson-meta">
@@ -993,21 +994,25 @@ function PathStep({
 }
 
 function LearnView({
+  learningProfile,
   progress,
   onLesson,
 }: {
+  learningProfile: LearningProfile;
   progress: SavedProgress;
   onLesson: (lesson?: Lesson) => void;
 }) {
+  const recommendation = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   return (
     <div className="content-page">
       <div className="page-intro">
         <p>
-          Learn the rule before you retrieve it. Follow a foundation, explore everyday Korean, or unlock a mixed challenge path as you go.
+          Your starting level and interests guide the recommended next lesson. Change them in My account whenever you need to.
           Every step stays free.
         </p>
       </div>
       <div className="learning-pathways">
+        <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         {learningPathways.map((pathway) => {
           const pathwayLessons = lessonsForPathway(pathway.id);
           const pathwayStats = pathwayProgress(pathway.id, progress.completedLessonIds);
@@ -1027,7 +1032,7 @@ function LearnView({
                 {pathwayLessons.map((lesson, index) => {
                   const complete = progress.completedLessonIds.includes(lesson.id);
                   const unlocked = isLessonUnlocked(lesson, progress.completedLessonIds);
-                  const next = !complete && unlocked && nextAvailableLesson(progress.completedLessonIds).id === lesson.id;
+                  const next = !complete && unlocked && nextAvailableLesson(progress.completedLessonIds, learningProfile).id === lesson.id;
                   const prerequisite = prerequisiteLabel(lesson, progress.completedLessonIds);
                   return (
                     <CourseRow

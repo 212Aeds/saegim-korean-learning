@@ -1,4 +1,11 @@
 .korean-input { width: 100%; }
+.learning-profile-fields { border: 1px solid #d8dfc9; border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; margin: 14px 0; }
+.learning-profile-fields legend { padding: 0 6px; font-weight: 600; }
+.learning-profile-fields label { display: grid; gap: 8px; }
+.learning-profile-fields select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d8dfc9; background: #fffaf3; color: #314739; font: inherit; }
+.learning-profile-fields label.profile-reason { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.learning-profile-fields .profile-reason input { width: 18px; height: 18px; accent-color: #385442; }
+.learning-profile-fields small { color: #58654f; font-size: 12px; line-height: 1.5; }
 .keyboard-toggle { background: transparent; border: 0; color: #385442; padding: 12px 0; font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 .korean-keyboard { padding: 12px 8px; background: #f1eddf; border: 1px solid #d8d4c3; border-radius: 16px; margin-bottom: 12px; }
 .keyboard-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 6px; }

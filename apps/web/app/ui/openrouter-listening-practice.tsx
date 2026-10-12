@@ -17,7 +17,7 @@ function savedSpeechRate() {
   return rate >= 0.65 && rate <= 1.1 ? rate : 1;
 }
 function compareHangul(expected: string, heard: string) {
-  return compareSpeech(expected, heard);
+  return compareSpeech(expected, heard, true);
 }
 
 export function OpenRouterListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange }: {
@@ -125,7 +125,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
     captureRef.current = null;
     setMicLevel(0);
     window.clearTimeout(capture.timer);
-    setBusy("transcribing"); setNotice("Transcribing your recording with Whisper…");
+    setBusy("transcribing"); setNotice("Checking your answer…");
     let wav: ArrayBuffer | undefined;
     try {
       if (!capture.speechDetected) throw new Error("No speech detected. Try again closer to your microphone, or switch to writing.");
@@ -134,7 +134,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
         method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(20_000),
         headers: { "Content-Type": "audio/wav", "X-Sori-Speech-Consent": "true" }, body: wav,
       });
-      if (!response.ok) throw new Error(response.status === 429 ? "The speech provider is temporarily busy. Please try again or type your phrase." : "Whisper could not transcribe this clip. Try again or type your phrase.");
+      if (!response.ok) throw new Error("Couldn’t hear your answer clearly. Try again or switch to writing.");
       const result = await response.json() as { transcript?: unknown };
       if (typeof result.transcript !== "string" || !result.transcript.trim()) throw new Error("No words were detected. Check the live mic level, speak a little closer, and try again.");
       setHeard(result.transcript.trim());
@@ -189,7 +189,6 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
               <div className="speech-practice-actions"><button className="button button-dark" type="submit" disabled={!written.trim()}>Check writing</button><button type="button" className="button button-quiet" onClick={() => { setWriteInstead(false); setWritten(""); setNotice(""); }}>Use microphone</button></div>
             </form>
           )}
-          <p className="openrouter-practice-note">Recording stops after a short silence. Microphone audio is sent to OpenRouter for transcription; you can switch to writing.</p>
           {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
           {heard && <div className="speech-transcript"><span className="micro-label">SORI HEARD</span><p lang="ko">{heard}</p></div>}
           {statusReady && !transcriptionAvailable && <small>Speech recognition is unavailable right now. Switch to writing to continue this exercise.</small>}
@@ -198,7 +197,6 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
         <>
       <h4><SpeakerHigh size={16} /> Listen, then speak</h4>
       <div className="openrouter-practice-body">
-        <p className="openrouter-practice-note">Listen to the model, then record your pronunciation. When you record, your audio is sent to OpenRouter for transcription; Sori compares the transcript with the target.</p>
         <p className="openrouter-practice-target"><strong lang="ko">{korean}</strong>{english && <span>{english}</span>}</p>
         <label className="openrouter-voice-picker">Korean voice
           <select value={voice} onChange={(event) => { const next = event.target.value as ElevenLabsVoice; setVoice(next); saveElevenLabsVoice(next); onVoiceChange?.(next); }}>
@@ -218,8 +216,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
           <div className="speech-input-meter-track" role="meter" aria-label="Live microphone input level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={micLevel}><span style={{ transform: `scaleX(${micLevel / 100})` }} /></div>
         </div>}
         {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
-        {heard && <div className="speech-transcript"><span className="micro-label">WHISPER HEARD</span><p lang="ko">{heard}</p><small>Target: <span lang="ko">{korean}</span></small></div>}
-        {!statusReady ? <small>Checking audio availability…</small> : !synthesisAvailable || !transcriptionAvailable ? <small>Natural voice or Whisper transcription is temporarily unavailable. The lesson remains available; try again later.</small> : <small>Sori stays free to learners. Whisper compares recognized text with the target; it cannot measure pitch, sound quality, or accent from transcription alone.</small>}
+        {heard && <div className="speech-transcript"><span className="micro-label">YOUR ANSWER</span><p lang="ko">{heard}</p></div>}
       </div>
         </>
       )}

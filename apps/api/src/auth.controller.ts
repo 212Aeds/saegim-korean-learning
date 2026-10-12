@@ -36,18 +36,22 @@ const loginSchema = z.object({
     .transform((value) => value.toLowerCase()),
   password: z.string().min(12).max(128),
 });
+const learningProfileSchema = z.object({ level: z.enum(["new", "hangul", "basic", "intermediate"]), reasons: z.array(z.enum(["family", "travel", "culture", "work-study"])).min(1).max(4).transform((reasons) => [...new Set(reasons)]) });
 const registerSchema = loginSchema.extend({
   displayName: z.string().trim().min(1).max(40),
+  learningProfile: learningProfileSchema.default({ level: "new", reasons: ["culture"] }),
 });
 const accountNameSchema = z.strictObject({
   displayName: z.string().trim().min(1).max(40),
+  learningProfile: learningProfileSchema.optional(),
 });
 
-type Account = { id: string; email: string; displayName: string };
+type Account = { id: string; email: string; displayName: string; learningProfile: z.infer<typeof learningProfileSchema> };
 type AccountRow = {
   id: string;
   email: string;
   display_name: string;
+  learning_profile: z.infer<typeof learningProfileSchema>;
   password_hash?: string;
 };
 type AuthenticatedRequest = Request & { soriAccount?: Account };
@@ -128,10 +132,10 @@ export class AuthController {
     try {
       const passwordHash = await hashPassword(input.data.password);
       const created = await this.database.query<AccountRow>(
-        `INSERT INTO learner_accounts (email, display_name, password_hash)
-         VALUES ($1, $2, $3)
-         RETURNING id, email, display_name`,
-        [input.data.email, input.data.displayName, passwordHash],
+        `INSERT INTO learner_accounts (email, display_name, password_hash, learning_profile)
+         VALUES ($1, $2, $3, $4::jsonb)
+         RETURNING id, email, display_name, learning_profile`,
+        [input.data.email, input.data.displayName, passwordHash, JSON.stringify(input.data.learningProfile)],
       );
       account = this.publicAccount(created.rows[0]);
     } catch (error) {
@@ -176,7 +180,7 @@ export class AuthController {
     let account: Account;
     try {
       const result = await this.database.query<AccountRow>(
-        `SELECT id, email, display_name, password_hash
+        `SELECT id, email, display_name, password_hash, learning_profile
          FROM learner_accounts WHERE email = $1`,
         [input.data.email],
       );
@@ -234,9 +238,9 @@ export class AuthController {
     }
     try {
       const updated = await this.database.query<AccountRow>(
-        `UPDATE learner_accounts SET display_name = $2
-         WHERE id = $1 RETURNING id, email, display_name`,
-        [account.id, input.data.displayName],
+        `UPDATE learner_accounts SET display_name = $2, learning_profile = COALESCE($3::jsonb, learning_profile)
+         WHERE id = $1 RETURNING id, email, display_name, learning_profile`,
+        [account.id, input.data.displayName, input.data.learningProfile ? JSON.stringify(input.data.learningProfile) : null],
       );
       if (!updated.rowCount) {
         throw new HttpException({ message: "Your account could not be found." }, HttpStatus.NOT_FOUND);
@@ -389,7 +393,7 @@ export class AuthController {
   }
 
   private publicAccount(row: AccountRow): Account {
-    return { id: row.id, email: row.email, displayName: row.display_name };
+    return { id: row.id, email: row.email, displayName: row.display_name, learningProfile: row.learning_profile };
   }
 
   private rateKey(bucket: string, identifier: string) {
@@ -485,7 +489,7 @@ export class AuthController {
       "DELETE FROM learner_sessions WHERE expires_at <= now()",
     );
     const result = await this.database.query<AccountRow>(
-      `SELECT accounts.id, accounts.email, accounts.display_name
+      `SELECT accounts.id, accounts.email, accounts.display_name, accounts.learning_profile
        FROM learner_sessions sessions
        JOIN learner_accounts accounts ON accounts.id = sessions.account_id
        WHERE sessions.token_hash = $1 AND sessions.expires_at > now()`,

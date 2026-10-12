@@ -1,4 +1,5 @@
 import { moreLessons } from "./more-lessons";
+import { newLessons } from "./new-lessons";
 
 export type MultipleChoiceQuestion = {
   id: string;
@@ -421,6 +422,7 @@ export const lessons: Lesson[] = [
     ],
   },
   ...moreLessons,
+  ...newLessons,
 ];
 
 export function shuffle<T>(items: T[]): T[] {

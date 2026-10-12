@@ -7,6 +7,10 @@ const { editKorean } = require('../apps/web/app/ui/korean-input.ts');
 const { compareSpeech, silenceDecision } = require('../apps/web/app/ui/speech-check.ts');
 const { initialProgress, recordDailyPractice } = require('../apps/web/app/progress.ts');
 const { encodeWav } = require('../apps/web/app/ui/openrouter-audio-capture.ts');
+const { recommendedLessons } = require('../apps/web/app/learning-profile.ts');
+const { lessons } = require('../apps/web/app/curriculum.ts');
+const { speakingCards } = require('../apps/web/app/speak-cards.ts');
+const { dailyPlan } = require('../apps/web/app/daily-plan.ts');
 test('keyboard composes and deletes jamo, including compound vowels and cursor selection', () => {
   assert.equal(editKorean('ㄴ', 1, 1, 'ㅓ').value, '너');
   assert.equal(editKorean('너', 1, 1, 'backspace').value, 'ㄴ');
@@ -45,4 +49,46 @@ test('recording removes long silence, retains speech padding, and rejects silent
   const header = new DataView(wav);
   assert.equal(header.getUint32(40, true), wav.byteLength - 44);
   assert.throws(() => encodeWav({ ...capture, chunks: [new Float32Array(samples.length)] }), /No speech/);
+});
+test('price speaking accepts equivalent questions without accepting a different question or writing typo', () => {
+  assert.equal(compareSpeech('이거 얼마예요?', '이것은 얼마예요?', true).matches, true);
+  assert.equal(compareSpeech('이거 얼마예요?', '이거 얼마에요?', true).matches, true);
+  assert.equal(compareSpeech('이거 얼마예요?', '얼마예요?', true).matches, true);
+  assert.equal(compareSpeech('이거 얼마예요?', '어디예요?', true).matches, false);
+  assert.equal(compareSpeech('이거 얼마예요?', '이거 얼마에요?', false).matches, false);
+});
+test('every speaking target accepts itself and rejects an unrelated utterance', () => {
+  for (const card of speakingCards) {
+    assert.equal(compareSpeech(card.korean, card.korean, true).matches, true, card.id);
+    assert.equal(compareSpeech(card.korean, '도서관에서 책을 빌려요', true).matches, false, card.id);
+  }
+});
+test('recommendations use proficiency, avoid completed lessons, and preserve prerequisites', () => {
+  const beginner = recommendedLessons([], { level: 'new', reasons: ['travel'] });
+  assert.equal(beginner[0].category, 'Hangul');
+  const traveler = recommendedLessons([], { level: 'basic', reasons: ['travel'] });
+  assert.notEqual(traveler[0].category, 'Hangul');
+  const after = recommendedLessons([traveler[0].id], { level: 'basic', reasons: ['travel'] });
+  assert.ok(after.every((lesson) => lesson.id !== traveler[0].id));
+  assert.ok(after.every((lesson) => (lesson.prerequisiteLessonIds ?? []).every((id) => !lessons.some((item) => item.id === id) || id === traveler[0].id)));
+});
+test('new lessons have unique identities, valid prerequisites, and nonempty authored questions', () => {
+  const ids = new Set(lessons.map((lesson) => lesson.id));
+  assert.equal(ids.size, lessons.length);
+  for (const id of ['shopping-prices', 'travel-find-places', 'family-short-introductions']) {
+    const lesson = lessons.find((lesson) => lesson.id === id);
+    assert.ok(lesson.questions.length >= 5);
+    assert.ok(lesson.prerequisiteLessonIds.every((required) => ids.has(required)));
+  }
+});
+test('quests omit unavailable reviews, ignore yesterday, and offer revisits after course completion', () => {
+  const date = new Date(2026, 9, 11, 12);
+  const empty = dailyPlan(initialProgress, date);
+  assert.equal(empty.reviewGoal, 0);
+  assert.equal(empty.daily.lessons.length, 0);
+  const old = { ...initialProgress, completedLessonIds: lessons.map((lesson) => lesson.id), dailyPractice: { date: '2026-10-10', lessons: ['old'], reviews: ['old'], speaking: ['old'] } };
+  const plan = dailyPlan(old, date);
+  assert.equal(plan.revisit, true);
+  assert.equal(plan.lessonGoal, 1);
+  assert.equal(plan.daily.lessons.length, 0);
 });

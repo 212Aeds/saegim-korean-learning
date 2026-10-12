@@ -4,11 +4,14 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle, SignOut, X } from "./icons";
 import { useDialogFocus } from "./use-dialog-focus";
 import type { LearningPreferences } from "../progress";
+import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
+import { LearningProfileFields } from "./learning-profile-fields";
 
 export type LearnerAccount = {
   id: string;
   email: string;
   displayName: string;
+  learningProfile?: LearningProfile;
 };
 
 export function AccountModal({
@@ -43,6 +46,8 @@ export function AccountModal({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [profileName, setProfileName] = useState(account?.displayName ?? "");
+  const [learningProfile, setLearningProfile] = useState(account?.learningProfile ?? defaultLearningProfile);
+  const profileChanged = JSON.stringify(learningProfile) !== JSON.stringify(account?.learningProfile ?? defaultLearningProfile);
   useEffect(() => setProfileName(account?.displayName ?? ""), [account?.displayName]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -57,7 +62,7 @@ export function AccountModal({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, displayName }),
+          body: JSON.stringify({ email, password, displayName, ...(mode === "create" ? { learningProfile } : {}) }),
         },
       );
       const body = (await response.json()) as
@@ -101,7 +106,7 @@ export function AccountModal({
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: profileName }),
+        body: JSON.stringify({ displayName: profileName, learningProfile }),
       });
       const body = (await response.json()) as LearnerAccount | { message?: string };
       if (!response.ok || !("id" in body)) {
@@ -109,7 +114,7 @@ export function AccountModal({
       }
       setProfileName(body.displayName);
       onAccountUpdated(body);
-      setMessage("Your name is saved. It will appear in your welcome message.");
+      setMessage("Your profile is saved. Your next lesson is tailored to your level and interests.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Your name could not be saved.");
     } finally {
@@ -201,10 +206,11 @@ export function AccountModal({
               <label htmlFor="profile-name">Name to use around Sori</label>
               <div>
                 <input id="profile-name" value={profileName} onChange={(event) => setProfileName(event.target.value)} maxLength={40} required />
-                <button className="button button-quiet" type="submit" disabled={busy || !profileName.trim() || profileName.trim() === account.displayName}>
-                  Save name
+                <button className="button button-quiet" type="submit" disabled={busy || !profileName.trim() || !learningProfile.reasons.length || (!profileChanged && profileName.trim() === account.displayName)}>
+                  Save profile
                 </button>
               </div>
+              <LearningProfileFields profile={learningProfile} onChange={setLearningProfile} />
             </form>
             {preferences && onPreferencesChange && (
               <section className="learning-preferences" aria-labelledby="learning-preferences-title">
@@ -372,6 +378,7 @@ export function AccountModal({
                     <small>Use at least 12 characters.</small>
                   )}
                 </label>
+                {mode === "create" && <LearningProfileFields profile={learningProfile} onChange={setLearningProfile} />}
                 {message && (
                   <p className="account-message" role="alert">
                     {message}
@@ -379,7 +386,7 @@ export function AccountModal({
                 )}
                 <button
                   className="button button-dark account-submit"
-                  disabled={busy}
+                  disabled={busy || (mode === "create" && !learningProfile.reasons.length)}
                 >
                   {busy
                     ? "One moment…"

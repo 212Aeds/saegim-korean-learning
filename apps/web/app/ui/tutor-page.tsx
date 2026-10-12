@@ -81,7 +81,6 @@ export function TutorPage() {
           </div>
         </div>
 
-        <p className="tutor-ai-disclosure">The Tutor is free for you to use. Your question is sent to Google Gemini through OpenRouter to generate an answer. Sori does not save chat history; please leave out private details.</p>
         <form className="tutor-ask-form" onSubmit={(event) => void ask(event)}>
           {state === "thinking" ? (
             <div className="tutor-prompt-thinking" role="status" aria-live="polite" aria-busy="true">

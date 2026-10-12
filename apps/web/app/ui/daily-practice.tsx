@@ -1,15 +1,13 @@
 "use client";
-import { dueReviewItems, localDateKey, type SavedProgress } from "../progress";
+import { type SavedProgress } from "../progress";
 import { SoriMascot } from "./sori-mascot";
+import { dailyPlan } from "../daily-plan";
 
 export function DailyPractice({ progress, onLesson, onReview, onSpeak }: { progress: SavedProgress; onLesson: () => void; onReview: () => void; onSpeak: () => void }) {
-  const daily = progress.dailyPractice.date === localDateKey() ? progress.dailyPractice : { lessons: [], reviews: [], speaking: [] };
-  const lessonGoal = Math.max(1, Math.ceil(progress.dailyGoalMinutes / 20));
-  const reviewGoal = Math.min(20, Math.max(3, Math.ceil(progress.dailyGoalMinutes / 3)), dueReviewItems(progress).length + daily.reviews.length);
-  const speakingGoal = progress.dailyGoalMinutes >= 15 ? Math.ceil(progress.dailyGoalMinutes / 20) : 0;
+  const { daily, revisit, lessonGoal, reviewGoal, speakingGoal } = dailyPlan(progress);
   const tasks = [
-    { label: `Complete ${lessonGoal} lesson${lessonGoal === 1 ? "" : "s"}`, value: daily.lessons.length, goal: lessonGoal, action: onLesson },
-    { label: reviewGoal ? `Recall ${reviewGoal} different cards` : "Scheduled reviews caught up", value: daily.reviews.length, goal: reviewGoal, action: onReview },
+    { label: `${revisit ? "Revisit" : "Complete"} ${lessonGoal} lesson${lessonGoal === 1 ? "" : "s"}`, value: daily.lessons.length, goal: lessonGoal, action: onLesson },
+    ...(reviewGoal ? [{ label: `Review ${reviewGoal} different cards`, value: daily.reviews.length, goal: reviewGoal, action: onReview }] : []),
     ...(speakingGoal ? [{ label: `Practice ${speakingGoal} speaking concept${speakingGoal === 1 ? "" : "s"}`, value: daily.speaking.length, goal: speakingGoal, action: onSpeak }] : []),
   ];
   const complete = tasks.every((task) => task.value >= task.goal);

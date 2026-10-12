@@ -400,7 +400,7 @@ export function LessonModal({
           </div>
         ) : null}
         <div className="modal-bottom">
-          <span>Speaking rounds can switch to writing. Mic audio is sent to OpenRouter for transcription.</span>
+          <span>Learn at your own pace. Switch to writing whenever you need to.</span>
           <span className="modal-free"><i /> 100% free</span>
         </div>
       </section>
