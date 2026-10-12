@@ -136,7 +136,7 @@ export function TutorPanel({ lessonId, context, curatedHint }: {
             <span className="micro-label">LESSON HINT</span>
             <p>{curatedHint}</p>
           </div>
-          <p className="tutor-consent-copy">If you ask, your question and this lesson or card context go to OpenAI for an answer. OpenAI does not use API data to train models by default. Abuse-monitoring logs may retain it for up to 30 days. Sori does not save this conversation.</p>
+          <p className="tutor-consent-copy">If you ask, your question and this lesson or card context go to OpenAI for an answer. OpenAI does not use API data to train models by default. Abuse-monitoring logs may retain it for up to 30 days. Saegim does not save this conversation.</p>
           <label className="tutor-consent">
             <input type="checkbox" checked={consented} onChange={(event) => {
               if (!event.target.checked) {

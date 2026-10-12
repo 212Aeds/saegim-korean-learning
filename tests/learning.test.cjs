@@ -5,9 +5,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { editKorean } = require('../apps/web/app/ui/korean-input.ts');
 const { compareSpeech, silenceDecision } = require('../apps/web/app/ui/speech-check.ts');
-const { initialProgress, recordDailyPractice } = require('../apps/web/app/progress.ts');
+const { initialProgress, recordDailyPractice, rateReviewItem } = require('../apps/web/app/progress.ts');
 const { encodeWav } = require('../apps/web/app/ui/openrouter-audio-capture.ts');
-const { recommendedLessons } = require('../apps/web/app/learning-profile.ts');
+const { recommendedLessons, learningRoute } = require('../apps/web/app/learning-profile.ts');
+const { transcriptRomanization } = require('../apps/web/app/ui/transcript-romanization.ts');
 const { lessons } = require('../apps/web/app/curriculum.ts');
 const { speakingCards } = require('../apps/web/app/speak-cards.ts');
 const { dailyPlan } = require('../apps/web/app/daily-plan.ts');
@@ -91,4 +92,28 @@ test('quests omit unavailable reviews, ignore yesterday, and offer revisits afte
   assert.equal(plan.revisit, true);
   assert.equal(plan.lessonGoal, 1);
   assert.equal(plan.daily.lessons.length, 0);
+});
+test('profile routes are complete, unique, and put prerequisites before dependent lessons', () => {
+  for (const level of ['new', 'hangul', 'basic', 'intermediate']) {
+    const route = learningRoute({level, reasons: ['travel']});
+    assert.equal(route.length, lessons.length);
+    assert.equal(new Set(route.map((item)=>item.id)).size, lessons.length);
+    for (const lesson of route) for (const prerequisite of lesson.prerequisiteLessonIds ?? []) {
+      assert.ok(route.findIndex((item)=>item.id===prerequisite) < route.indexOf(lesson), lesson.id);
+    }
+  }
+});
+test('romanization follows what was heard, not the expected answer', () => {
+  assert.equal(transcriptRomanization('너'), 'neo');
+  assert.equal(transcriptRomanization('사과'), 'sagwa');
+  assert.equal(transcriptRomanization('학교'), 'hakgyo');
+  assert.equal(transcriptRomanization(''), '');
+});
+test('missed-card practice tracks actual ratings and clears the missed flag after recall', () => {
+  const card = {id:'test',front:'너',question:'Recall',answer:'you',note:'Test',repetitions:0,dueAt:new Date().toISOString()};
+  const missed = rateReviewItem({...initialProgress,reviewItems:[card]}, 'test', false);
+  assert.equal(missed.reviewItems[0].lastResult,'again');
+  const recovered = rateReviewItem(missed,'test',true);
+  assert.equal(recovered.reviewItems[0].lastResult,'remembered');
+  assert.equal(recovered.reviewsDone,1);
 });

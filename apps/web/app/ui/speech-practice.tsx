@@ -118,7 +118,7 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       uploading.current = true;
       const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
         method: "POST", credentials: "include", cache: "no-store", signal: controller.signal,
-        headers: { "Content-Type": "audio/wav", "X-Sori-Speech-Consent": "true" }, body: audio,
+        headers: { "Content-Type": "audio/wav", "X-Saegim-Speech-Consent": "true" }, body: audio,
       });
       if (!response.ok) {
         throw new Error(response.status === 429 ? "The speech provider is temporarily busy. Type your response or try again." :
@@ -233,7 +233,7 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
         {active && <button className="button button-quiet" onClick={() => cancel()}>Cancel</button>}
       </div>
       {showConsent && <div className="speech-consent">
-        <p>If speech becomes enabled, a short recording leaves Sori for the speech provider to transcribe. Sori keeps the recording and transcript only for this attempt. Provider terms about training use and project billing are still under review, so speech is currently unavailable.</p>
+        <p>If speech becomes enabled, a short recording leaves Saegim for the speech provider to transcribe. Saegim keeps the recording and transcript only for this attempt. Provider terms about training use and project billing are still under review, so speech is currently unavailable.</p>
         <label><input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} /> I agree to send this one clip for transcription.</label>
         <div className="speech-practice-actions">
           <button className="button button-dark" disabled={!consented} onClick={() => void start()}>Start this attempt</button>

@@ -5,6 +5,7 @@ import { Microphone, SpeakerHigh, Stop } from "./icons";
 import { SoriMascot } from "./sori-mascot";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
+import { transcriptRomanization } from "./transcript-romanization";
 import { compareSpeech, silenceDecision } from "./speech-check";
 import { encodeWav, maxClipSeconds, releaseCapture, type OpenRouterCapture } from "./openrouter-audio-capture";
 import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, type ElevenLabsVoice } from "./speech";
@@ -132,7 +133,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
       wav = encodeWav(capture); releaseCapture(capture);
       const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
         method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(20_000),
-        headers: { "Content-Type": "audio/wav", "X-Sori-Speech-Consent": "true" }, body: wav,
+        headers: { "Content-Type": "audio/wav", "X-Saegim-Speech-Consent": "true" }, body: wav,
       });
       if (!response.ok) throw new Error("Couldn’t hear your answer clearly. Try again or switch to writing.");
       const result = await response.json() as { transcript?: unknown };
@@ -190,7 +191,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
             </form>
           )}
           {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
-          {heard && <div className="speech-transcript"><span className="micro-label">SORI HEARD</span><p lang="ko">{heard}</p></div>}
+          {heard && <div className="speech-transcript"><span className="micro-label">YOUR ANSWER</span><p lang="ko">{heard}</p><p className="transcript-romanization" lang="ko-Latn">{transcriptRomanization(heard)}</p></div>}
           {statusReady && !transcriptionAvailable && <small>Speech recognition is unavailable right now. Switch to writing to continue this exercise.</small>}
         </>
       ) : (
@@ -216,7 +217,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
           <div className="speech-input-meter-track" role="meter" aria-label="Live microphone input level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={micLevel}><span style={{ transform: `scaleX(${micLevel / 100})` }} /></div>
         </div>}
         {notice && <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>}
-        {heard && <div className="speech-transcript"><span className="micro-label">YOUR ANSWER</span><p lang="ko">{heard}</p></div>}
+        {heard && <div className="speech-transcript"><span className="micro-label">YOUR ANSWER</span><p lang="ko">{heard}</p><p className="transcript-romanization" lang="ko-Latn">{transcriptRomanization(heard)}</p></div>}
       </div>
         </>
       )}

@@ -35,6 +35,7 @@ export const defaultLearningPreferences: LearningPreferences = {
 };
 
 export type ReviewItem = {
+  lastResult?: "again" | "remembered";
   id: string;
   front: string;
   question: string;
@@ -224,7 +225,7 @@ export function rateReviewItem(
     const dueAt = new Date(
       now.getTime() + (remembered ? days * 86_400_000 : 10 * 60_000),
     ).toISOString();
-    return { ...item, repetitions, dueAt };
+    return { ...item, repetitions, dueAt, lastResult: remembered ? "remembered" as const : "again" as const };
   });
   const next = { ...progress, reviewItems };
   return recordActivity(

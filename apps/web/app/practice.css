@@ -1,4 +1,17 @@
 .korean-input { width: 100%; }
+.speech-transcript .transcript-romanization { font-size: 14px; color: #627058; margin: 6px 0 0; }
+.learning-roadmap { padding: 24px; border: 1px solid #d8dfc9; border-radius: 20px; background: #fffaf3; margin: 0 0 24px; }
+.learning-roadmap h3 { margin: 10px 0; font-size: 22px; }
+.learning-roadmap p, .learning-roadmap small { font-size: 13px; color: #58654f; line-height: 1.5; }
+.learning-roadmap ol { list-style: none; padding: 0; margin: 18px 0; }
+.learning-roadmap li { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #e2e5d8; }
+.learning-roadmap li div { flex: 1; }
+.learning-roadmap li p { margin: 5px 0 0; }
+.roadmap-number { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #e8f0df; flex-shrink: 0; color: #385442; }
+.recovery-practice { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; background: #f4e9da; border-radius: 20px; margin-bottom: 24px; }
+.recovery-practice h3 { margin: 8px 0; }
+.recovery-practice p { font-size: 14px; color: #655942; }
+@media(max-width: 520px) { .learning-roadmap { padding: 16px; } .learning-roadmap li { flex-wrap: wrap; } .learning-roadmap li div { flex-basis: 70%; } .learning-roadmap li button { margin-left: 42px; } .recovery-practice { flex-direction: column; align-items: stretch; } }
 .learning-profile-fields { border: 1px solid #d8dfc9; border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; margin: 14px 0; }
 .learning-profile-fields legend { padding: 0 6px; font-weight: 600; }
 .learning-profile-fields label { display: grid; gap: 8px; }

@@ -107,7 +107,7 @@ self.addEventListener("message", (event: MessageEvent<TutorRequest>) => {
       : typeof generated === "string" ? generated.trim() : "";
     if (!text) throw new Error("The tutor generated an empty response. Please try asking another way.");
     if (isDegenerateAnswer(text)) {
-      throw new Error("Sori’s small offline model repeated itself. Try rephrasing, or use the reviewed guide for this topic.");
+      throw new Error("Saegim’s small offline model repeated itself. Try rephrasing, or use the reviewed guide for this topic.");
     }
     send({ type: "answer", requestId: request.requestId, text });
   }).catch((error: unknown) => {

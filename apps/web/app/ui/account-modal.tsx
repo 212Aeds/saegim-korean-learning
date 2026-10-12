@@ -136,7 +136,7 @@ export function AccountModal({
       link.href = URL.createObjectURL(
         new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
       );
-      link.download = "sori-learning-data.json";
+      link.download = "saegim-learning-data.json";
       link.click();
       URL.revokeObjectURL(link.href);
     } catch {
@@ -148,7 +148,7 @@ export function AccountModal({
 
   async function deleteAccount() {
     const confirmed = window.confirm(
-      "Delete your Sori account and synced progress? This cannot be undone. Your copy on this device will stay here.",
+      "Delete your Saegim account and synced progress? This cannot be undone. Your copy on this device will stay here.",
     );
     if (!confirmed) return;
     setBusy(true);
@@ -203,7 +203,7 @@ export function AccountModal({
               </span>
             </div>
             <form className="account-profile-form" onSubmit={(event) => void saveProfileName(event)}>
-              <label htmlFor="profile-name">Name to use around Sori</label>
+              <label htmlFor="profile-name">Name to use around Saegim</label>
               <div>
                 <input id="profile-name" value={profileName} onChange={(event) => setProfileName(event.target.value)} maxLength={40} required />
                 <button className="button button-quiet" type="submit" disabled={busy || !profileName.trim() || !learningProfile.reasons.length || (!profileChanged && profileName.trim() === account.displayName)}>

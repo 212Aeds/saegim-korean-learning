@@ -39,6 +39,7 @@ export const progressSchema = z.object({
         accepted: z.array(z.string().min(1).max(120)).max(20).optional(),
         note: z.string().min(1).max(500),
         repetitions: z.number().int().min(0).max(100_000),
+        lastResult: z.enum(["again", "remembered"]).optional(),
         dueAt: z.string().datetime(),
       }),
     )

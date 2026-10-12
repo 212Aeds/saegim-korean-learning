@@ -27,7 +27,7 @@ export function TutorPage() {
     if (!clean || state === "thinking") return;
     if (!apiUrl) {
       setState("error");
-      setNotice("Sori’s tutor service is not connected right now. Try again later.");
+      setNotice("Saegim’s tutor service is not connected right now. Try again later.");
       return;
     }
     setQuestion(clean);
@@ -51,21 +51,21 @@ export function TutorPage() {
       if (!response.ok) {
         if (response.status === 429) {
           const body = await response.json().catch(() => null) as { message?: unknown } | null;
-          throw new Error(typeof body?.message === "string" ? body.message : "Sori’s Tutor is busy right now. Please try again a little later.");
+          throw new Error(typeof body?.message === "string" ? body.message : "Saegim’s Tutor is busy right now. Please try again a little later.");
         }
         if (response.status === 401) throw new Error("Please sign in again to use the tutor.");
-        if (response.status === 503) throw new Error("Sori’s Tutor is temporarily unavailable. Your question is still here; please try again.");
-        throw new Error("Sori’s tutor could not answer right now. Your question is still here; please try again.");
+        if (response.status === 503) throw new Error("Saegim’s Tutor is temporarily unavailable. Your question is still here; please try again.");
+        throw new Error("Saegim’s tutor could not answer right now. Your question is still here; please try again.");
       }
       const value = await response.json() as Partial<TutorAnswer>;
       if (typeof value.explanation !== "string" || typeof value.hint !== "string" || typeof value.nextExercise !== "string") {
-        throw new Error("Sori’s tutor returned an incomplete answer. Please try again.");
+        throw new Error("Saegim’s tutor returned an incomplete answer. Please try again.");
       }
       setAnswer({ question: clean, content: { explanation: value.explanation, hint: value.hint, nextExercise: value.nextExercise } });
       setState("idle");
     } catch (error) {
       setState("error");
-      setNotice(error instanceof Error ? error.message : "Sori’s tutor could not answer right now.");
+      setNotice(error instanceof Error ? error.message : "Saegim’s tutor could not answer right now.");
     }
   }
 
@@ -76,7 +76,7 @@ export function TutorPage() {
           <SoriMascot className={`tutor-chat-mascot ${state === "thinking" ? "is-thinking" : ""}`} />
           <div>
             <span className="micro-label"><Sparkle size={14} /> YOUR KOREAN TUTOR</span>
-            <h2 id="tutor-title">Ask Sori anything<br />about Korean.</h2>
+            <h2 id="tutor-title">Ask Saegim anything<br />about Korean.</h2>
             <p>A focused tutor for grammar, words, writing, pronunciation, and when to use a phrase. No model download or speaking practice in this section.</p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export function TutorPage() {
           {state === "thinking" ? (
             <div className="tutor-prompt-thinking" role="status" aria-live="polite" aria-busy="true">
               <SoriMascot className="tutor-thinking-mascot" />
-              <div><strong>Sori is thinking</strong><span>Finding a clear explanation and a useful example…</span></div>
+              <div><strong>Saegim is thinking</strong><span>Finding a clear explanation and a useful example…</span></div>
               <i aria-hidden="true" />
             </div>
           ) : (
@@ -95,7 +95,7 @@ export function TutorPage() {
                 <textarea value={question} onChange={(event) => { setQuestion(event.target.value); setAnswer(null); setNotice(""); }} maxLength={600} rows={4} placeholder="Why does this sentence use 은 instead of 이?" />
               </label>
               <button type="submit" className="button button-dark" disabled={!question.trim()}>
-                Ask Sori <ArrowRight size={17} />
+                Ask Saegim <ArrowRight size={17} />
               </button>
             </>
           )}
@@ -120,7 +120,7 @@ export function TutorPage() {
             </div>
           </article>
         )}
-        <p className="tutor-boundary-note">Sori’s answers are AI-generated and can make mistakes. Korean examples are generated from the question context; check subtle usage with a trusted teacher when it matters.</p>
+        <p className="tutor-boundary-note">Saegim’s answers are AI-generated and can make mistakes. Korean examples are generated from the question context; check subtle usage with a trusted teacher when it matters.</p>
       </section>
     </div>
   );

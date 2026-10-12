@@ -586,7 +586,7 @@ export function LocalSpeechPractice({ expectedKorean, expectedRomanization, expe
         </button>
       </form>
       {transcript && <div className="speech-transcript"><p lang="ko">{transcript}</p><strong>{matches ? "Match" : "Try again"}</strong></div>}
-      <small className="local-speech-privacy">Offline model files download once from Hugging Face after you choose Enable. Inference then runs in this browser; microphone audio and transcripts are never sent to Sori or a speech provider. Feedback compares the recognized text with the target; it is an estimate, not phoneme-level pronunciation scoring. Model: <a href="https://huggingface.co/onnx-community/whisper-tiny" target="_blank" rel="noreferrer">Whisper tiny</a> (Apache 2.0 base model). Browser speech packs and typed answers are also available.</small>
+      <small className="local-speech-privacy">Offline model files download once from Hugging Face after you choose Enable. Inference then runs in this browser; microphone audio and transcripts are never sent to Saegim or a speech provider. Feedback compares the recognized text with the target; it is an estimate, not phoneme-level pronunciation scoring. Model: <a href="https://huggingface.co/onnx-community/whisper-tiny" target="_blank" rel="noreferrer">Whisper tiny</a> (Apache 2.0 base model). Browser speech packs and typed answers are also available.</small>
       <OpenRouterListeningPractice korean={expectedKorean} english={expectedTranslation} />
     </section>
   );

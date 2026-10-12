@@ -31,6 +31,7 @@ import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
 import { DailyPractice } from "./ui/daily-practice";
 import { WordReference } from "./ui/word-reference";
+import { LearningRoadmap } from "./ui/learning-roadmap";
 import { recommendedLessons, defaultLearningProfile, type LearningProfile } from "./learning-profile";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
@@ -124,6 +125,7 @@ export default function Home() {
   const [lessonOpen, setLessonOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(lessons[0]);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewFocus, setReviewFocus] = useState<"due" | "missed">("due");
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountMode, setAccountMode] = useState<"create" | "login">("create");
   const [account, setAccount] = useState<LearnerAccount | null>(null);
@@ -347,7 +349,7 @@ export default function Home() {
     return (
       <main className="landing-loading" aria-live="polite">
         <SoriMascot className="loading-mascot" />
-        <span className="brand-name">sori<span>.</span></span>
+        <span className="brand-name">saegim<span>.</span></span>
         <p>Getting your learning space ready…</p>
       </main>
     );
@@ -388,11 +390,11 @@ export default function Home() {
           className="brand"
           href="#today"
           onClick={() => navigateTo("today")}
-          aria-label="Sori home"
+          aria-label="Saegim home"
         >
           <SoriMascot className="brand-mark" />
           <span className="brand-name">
-            sori<span>.</span>
+            saegim<span>.</span>
           </span>
         </a>
         <p className="brand-caption">Korean, remembered.</p>
@@ -520,6 +522,7 @@ export default function Home() {
           <div className="section-view" key={tab}>
           {tab === "today" && (
             <TodayView
+              onMissedReview={() => { setReviewFocus("missed"); setReviewOpen(true); }}
               learningProfile={account.learningProfile ?? defaultLearningProfile}
               progress={progress}
               todayDate={todayDate}
@@ -628,11 +631,11 @@ export default function Home() {
       )}
       {reviewOpen && (
         <ReviewDeck
-          items={dueReviewItems(progress)}
+          items={reviewFocus === "missed" ? progress.reviewItems.filter((item) => item.lastResult === "again") : dueReviewItems(progress)}
           onRate={(id, remembered) =>
             setProgress((current) => rateReviewItem(current, id, remembered))
           }
-          onClose={() => setReviewOpen(false)}
+          onClose={() => { setReviewOpen(false); setReviewFocus("due"); }}
         />
       )}
       {accountOpen && (
@@ -655,6 +658,7 @@ export default function Home() {
 }
 
 function TodayView({
+  onMissedReview,
   learningProfile,
   progress,
   todayDate,
@@ -664,6 +668,7 @@ function TodayView({
   onTab,
   onGoalChange,
 }: {
+  onMissedReview: () => void;
   learningProfile: LearningProfile;
   progress: SavedProgress;
   todayDate: Date;
@@ -714,6 +719,8 @@ function TodayView({
         </label>
       </div>
       <DailyPractice progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
+      <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
+      {progress.reviewItems.some((item) => item.lastResult === "again") && <section className="recovery-practice"><div><span className="micro-label">A SECOND CHANCE</span><h3>Turn a missed answer into a remembered one.</h3><p>{progress.reviewItems.filter((item) => item.lastResult === "again").length} cards you marked Again. Practice now, even before the next scheduled review.</p></div><button type="button" className="button button-dark" onClick={onMissedReview}>Practice missed cards</button></section>}
       <div className="dashboard-grid">
         <div className="primary-column">
           <section className="continue-panel">
@@ -1012,6 +1019,7 @@ function LearnView({
         </p>
       </div>
       <div className="learning-pathways">
+        <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         {learningPathways.map((pathway) => {
           const pathwayLessons = lessonsForPathway(pathway.id);
@@ -1208,7 +1216,7 @@ function WordsView({
       <div className="page-intro words-intro">
         <h2>Your growing word bank</h2>
         <p>
-          Browse 5,000 community-dictionary and Sori references with local access when the database is offline. Reference entries await editor review before they can become lesson material.
+          Browse 5,000 community-dictionary and Saegim references with local access when the database is offline. Reference entries await editor review before they can become lesson material.
           Tap a word to hear it.
         </p>
       </div>
@@ -1298,11 +1306,11 @@ function WordsView({
         </button>
       )}
       <p className="word-credit">
-        Community dictionary entries are adapted from cc-kedict: Creative Commons Korean-English Dictionary by Michael Hagiwara and cc-kedict contributors, based largely on English Wiktionary. Original Sori vocabulary is dedicated to the public domain under CC0 1.0.{" "}
+        Community dictionary entries are adapted from cc-kedict: Creative Commons Korean-English Dictionary by Michael Hagiwara and cc-kedict contributors, based largely on English Wiktionary. Original Saegim vocabulary is dedicated to the public domain under CC0 1.0.{" "}
         <a href="https://github.com/mhagiwara/cc-kedict" target="_blank" rel="noreferrer">
           View the source
         </a>
-        . Entries are selected and reformatted for Sori and distributed under{" "}
+        . Entries are selected and reformatted for Saegim and distributed under{" "}
         <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">
           CC BY-SA 3.0
         </a>

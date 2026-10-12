@@ -3,10 +3,10 @@ import "./styles.css";
 import "./practice.css";
 
 export const metadata: Metadata = {
-  title: "Sori — Korean, remembered",
+  title: "Saegim — Korean, remembered",
   description:
     "A free, friendly place to learn Korean one small step at a time.",
-  applicationName: "Sori",
+  applicationName: "Saegim",
 };
 
 export const viewport: Viewport = {

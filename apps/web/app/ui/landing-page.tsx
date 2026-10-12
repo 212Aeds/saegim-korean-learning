@@ -19,9 +19,9 @@ export function LandingPage({
   return (
     <div className="landing-page">
       <header className="landing-nav">
-        <a className="landing-brand" href="#home" aria-label="Sori home">
+        <a className="landing-brand" href="#home" aria-label="Saegim home">
           <span className="landing-mark" aria-hidden="true">한</span>
-          <span>sori<span>.</span></span>
+          <span>saegim<span>.</span></span>
         </a>
         <div className="landing-nav-actions">
           <span className="free-pill"><span /> Always free</span>
@@ -54,12 +54,12 @@ export function LandingPage({
           </span>
           <div className="landing-mascot-card">
             <SoriMascot className="landing-mascot" />
-            <span><strong>Meet Sori</strong><small>Your Korean learning companion</small></span>
+            <span><strong>Meet Saegim</strong><small>Your Korean learning companion</small></span>
           </div>
         </div>
       </section>
 
-      <section className="landing-promises" aria-label="How Sori helps you learn">
+      <section className="landing-promises" aria-label="How Saegim helps you learn">
         <article>
           <BookOpenText size={20} />
           <div><strong>Practice that sticks</strong><span>Recall, write, and revisit words at the right time.</span></div>
