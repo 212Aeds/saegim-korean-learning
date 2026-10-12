@@ -3,24 +3,28 @@
 import { useRef, useState } from "react";
 import { ArrowRight, Check, X } from "./icons";
 import type { ReviewItem } from "../progress";
-import { deduplicateReviewItems } from "../progress";
-import { shuffle } from "../curriculum";
+import { reviewSession } from "./review-session";
 import { useDialogFocus } from "./use-dialog-focus";
 import { playCorrectAnswerSound } from "./feedback-sound";
+import { FeedbackToggle } from "./feedback-toggle";
+import { FlipCard } from "./flip-card";
+import { speakKorean } from "./speech";
 import { WordReference } from "./word-reference";
 
 export function ReviewModal({
   items,
+  maxCards,
   onRate,
   onClose,
 }: {
   items: ReviewItem[];
+  maxCards?: number;
   onRate: (id: string, remembered: boolean) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
   useDialogFocus(dialogRef, onClose);
-  const [sessionItems] = useState(() => shuffle(deduplicateReviewItems(items)));
+  const [sessionItems] = useState(() => reviewSession(items, maxCards));
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [rememberedCount, setRememberedCount] = useState(0);
@@ -60,24 +64,25 @@ export function ReviewModal({
           <span className="micro-label">FLASHCARD · {String(index + 1).padStart(2, "0")} OF {String(sessionItems.length).padStart(2, "0")}</span>
           <button className="modal-close" onClick={onClose} aria-label="Close review"><X size={20} /></button>
         </div>
+        <div className="review-session-progress" role="progressbar" aria-label="Cards practiced" aria-valuemin={0} aria-valuemax={sessionItems.length} aria-valuenow={index}><i style={{ transform: `scaleX(${index / sessionItems.length})` }} /></div>
         <div className="review-question">
-          <span className="question-label">{revealed ? "ANSWER" : card.question}</span>
-          <h2 id="review-title" lang="ko">{revealed ? card.answer : card.front}</h2>
-          <WordReference word={card.front} />
-          {revealed ? (
-            <>
-              <p>{card.note}</p>
-              <div className="answer-actions">
-                <button className="button button-quiet" onClick={() => finishCard(false)}>{index === sessionItems.length - 1 ? "Again · finish" : "Again · keep in review"}</button>
-                <button className="button button-dark" onClick={() => { playCorrectAnswerSound(); finishCard(true); }}>{index === sessionItems.length - 1 ? "Remembered · finish" : "I remembered"} <Check size={16} /></button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p>Try to recall the answer before you turn this card over.</p>
-              <button className="button button-dark" onClick={() => setRevealed(true)}>Reveal card <ArrowRight size={16} /></button>
-            </>
-          )}
+          <h2 id="review-title" className="review-session-heading">Recall, reveal, remember.</h2>
+          <FlipCard key={card.id} flipped={revealed} front={<div className="review-face-content">
+            <span className="question-label">{card.question}</span><h3 lang="ko">{card.front}</h3>
+            <p>Try to recall the answer before you turn this card over.</p>
+          </div>} back={<div className="review-face-content">
+            <span className="question-label">ANSWER</span><h3>{card.answer}</h3><p>{card.note}</p>
+          </div>} />
+          <div className="flashcard-tools">
+            <FeedbackToggle />
+            <button className="button button-quiet" onClick={() => speakKorean(card.front)}>Listen to Korean</button>
+            <button className="button button-soft" aria-pressed={revealed} onClick={() => setRevealed(!revealed)}>{revealed ? "Back to question" : "Reveal card"} <ArrowRight size={16} /></button>
+          </div>
+          {revealed && <><WordReference word={card.front} /><p className="recall-rating-hint">How did your recall feel? Your rating plans the next review.</p>
+            <div className="answer-actions">
+              <button className="button button-quiet" onClick={() => finishCard(false)}>{index === sessionItems.length - 1 ? "Again · finish" : "Again · keep in review"}</button>
+              <button className="button button-dark" onClick={() => { playCorrectAnswerSound(); finishCard(true); }}>{index === sessionItems.length - 1 ? "Remembered · finish" : "I remembered"} <Check size={16} /></button>
+            </div></>}
         </div>
         <div className="modal-bottom">
           <span>One card, one rating. You can revisit anything marked “Again.”</span>

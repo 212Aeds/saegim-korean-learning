@@ -6,6 +6,9 @@ import {
   ArrowRight,
   Check,
 } from "./icons";
+import { FeedbackToggle } from "./feedback-toggle";
+import { FlipCard } from "./flip-card";
+import { playCorrectAnswerSound } from "./feedback-sound";
 import { speakingCards } from "../speak-cards";
 import type { LearningPreferences } from "../progress";
 import { OpenRouterListeningPractice } from "./openrouter-listening-practice";
@@ -82,6 +85,7 @@ export function SpeakDeck({
     if (completionInProgress.current || completed) return;
     completionInProgress.current = true;
     setCompleting(true);
+    playCorrectAnswerSound();
     const next = nextUncompletedCard(card.id, [...new Set([...completedIds, card.id])]);
     const finishPractice = () => {
       completionTimer.current = null;
@@ -115,15 +119,14 @@ export function SpeakDeck({
           <span>{String(index + 1).padStart(2, "0")} <i /> {String(speakingCards.length).padStart(2, "0")}</span>
           <span className="speak-card-kind">{card.kind}</span>
         </div>
-        <div className="speak-card-body">
-          {!flipped ? (
-            <>
+        <FlipCard key={card.id} flipped={flipped} front={
+            <div className="speak-card-body">
               <span className="speak-card-prompt">{card.promptLabel}</span>
               <h3 lang="ko">{card.prompt}</h3>
               <p>{card.kind === "recall" ? "Say the Korean phrase aloud before you flip." : card.kind === "grammar" ? "Think of the example before you reveal the pattern." : "Take a breath. Say it out loud before you reveal the guide."}</p>
-            </>
-          ) : (
-            <>
+            </div>
+          } back={
+            <div className="speak-card-body">
               <span className="speak-card-prompt">{card.grammarTitle}</span>
               <h3 lang="ko">{card.korean}</h3>
               {preferences.romanization && <span className="speak-card-roman">{card.romanization}</span>}
@@ -137,11 +140,11 @@ export function SpeakDeck({
                 <strong lang="ko">{card.focus}</strong>
                 <small>{card.focusRomanization} · {card.focusMeaning}</small>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          } />
         <div className="speak-card-actions">
-          <button className="button button-quiet" onClick={() => setFlipped((value) => !value)}>
+          <FeedbackToggle />
+          <button className="button button-quiet" aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
             {flipped ? "Back to prompt" : "Flip for meaning & tip"}
           </button>
         </div>

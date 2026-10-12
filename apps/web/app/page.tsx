@@ -126,7 +126,7 @@ export default function Home() {
   const [lessonOpen, setLessonOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(lessons[0]);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [reviewFocus, setReviewFocus] = useState<"due" | "missed">("due");
+  const [reviewFocus, setReviewFocus] = useState<"due" | "missed" | "practice">("due");
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountMode, setAccountMode] = useState<"create" | "login">("create");
   const [account, setAccount] = useState<LearnerAccount | null>(null);
@@ -545,6 +545,7 @@ export default function Home() {
           {tab === "review" && (
             <ReviewView
               progress={progress}
+              onPractice={() => { setReviewFocus("practice"); setReviewOpen(true); }}
               onReview={() => setReviewOpen(true)}
               onLesson={() => {
                 navigateTo("today");
@@ -633,7 +634,8 @@ export default function Home() {
       )}
       {reviewOpen && (
         <ReviewDeck
-          items={reviewFocus === "missed" ? progress.reviewItems.filter((item) => item.lastResult === "again") : dueReviewItems(progress)}
+          maxCards={reviewFocus === "practice" ? 10 : undefined}
+          items={reviewFocus === "missed" ? progress.reviewItems.filter((item) => item.lastResult === "again") : reviewFocus === "practice" ? progress.reviewItems : dueReviewItems(progress)}
           onRate={(id, remembered) =>
             setProgress((current) => rateReviewItem(current, id, remembered))
           }
@@ -1332,10 +1334,12 @@ function WordsView({
 function ReviewView({
   progress,
   onReview,
+  onPractice,
   onLesson,
 }: {
   progress: SavedProgress;
   onReview: () => void;
+  onPractice: () => void;
   onLesson: () => void;
 }) {
   const due = dueReviewItems(progress);
@@ -1422,6 +1426,7 @@ function ReviewView({
           )}
         </button>
       </div>
+      {progress.reviewItems.length > 0 && <section className="recovery-practice"><div><span className="micro-label">KEEP YOUR WORDS CLOSE</span><h3>A little practice, whenever you like.</h3><p>Revisit up to 10 saved cards, even when nothing is due. Your ratings update their next review dates.</p></div><button className="button button-soft" onClick={onPractice}>Practice saved cards <ArrowRight size={17} /></button></section>}
       <div className="review-footnote">
         You’ve recalled <strong>{progress.reviewsDone}</strong> items so far.
         Getting one wrong is part of learning.

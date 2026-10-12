@@ -3,6 +3,7 @@ let audioContext: AudioContext | null = null;
 export function playCorrectAnswerSound() {
   if (typeof window === "undefined" || !window.AudioContext) return;
   try {
+    if (window.localStorage.getItem("saegim-feedback-muted") === "true") return;
     audioContext ??= new AudioContext();
     if (audioContext.state === "suspended") void audioContext.resume();
     const now = audioContext.currentTime;
