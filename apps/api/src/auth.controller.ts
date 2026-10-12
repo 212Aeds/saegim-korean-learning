@@ -36,7 +36,7 @@ const loginSchema = z.object({
     .transform((value) => value.toLowerCase()),
   password: z.string().min(12).max(128),
 });
-const learningProfileSchema = z.object({ level: z.enum(["new", "hangul", "basic", "intermediate"]), reasons: z.array(z.enum(["family", "travel", "culture", "work-study"])).min(1).max(4).transform((reasons) => [...new Set(reasons)]), avatar: z.enum(["sprout", "cat", "star", "moon"]).default("sprout"), weeklyGoal: z.union([z.literal(3), z.literal(5), z.literal(7)]).default(5) });
+const learningProfileSchema = z.object({ level: z.enum(["new", "hangul", "basic", "intermediate"]), reasons: z.array(z.enum(["family", "travel", "culture", "work-study"])).min(1).max(4).transform((reasons) => [...new Set(reasons)]), avatar: z.enum(["sprout", "cat", "star", "moon"]).default("sprout"), weeklyGoal: z.union([z.literal(3), z.literal(5), z.literal(7)]).default(5), dailyMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(20), z.literal(30), z.literal(45), z.literal(60)]).optional(), onboardingCompleted: z.boolean().optional() });
 const registerSchema = loginSchema.extend({
   displayName: z.string().trim().min(1).max(40),
   learningProfile: learningProfileSchema.default({ level: "new", reasons: ["culture"], avatar: "sprout", weeklyGoal: 5 }),

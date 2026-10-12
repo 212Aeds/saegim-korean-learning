@@ -1,7 +1,7 @@
 import { coreLetterLessonIds } from "./foundation-lessons";
 import { lessons } from "./curriculum";
 import { isLessonUnlocked } from "./learning-pathways";
-export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7 };
+export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7; dailyMinutes?: 5 | 10 | 15 | 20 | 30 | 45 | 60; onboardingCompleted?: boolean };
 export const defaultLearningProfile: LearningProfile = { level: "new", reasons: ["culture"] };
 // Self-reported placement opens an entry point; it never awards completion or XP.
 export function placementKnowledge(profile = defaultLearningProfile) {

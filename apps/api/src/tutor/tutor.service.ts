@@ -21,7 +21,10 @@ export class TutorService {
     }
     try {
       return await this.provider.answer({ question, lessonContext, conversation });
-    } catch {
+    } catch (error) {
+      const safeReasons = ["Provider failure", "Provider response too large", "Invalid provider response", "Invalid tutor answer"];
+      const reason = error instanceof Error && safeReasons.includes(error.message) ? error.message : "Unavailable or timed out";
+      console.warn(`[tutor] Request failed: ${reason}`);
       // Provider bodies, credentials, and learner content never enter logs.
       throw new ServiceUnavailableException("The tutor could not answer. Use the lesson hint instead.");
     }

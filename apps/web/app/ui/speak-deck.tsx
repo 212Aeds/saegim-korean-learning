@@ -1,32 +1,46 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-} from "./icons";
+import { ArrowLeft, ArrowRight, Check } from "./icons";
 import { FeedbackToggle } from "./feedback-toggle";
 import { FlipCard } from "./flip-card";
 import { playCorrectAnswerSound } from "./feedback-sound";
-import { speakingCards } from "../speak-cards";
+import { speakingCardsForProfile, type SpeakingCard } from "../speak-cards";
+import type { LearningProfile } from "../learning-profile";
 import type { LearningPreferences } from "../progress";
 import { OpenRouterListeningPractice } from "./openrouter-listening-practice";
 import type { ElevenLabsVoice } from "./speech";
 
-function firstUncompletedCard(completedIds: string[]) {
-  return speakingCards.find((item) => !completedIds.includes(item.id)) ?? speakingCards[0];
+function firstUncompletedCard(
+  completedIds: string[],
+  speakingCards: SpeakingCard[],
+) {
+  return (
+    speakingCards.find((item) => !completedIds.includes(item.id)) ??
+    speakingCards[0]
+  );
 }
 
-function cardForCursor(currentCardId: string | null, completedIds: string[]) {
+function cardForCursor(
+  currentCardId: string | null,
+  completedIds: string[],
+  speakingCards: SpeakingCard[],
+) {
   const cursorCard = speakingCards.find((item) => item.id === currentCardId);
-  return cursorCard ?? firstUncompletedCard(completedIds);
+  return cursorCard ?? firstUncompletedCard(completedIds, speakingCards);
 }
 
-function nextUncompletedCard(currentId: string, completedIds: string[]) {
+function nextUncompletedCard(
+  currentId: string,
+  completedIds: string[],
+  speakingCards: SpeakingCard[],
+) {
   const currentIndex = speakingCards.findIndex((item) => item.id === currentId);
   for (let step = 1; step <= speakingCards.length; step += 1) {
-    const candidate = speakingCards[(currentIndex + step + speakingCards.length) % speakingCards.length];
+    const candidate =
+      speakingCards[
+        (currentIndex + step + speakingCards.length) % speakingCards.length
+      ];
     if (!completedIds.includes(candidate.id)) return candidate;
   }
   return speakingCards[0];
@@ -34,12 +48,16 @@ function nextUncompletedCard(currentId: string, completedIds: string[]) {
 
 export function SpeakDeck({
   completedIds,
+  profile,
+  completedLessonIds,
   currentCardId,
   onNavigate,
   onComplete,
   preferences,
   onPreferencesChange,
 }: {
+  profile: LearningProfile;
+  completedLessonIds: string[];
   completedIds: string[];
   currentCardId: string | null;
   onNavigate: (cardId: string) => void;
@@ -47,11 +65,12 @@ export function SpeakDeck({
   preferences: LearningPreferences;
   onPreferencesChange: (preferences: LearningPreferences) => void;
 }) {
+  const speakingCards = speakingCardsForProfile(profile, completedLessonIds);
   const [flipped, setFlipped] = useState(false);
   const [completing, setCompleting] = useState(false);
   const completionInProgress = useRef(false);
   const completionTimer = useRef<number | null>(null);
-  const card = cardForCursor(currentCardId, completedIds);
+  const card = cardForCursor(currentCardId, completedIds, speakingCards);
   const index = speakingCards.findIndex((item) => item.id === card.id);
   const completed = completedIds.includes(card.id);
 
@@ -63,7 +82,8 @@ export function SpeakDeck({
     completionInProgress.current = false;
     setCompleting(false);
     return () => {
-      if (completionTimer.current !== null) window.clearTimeout(completionTimer.current);
+      if (completionTimer.current !== null)
+        window.clearTimeout(completionTimer.current);
       completionTimer.current = null;
     };
   }, [card.id]);
@@ -72,8 +92,15 @@ export function SpeakDeck({
     if (completionInProgress.current) return;
     const currentIndex = speakingCards.findIndex((item) => item.id === card.id);
     for (let step = 1; step <= speakingCards.length; step += 1) {
-      const candidate = speakingCards[(currentIndex + direction * step + speakingCards.length * 2) % speakingCards.length];
-      if (!completedIds.includes(candidate.id) || completedIds.length >= speakingCards.length) {
+      const candidate =
+        speakingCards[
+          (currentIndex + direction * step + speakingCards.length * 2) %
+            speakingCards.length
+        ];
+      if (
+        !completedIds.includes(candidate.id) ||
+        speakingCards.every((item) => completedIds.includes(item.id))
+      ) {
         onNavigate(candidate.id);
         break;
       }
@@ -86,7 +113,11 @@ export function SpeakDeck({
     completionInProgress.current = true;
     setCompleting(true);
     playCorrectAnswerSound();
-    const next = nextUncompletedCard(card.id, [...new Set([...completedIds, card.id])]);
+    const next = nextUncompletedCard(
+      card.id,
+      [...new Set([...completedIds, card.id])],
+      speakingCards,
+    );
     const finishPractice = () => {
       completionTimer.current = null;
       setFlipped(false);
@@ -98,38 +129,85 @@ export function SpeakDeck({
   }
 
   return (
-    <div className={`speak-deck-page ${preferences.hangulSize === "large" ? "hangul-large" : ""}`}>
+    <div
+      className={`speak-deck-page ${preferences.hangulSize === "large" ? "hangul-large" : ""}`}
+    >
       <div className="speak-deck-heading">
         <div>
           <span className="micro-label">A SMALL SPEAKING PRACTICE</span>
           <h2>Say it, then notice why.</h2>
         </div>
         <div className="speak-deck-count">
-          <strong>{completedIds.length}</strong><span> / {speakingCards.length} practiced</span>
+          <strong>
+            {
+              speakingCards.filter((item) => completedIds.includes(item.id))
+                .length
+            }
+          </strong>
+          <span> / {speakingCards.length} practiced</span>
         </div>
       </div>
 
-      <div className={`speak-deck-progress ${completing ? "is-completing" : ""}`} aria-label={`${index + 1} of ${speakingCards.length}`}>
-        <i style={{ transform: `scaleX(${(index + 1) / speakingCards.length})` }} />
+      <div
+        className={`speak-deck-progress ${completing ? "is-completing" : ""}`}
+        aria-label={`${index + 1} of ${speakingCards.length}`}
+      >
+        <i
+          style={{ transform: `scaleX(${(index + 1) / speakingCards.length})` }}
+        />
       </div>
-      <label className="phrase-picker">Choose a useful phrase<select value={card.id} disabled={completing} onChange={(event) => { setFlipped(false); onNavigate(event.target.value); }}>{speakingCards.map((phrase) => <option key={phrase.id} value={phrase.id}>{completedIds.includes(phrase.id) ? "✓ " : ""}{phrase.meaning}</option>)}</select></label>
+      <label className="phrase-picker">
+        {profile.level === "new" && card.kind === "pronunciation"
+          ? "Choose a familiar letter"
+          : "Choose a useful phrase"}
+        <select
+          value={card.id}
+          disabled={completing}
+          onChange={(event) => {
+            setFlipped(false);
+            onNavigate(event.target.value);
+          }}
+        >
+          {speakingCards.map((phrase) => (
+            <option key={phrase.id} value={phrase.id}>
+              {completedIds.includes(phrase.id) ? "✓ " : ""}
+              {phrase.meaning}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <article className={`speak-flashcard ${flipped ? "is-flipped" : ""}`}>
         <div className="speak-card-top">
-          <span>{String(index + 1).padStart(2, "0")} <i /> {String(speakingCards.length).padStart(2, "0")}</span>
+          <span>
+            {String(index + 1).padStart(2, "0")} <i />{" "}
+            {String(speakingCards.length).padStart(2, "0")}
+          </span>
           <span className="speak-card-kind">{card.kind}</span>
         </div>
-        <FlipCard key={card.id} flipped={flipped} front={
+        <FlipCard
+          key={card.id}
+          flipped={flipped}
+          front={
             <div className="speak-card-body">
               <span className="speak-card-prompt">{card.promptLabel}</span>
               <h3 lang="ko">{card.prompt}</h3>
-              <p>{card.kind === "recall" ? "Say the Korean phrase aloud before you flip." : card.kind === "grammar" ? "Think of the example before you reveal the pattern." : "Take a breath. Say it out loud before you reveal the guide."}</p>
+              <p>
+                {card.kind === "recall"
+                  ? "Say the Korean phrase aloud before you flip."
+                  : card.kind === "grammar"
+                    ? "Think of the example before you reveal the pattern."
+                    : "Take a breath. Say it out loud before you reveal the guide."}
+              </p>
             </div>
-          } back={
+          }
+          back={
             <div className="speak-card-body">
               <span className="speak-card-prompt">{card.grammarTitle}</span>
               <h3 lang="ko">{card.korean}</h3>
-              {preferences.romanization && <span className="speak-card-roman">{card.romanization}</span>}
+              {preferences.romanization && (
+                <span className="speak-card-roman">{card.romanization}</span>
+              )}
               <strong className="speak-card-meaning">{card.meaning}</strong>
               <div className="speak-grammar-tip">
                 <span>GRAMMAR NOTE</span>
@@ -138,13 +216,20 @@ export function SpeakDeck({
               <div className="speak-focus-word">
                 <span>WORD TO NOTICE</span>
                 <strong lang="ko">{card.focus}</strong>
-                <small>{card.focusRomanization} · {card.focusMeaning}</small>
+                <small>
+                  {card.focusRomanization} · {card.focusMeaning}
+                </small>
               </div>
             </div>
-          } />
+          }
+        />
         <div className="speak-card-actions">
           <FeedbackToggle />
-          <button className="button button-quiet" aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
+          <button
+            className="button button-quiet"
+            aria-pressed={flipped}
+            onClick={() => setFlipped((value) => !value)}
+          >
             {flipped ? "Back to prompt" : "Flip for meaning & tip"}
           </button>
         </div>
@@ -152,13 +237,27 @@ export function SpeakDeck({
           key={card.id}
           korean={card.korean}
           english={card.meaning}
-          onVoiceChange={(speechVoice: ElevenLabsVoice) => onPreferencesChange({ ...preferences, speechVoice })}
-          onPaceChange={(speechPace) => onPreferencesChange({ ...preferences, speechPace })}
+          onVoiceChange={(speechVoice: ElevenLabsVoice) =>
+            onPreferencesChange({ ...preferences, speechVoice })
+          }
+          onPaceChange={(speechPace) =>
+            onPreferencesChange({ ...preferences, speechPace })
+          }
         />
         <div className="speak-deck-navigation">
-          <button className="speak-arrow" onClick={() => move(-1)} aria-label="Previous speaking card"><ArrowLeft size={18} /></button>
+          <button
+            className="speak-arrow"
+            onClick={() => move(-1)}
+            aria-label="Previous speaking card"
+          >
+            <ArrowLeft size={18} />
+          </button>
           {completing ? (
-            <button className="button button-soft speak-practiced" aria-live="polite" disabled>
+            <button
+              className="button button-soft speak-practiced"
+              aria-live="polite"
+              disabled
+            >
               Practiced <Check size={17} />
             </button>
           ) : !completed ? (
@@ -170,10 +269,19 @@ export function SpeakDeck({
               Practiced · Next card <ArrowRight size={17} />
             </button>
           )}
-          <button className="speak-arrow" onClick={() => move(1)} aria-label="Next speaking card"><ArrowRight size={18} /></button>
+          <button
+            className="speak-arrow"
+            onClick={() => move(1)}
+            aria-label="Next speaking card"
+          >
+            <ArrowRight size={18} />
+          </button>
         </div>
       </article>
-      <p className="speak-deck-footnote">{speakingCards.length} distinct phrases · one card per concept · Review schedules cards for you · always free</p>
+      <p className="speak-deck-footnote">
+        {speakingCards.length} speaking concepts · one card per concept · Review
+        schedules cards for you · always free
+      </p>
     </div>
   );
 }

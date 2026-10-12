@@ -22,6 +22,7 @@ import {
   ChatCircleDots,
 } from "./ui/icons";
 import { LessonModal } from "./ui/lesson-modal";
+import { LearningOnboarding } from "./ui/learning-onboarding";
 import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { SpeakDeck } from "./ui/speak-deck";
@@ -387,6 +388,8 @@ export default function Home() {
     );
   }
 
+  if (!account.learningProfile?.onboardingCompleted) return <LearningOnboarding account={account} onSignOut={signOut} onSaved={updated => {setAccount(updated);setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile?.dailyMinutes??15}));}} />;
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label="Main navigation">
@@ -565,6 +568,8 @@ export default function Home() {
           )}
           {tab === "speak" && (
             <SpeakDeck
+              profile={account.learningProfile ?? defaultLearningProfile}
+              completedLessonIds={progress.completedLessonIds}
               completedIds={progress.speakingCardIds}
               currentCardId={progress.speakingCardId}
               preferences={progress.learningPreferences}
@@ -650,9 +655,9 @@ export default function Home() {
       {accountOpen && (
         <AccountModal
           apiUrl={process.env.NEXT_PUBLIC_API_URL}
-          account={account}
+          account={{...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
           preferences={progress.learningPreferences}
-          onAccountUpdated={setAccount}
+          onAccountUpdated={updated => {setAccount(updated);if(updated.learningProfile?.dailyMinutes)setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile!.dailyMinutes!}));}}
           onPreferencesChange={(learningPreferences) =>
             setProgress((current) => ({ ...current, learningPreferences }))
           }
@@ -729,7 +734,7 @@ function TodayView({
           </select>
         </label>
       </div>
-      <DailyPractice progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
+      <DailyPractice profile={learningProfile} progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
       <section className="weekly-plan"><div><span className="micro-label">YOUR WEEK, YOUR PACE</span><h3>{weekly.complete ? "Your weekly goal is met!" : `${weekly.studied} of ${weekly.goal} study days this week`}</h3><p>{weekly.complete ? "Keep exploring or take a well-earned break. Your progress stays here." : `${weekly.remaining} more study ${weekly.remaining === 1 ? "day" : "days"} to your goal. A lesson, review, or speaking practice counts.`}</p></div><progress value={Math.min(weekly.studied, weekly.goal)} max={weekly.goal} aria-label="Weekly study goal" /></section>
       <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
       {progress.reviewItems.some((item) => item.lastResult === "again") && <section className="recovery-practice"><div><span className="micro-label">A SECOND CHANCE</span><h3>Turn a missed answer into a remembered one.</h3><p>{progress.reviewItems.filter((item) => item.lastResult === "again").length} cards you marked Again. Practice now, even before the next scheduled review.</p></div><button type="button" className="button button-dark" onClick={onMissedReview}>Practice missed cards</button></section>}
@@ -786,10 +791,8 @@ function TodayView({
               </span>
             </div>
             <div className="review-items">
-              <span>가</span>
-              <span>나</span>
-              <span>안녕</span>
-              <span className="more-items">+2</span>
+              {(progress.reviewItems.length ? progress.reviewItems.slice(0,3).map(item=>item.front) : nextLesson.words.slice(0,3)).map((word,index)=><span key={`${word}-${index}`}>{word}</span>)}
+              {progress.reviewItems.length>3 && <span className="more-items">+{progress.reviewItems.length-3}</span>}
             </div>
             <button
               className="icon-arrow"
@@ -945,7 +948,7 @@ function TodayView({
         <CalendarDots size={17} />
         <span>
           {!progress.completed
-            ? "Small steps count. Start with a few Hangul sounds."
+            ? `Small steps count. Your next step is ${nextLesson.title}.`
             : dueCount
               ? "Your review brings earlier sounds back while they are still familiar."
               : "Your next review is scheduled for later."}

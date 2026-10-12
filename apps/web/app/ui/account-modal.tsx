@@ -211,7 +211,7 @@ export function AccountModal({
                   Save profile
                 </button>
               </div>
-              <LearningProfileFields profile={learningProfile} onChange={setLearningProfile} />
+              <details className="account-learning-settings" open><summary aria-label="Learning settings">⚙ Learning settings</summary><LearningProfileFields profile={learningProfile} onChange={setLearningProfile} /></details>
               <fieldset className="learning-profile-fields"><legend>Make it yours</legend><span>Choose your avatar</span><div className="avatar-choices">{Object.entries(avatars).map(([id, symbol]) => <button key={id} type="button" aria-label={`Choose ${id} avatar`} aria-pressed={(learningProfile.avatar ?? "sprout") === id} onClick={() => setLearningProfile({ ...learningProfile, avatar: id as NonNullable<LearningProfile["avatar"]> })}>{symbol}</button>)}</div><label>Your weekly study goal<select value={learningProfile.weeklyGoal ?? 5} onChange={(event) => setLearningProfile({ ...learningProfile, weeklyGoal: Number(event.target.value) as 3 | 5 | 7 })}><option value={3}>3 days · a gentle start</option><option value={5}>5 days · a steady rhythm</option><option value={7}>7 days · a daily habit</option></select></label></fieldset>
             </form>
             {preferences && onPreferencesChange && (
@@ -380,7 +380,7 @@ export function AccountModal({
                     <small>Use at least 12 characters.</small>
                   )}
                 </label>
-                {mode === "create" && <LearningProfileFields profile={learningProfile} onChange={setLearningProfile} />}
+
                 {message && (
                   <p className="account-message" role="alert">
                     {message}

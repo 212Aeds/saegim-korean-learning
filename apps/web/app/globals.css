@@ -1,0 +1,332 @@
+.onboarding-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: var(--paper, #f7f6f0);
+  padding: 32px 20px;
+}
+.onboarding-card {
+  max-width: 660px;
+  width: 100%;
+  padding: 32px;
+  background: white;
+  border: 1px solid #e1e5db;
+  border-radius: 28px;
+}
+.onboarding-card h1 {
+  font-size: clamp(26px, 4vw, 38px);
+  letter-spacing: -1.2px;
+}
+.onboarding-card > p {
+  color: #667061;
+  line-height: 1.6;
+}
+.onboarding-mascot {
+  width: 85px;
+  height: 85px;
+  float: right;
+}
+.onboarding-card .learning-profile-fields {
+  margin: 24px 0;
+}
+.account-learning-settings {
+  margin-top: 20px;
+}
+.account-learning-settings summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+.milestone-row button {
+  border: 1px solid #d7dfcc;
+  border-radius: 999px;
+  background: #f7f8f1;
+  padding: 9px 13px;
+  color: #66705f;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background 0.2s;
+}
+.milestone-row button:hover {
+  transform: translateY(-3px);
+}
+.milestone-row button.earned {
+  background: #e4edce;
+  color: #334627;
+}
+.milestone-row button[aria-pressed="true"] {
+  outline: 2px solid #718e48;
+  outline-offset: 2px;
+}
+.milestone-detail {
+  margin-top: 14px;
+  border-radius: 16px;
+  background: #edf2e3;
+  padding: 16px;
+}
+.daily-mascot {
+  animation: quest-breathe 4s ease-in-out infinite;
+}
+.daily-task-list button {
+  transition:
+    transform 0.2s,
+    background 0.3s;
+}
+.daily-task-list button:hover {
+  transform: translateX(4px);
+}
+.daily-task-list button.complete {
+  animation: quest-earned 0.4s ease-out;
+}
+.daily-practice progress {
+  transition: all 0.4s;
+}
+.practice-focus {
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.practice-focus:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+.practice-question .choice {
+  transition:
+    transform 0.18s,
+    background 0.2s;
+}
+.practice-question .choice:active {
+  transform: scale(0.98);
+}
+.chat-partner-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #dfe5d7;
+  padding: 20px 0;
+}
+.chat-partner-bar > div:first-of-type {
+  flex: 1;
+}
+.chat-partner-bar small {
+  display: block;
+  color: #687460;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.partner-avatar {
+  flex: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e9d6bd;
+  color: #58432c;
+  font-size: 20px;
+  font-weight: 700;
+}
+.partner-avatar.is-chris {
+  background: #d3dfc1;
+  color: #3c5030;
+}
+.partner-avatar i {
+  position: absolute;
+  bottom: 1px;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border: 2px solid white;
+  background: #779d54;
+  border-radius: 50%;
+}
+.partner-switch {
+  display: flex;
+  gap: 3px;
+}
+.partner-switch [aria-pressed="true"] {
+  background: #e4ebd5;
+}
+.conversation-card .conversation-log {
+  padding: 22px 0;
+  max-height: 560px;
+  min-height: 230px;
+  background: transparent;
+}
+.conversation-card .conversation-turn {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: transparent;
+  padding: 0;
+  margin: 16px 0;
+  border: 0;
+  animation: chat-arrive 0.22s ease-out;
+}
+.conversation-turn.is-user {
+  justify-content: flex-end;
+}
+.chat-bubble {
+  max-width: 85%;
+  padding: 15px 18px;
+  background: #f0f3e8;
+  border-radius: 3px 20px 20px 20px;
+}
+.is-user .chat-bubble {
+  background: #344c30;
+  color: #fff;
+  border-radius: 20px 3px 20px 20px;
+}
+.is-user .micro-label,
+.is-user .conversation-roman {
+  color: #d4e1c7;
+}
+.chat-bubble > p:first-of-type {
+  font-size: 20px;
+  line-height: 1.6;
+}
+.chat-bubble .micro-label {
+  font-size: 10px;
+}
+.chat-help {
+  border-top: 1px solid #d9dfce;
+  margin: 12px 0;
+  padding-top: 10px;
+  font-size: 13px;
+}
+.chat-help summary {
+  cursor: pointer;
+  color: #536848;
+}
+.conversation-starters {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.conversation-empty > .partner-avatar {
+  margin: 0 auto 16px;
+}
+.conversation-empty strong {
+  display: block;
+}
+.voice-conversation-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px;
+  border: 1px solid #dce3d2;
+  border-radius: 18px;
+  background: #f6f8f0;
+  margin: 15px 0;
+}
+.voice-conversation-panel > div:first-child {
+  flex: 1;
+  min-width: 200px;
+}
+.voice-conversation-panel p {
+  font-size: 13px;
+  color: #687360;
+  line-height: 1.5;
+  margin: 5px 0 0;
+}
+.voice-conversation-panel.is-active {
+  border-color: #779a54;
+  background: #edf5df;
+}
+.voice-level {
+  width: 100%;
+  height: 5px;
+  background: #dae3ce;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.voice-level i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: #668b47;
+  transition: transform 0.12s;
+}
+.typing-dots {
+  display: inline-block;
+  color: #789756;
+  animation: quest-breathe 1.5s ease-in-out infinite;
+  letter-spacing: 4px;
+}
+.conversation-form textarea {
+  min-height: 100px;
+}
+.conversation-form .conversation-composer-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+@keyframes chat-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes quest-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes quest-earned {
+  from {
+    transform: scale(0.98);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (max-width: 600px) {
+  .onboarding-card {
+    padding: 24px 18px;
+  }
+  .chat-partner-bar {
+    flex-wrap: wrap;
+  }
+  .partner-switch {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .chat-bubble {
+    max-width: 90%;
+  }
+  .chat-bubble > p:first-of-type {
+    font-size: 18px;
+  }
+  .voice-conversation-panel > .button {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .daily-mascot,
+  .daily-task-list button.complete,
+  .conversation-card .conversation-turn,
+  .typing-dots {
+    animation: none;
+  }
+  .milestone-row button,
+  .daily-task-list button,
+  .practice-focus,
+  .practice-question .choice,
+  .voice-level i {
+    transition: none;
+  }
+}

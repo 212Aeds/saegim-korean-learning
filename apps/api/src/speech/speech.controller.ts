@@ -10,6 +10,10 @@ import { SpeechAudioCacheService } from "./speech-audio-cache.service";
 const maxBytes = 2 * 1024 * 1024;
 const maxSeconds = 15;
 
+function hasRecordingConsent(request: Request) {
+  return request.header("x-saegim-speech-consent") === "true" || request.header("x-sori-speech-consent") === "true";
+}
+
 @Injectable()
 export class SpeechClipMiddleware implements NestMiddleware {
   private readonly parse = raw({ type: () => true, limit: maxBytes, inflate: false });
@@ -24,7 +28,7 @@ export class SpeechClipMiddleware implements NestMiddleware {
     response.once("close", discard);
     // Reject unsupported uploads before buffering them. Only uncompressed PCM
     // WAV is accepted so duration can be verified from the actual data chunk.
-    if (request.header("x-sori-speech-consent") !== "true") {
+    if (!hasRecordingConsent(request)) {
       throw new BadRequestException("Consent is required for each recording.");
     }
     if (request.header("content-type")?.trim().toLowerCase() !== "audio/wav") {
@@ -130,7 +134,7 @@ export class SpeechController {
     const audio = Buffer.isBuffer(request.body) ? request.body : undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
-      if (request.header("x-sori-speech-consent") !== "true") throw new BadRequestException("Consent is required for each recording.");
+      if (!hasRecordingConsent(request)) throw new BadRequestException("Consent is required for each recording.");
       if (request.header("content-type") !== "audio/wav" || !audio) throw new BadRequestException("Use a PCM WAV recording.");
       validateWav(audio);
       if (!this.available() || !request.soriAccountId) throw new ServiceUnavailableException("Speech is unavailable. Type your response instead.");
