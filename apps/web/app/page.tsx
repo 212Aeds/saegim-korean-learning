@@ -33,7 +33,7 @@ import { DailyPractice } from "./ui/daily-practice";
 import { WordReference } from "./ui/word-reference";
 import { LearningRoadmap } from "./ui/learning-roadmap";
 import { accountAvatar, weeklyProgress } from "./account-personalization";
-import { recommendedLessons, defaultLearningProfile, type LearningProfile } from "./learning-profile";
+import { recommendedLessons, placementKnowledge, defaultLearningProfile, type LearningProfile } from "./learning-profile";
 import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
 import {
@@ -628,6 +628,7 @@ export default function Home() {
           key={selectedLesson.id}
           lesson={selectedLesson}
           preferences={progress.learningPreferences}
+          onPreferencesChange={(learningPreferences) => setProgress((current) => ({ ...current, learningPreferences }))}
           onClose={() => setLessonOpen(false)}
           onComplete={finishLesson}
         />
@@ -899,7 +900,7 @@ function TodayView({
               </div>
               {lessons.slice(0, 5).map((lesson, index) => {
                 const complete = progress.completedLessonIds.includes(lesson.id);
-                const available = isLessonUnlocked(lesson, progress.completedLessonIds);
+                const available = isLessonUnlocked(lesson, progress.completedLessonIds, placementKnowledge(learningProfile));
                 const state = complete
                   ? "complete"
                   : available
@@ -1045,9 +1046,9 @@ function LearnView({
               <div className="course-list">
                 {pathwayLessons.map((lesson, index) => {
                   const complete = progress.completedLessonIds.includes(lesson.id);
-                  const unlocked = isLessonUnlocked(lesson, progress.completedLessonIds);
+                  const unlocked = isLessonUnlocked(lesson, progress.completedLessonIds, placementKnowledge(learningProfile));
                   const next = !complete && unlocked && nextAvailableLesson(progress.completedLessonIds, learningProfile).id === lesson.id;
-                  const prerequisite = prerequisiteLabel(lesson, progress.completedLessonIds);
+                  const prerequisite = prerequisiteLabel(lesson, progress.completedLessonIds, placementKnowledge(learningProfile));
                   return (
                     <CourseRow
                       key={lesson.id}

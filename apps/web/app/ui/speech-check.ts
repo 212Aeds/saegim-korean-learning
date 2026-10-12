@@ -1,3 +1,4 @@
+import { consonantAnswers } from "./hangul-answers";
 const letterNames: Record<string, string> = { "ㄱ": "기역", "ㄴ": "니은", "ㄷ": "디귿", "ㄹ": "리을", "ㅁ": "미음", "ㅂ": "비읍", "ㅅ": "시옷", "ㅇ": "이응", "ㅈ": "지읒", "ㅊ": "치읓", "ㅋ": "키읔", "ㅌ": "티읕", "ㅍ": "피읖", "ㅎ": "히읗" };
 export function normalizeSpeech(text: string) {
   return text.normalize("NFC").replace(/[\s\p{P}\p{S}]/gu, "");
@@ -35,7 +36,7 @@ export function compareSpeech(expected: string, heard: string, acceptVariants = 
     if (target[index] !== result[index]) { firstDifference = index; break; }
   }
   const variants = acceptVariants ? phraseAlternatives[normalizeSpeech(expected)] ?? [] : [];
-  const matches = firstDifference < 0 || letterNames[expected] === normalizeSpeech(heard) || variants.some((variant) => normalizeSpeech(variant) === normalizeSpeech(heard));
+  const matches = firstDifference < 0 || consonantAnswers(expected).some((answer) => normalizeSpeech(answer).toLowerCase() === normalizeSpeech(heard).toLowerCase()) || letterNames[expected] === normalizeSpeech(heard) || variants.some((variant) => normalizeSpeech(variant) === normalizeSpeech(heard));
   return { matches, targetBlock: matches ? "" : target[firstDifference] ?? "", heardBlock: matches ? "" : result[firstDifference] ?? "(no syllable heard)" };
 }
 export function silenceDecision(elapsedMs: number, lastSpeechMs: number, speechDetected: boolean) {

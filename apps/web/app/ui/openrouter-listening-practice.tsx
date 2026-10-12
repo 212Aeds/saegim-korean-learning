@@ -21,8 +21,9 @@ function compareHangul(expected: string, heard: string) {
   return compareSpeech(expected, heard, true);
 }
 
-export function OpenRouterListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange }: {
+export function OpenRouterListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange, selectedVoice }: {
   korean: string;
+  selectedVoice?: ElevenLabsVoice;
   english?: string;
   expectedRomanization?: string;
   variant?: "combined" | "lesson-speaking";
@@ -45,7 +46,7 @@ export function OpenRouterListeningPractice({ korean, english, expectedRomanizat
   const captureRef = useRef<OpenRouterCapture | null>(null);
   const attemptRef = useRef(0);
 
-  useEffect(() => setVoice(selectedElevenLabsVoice()), []);
+  useEffect(() => setVoice(selectedVoice ?? selectedElevenLabsVoice()), [selectedVoice]);
   useEffect(() => saveSpeechRate(rate), [rate]);
 
   useEffect(() => {

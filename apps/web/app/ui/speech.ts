@@ -1,8 +1,10 @@
+import { naturalSpeechText, consonantName } from "./hangul-answers";
 export type KoreanSpeechOptions = {
   voiceId?: string;
   voiceURI?: string;
   voiceName?: string;
   rate?: number;
+  naturalOnly?: boolean;
 };
 export type ElevenLabsVoice = "jessica" | "chris";
 const elevenLabsVoiceStorageKey = "sori-elevenlabs-voice";
@@ -162,7 +164,7 @@ export async function playElevenLabsKorean(
     const response = await fetch(`${apiUrl}/v1/speech/synthesize`, {
       method: "POST", credentials: "include", cache: "no-store", signal: controller.signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text.normalize("NFC").trim().replace(/\s+/gu, " "), voice }),
+      body: JSON.stringify({ text: naturalSpeechText(text).normalize("NFC").trim().replace(/\s+/gu, " "), voice }),
     });
     if (!response.ok || !response.headers.get("content-type")?.toLowerCase().startsWith("audio/")) throw new Error();
     const blob = await response.blob();
@@ -189,6 +191,7 @@ export async function playElevenLabsKorean(
     if (activeUrl) URL.revokeObjectURL(activeUrl);
     activeAudio = undefined;
     activeUrl = undefined;
+    if (fallbackOptions.naturalOnly || consonantName(text.trim())) return { played: false, source: "unavailable" };
     await waitForKoreanVoices();
     if (version !== playbackVersion) return { played: false, source: "unavailable" };
     const played = playDeviceKorean(text, { ...fallbackOptions, voiceName: "Yuna", rate });

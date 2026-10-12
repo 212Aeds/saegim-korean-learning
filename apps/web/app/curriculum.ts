@@ -1,3 +1,4 @@
+import { consonantAnswers, consonantNameQuestion } from "./ui/hangul-answers";
 import { moreLessons } from "./more-lessons";
 import { newLessons } from "./new-lessons";
 
@@ -454,7 +455,7 @@ export function normalizeAnswer(value: string) {
 
 export function isCorrectTextAnswer(question: TextQuestion, value: string) {
   const answer = normalizeAnswer(value);
-  return [question.answer, ...question.accepted].some(
+  return [question.answer, ...question.accepted, ...(consonantNameQuestion(question.korean, question.answer) ? consonantAnswers(question.korean) : [])].some(
     (accepted) => normalizeAnswer(accepted) === answer,
   );
 }

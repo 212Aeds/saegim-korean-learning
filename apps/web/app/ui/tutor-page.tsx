@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Sparkle } from "./icons";
+import { TutorConversation } from "./tutor-conversation";
 import { SoriMascot } from "./sori-mascot";
 import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
 
@@ -79,7 +80,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
           <div>
             <span className="micro-label"><Sparkle size={14} /> YOUR KOREAN TUTOR</span>
             <h2 id="tutor-title">Ask Saegim anything<br />about Korean.</h2>
-            <p>A focused tutor for grammar, words, writing, pronunciation, and when to use a phrase. No model download or speaking practice in this section.</p>
+            <p>A focused tutor for grammar, words, writing, pronunciation, and when to use a phrase. Ask here for an explanation, or use conversation practice below.</p>
           </div>
         </div>
 
@@ -124,6 +125,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
         )}
         <p className="tutor-boundary-note">Saegim’s answers are AI-generated and can make mistakes. Korean examples are generated from the question context; check subtle usage with a trusted teacher when it matters.</p>
       </section>
+      <TutorConversation profile={learningProfile} />
     </div>
   );
 }

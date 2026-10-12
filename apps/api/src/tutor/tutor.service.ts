@@ -1,13 +1,13 @@
 import { HttpException, HttpStatus, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { ProviderUsageService, TUTOR_REQUEST_RESERVATION_MICRO_USD } from "../provider-usage.service";
 import { TutorProvider } from "./tutor-provider";
-import type { TutorAnswer } from "./tutor.schema";
+import type { TutorAnswer, ConversationRequest } from "./tutor.schema";
 
 @Injectable()
 export class TutorService {
   constructor(private readonly provider: TutorProvider, private readonly usage: ProviderUsageService) {}
 
-  async answer(accountId: string, question: string, lessonContext: string): Promise<TutorAnswer> {
+  async answer(accountId: string, question: string, lessonContext: string, conversation?: ConversationRequest): Promise<TutorAnswer> {
     if (!this.provider.isAvailable()) throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
     const reservation = await this.usage.allowAndRecord(accountId, "tutor", TUTOR_REQUEST_RESERVATION_MICRO_USD);
     if (!reservation.allowed) {
@@ -20,7 +20,7 @@ export class TutorService {
       throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
     }
     try {
-      return await this.provider.answer({ question, lessonContext });
+      return await this.provider.answer({ question, lessonContext, conversation });
     } catch {
       // Provider bodies, credentials, and learner content never enter logs.
       throw new ServiceUnavailableException("The tutor could not answer. Use the lesson hint instead.");

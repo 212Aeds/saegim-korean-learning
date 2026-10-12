@@ -66,17 +66,17 @@ export function pathwayProgress(
   };
 }
 
-export function isLessonUnlocked(lesson: Lesson, completedLessonIds: string[]) {
+export function isLessonUnlocked(lesson: Lesson, completedLessonIds: string[], assumedKnowledge: string[] = []) {
   if (completedLessonIds.includes(lesson.id)) return true;
   const prerequisites = lesson.prerequisiteLessonIds ?? [];
   // Bad or stale IDs must never make a learner lose access to the course.
   const knownPrerequisites = prerequisites.filter((id) => knownLessonIds.has(id));
-  return knownPrerequisites.every((id) => completedLessonIds.includes(id));
+  return knownPrerequisites.every((id) => completedLessonIds.includes(id) || assumedKnowledge.includes(id));
 }
 
-export function prerequisiteLabel(lesson: Lesson, completedLessonIds: string[]) {
+export function prerequisiteLabel(lesson: Lesson, completedLessonIds: string[], assumedKnowledge: string[] = []) {
   const pending = (lesson.prerequisiteLessonIds ?? [])
-    .filter((id) => knownLessonIds.has(id) && !completedLessonIds.includes(id))
+    .filter((id) => knownLessonIds.has(id) && !completedLessonIds.includes(id) && !assumedKnowledge.includes(id))
     .map((id) => lessons.find((item) => item.id === id)?.title)
     .filter((title): title is string => Boolean(title));
   return pending.length ? `Complete first: ${pending.join(" · ")}` : "Ready to learn";
