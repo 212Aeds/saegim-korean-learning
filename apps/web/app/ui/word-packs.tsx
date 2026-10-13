@@ -1,13 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { journeyTopics, journeyVocabulary } from "../journey-content";
 import { WordReference } from "./word-reference";
-import { playElevenLabsKorean, selectedElevenLabsVoice } from "./speech";
+import { playElevenLabsKorean, selectedElevenLabsVoice, preferredSpeechRate, stopKoreanPlayback } from "./speech";
 export function WordPacks() {
   const [topic, setTopic] = useState<string | null>(null),
     [busy, setBusy] = useState<string | null>(null),
     [notice, setNotice] = useState("");
   const pack = journeyTopics.find((item) => item.id === topic);
+  const attempt=useRef(0);
+  function stopAudio(){attempt.current++;stopKoreanPlayback();setBusy(null);}
+  useEffect(()=>()=>{attempt.current++;stopKoreanPlayback();},[]);
   return (
     <section
       className="journey-word-packs"
@@ -25,12 +28,13 @@ export function WordPacks() {
             className="button button-soft"
             key={item.id}
             aria-pressed={topic === item.id}
-            onClick={() => setTopic(topic === item.id ? null : item.id)}
+            onClick={() => {stopAudio();setTopic(topic === item.id ? null : item.id);setNotice("");}}
           >
             {item.title}
           </button>
         ))}
       </div>
+      {busy && <button type="button" className="button button-quiet" onClick={stopAudio}>Stop audio</button>}
       {pack && (
         <div className="word-pack-grid">
           {journeyVocabulary
@@ -46,26 +50,27 @@ export function WordPacks() {
                   className="button button-quiet"
                   disabled={!!busy}
                   onClick={async () => {
+                    const version=++attempt.current;
                     setBusy(word.id);
                     setNotice("");
                     try {
                       const audio = await playElevenLabsKorean(
                         word.example,
                         selectedElevenLabsVoice(),
-                        1,
-                        { naturalOnly: true },
+                        preferredSpeechRate(),
+                        { naturalOnly: true, waitForEnd:true },
                       );
-                      if (!audio.played)
+                      if (!audio.played && version===attempt.current)
                         setNotice(
                           "Audio is unavailable right now. You can keep exploring.",
                         );
                     } finally {
-                      setBusy(null);
+                      if(version===attempt.current)setBusy(null);
                     }
                   }}
                 >
                   {busy === word.id
-                    ? "Preparing voice…"
+                    ? "Preparing / playing…"
                     : "Listen to the example"}
                 </button>
                 <WordReference

@@ -25,7 +25,7 @@ export const conversationRequestSchema = z.strictObject({
   messages: z.array(z.strictObject({ role: z.enum(["user", "assistant"]), content: learnerText(600) })).min(1).max(11)
     .refine((messages) => messages.length % 2 === 1 && messages.every((message, index) => message.role === (index % 2 === 0 ? "user" : "assistant")), "Use alternating turns ending in a learner message."),
   level: z.enum(["new", "hangul", "basic", "intermediate", "advanced"]),
-  scenario: z.enum(["everyday", "cafe", "travel", "friends"]).optional(),
+  scenario: z.enum(["everyday", "cafe", "travel", "friends", "home", "stay", "messages", "plans"]).optional(),
   consent: z.literal(true),
 });
 export type ConversationRequest = z.infer<typeof conversationRequestSchema>;

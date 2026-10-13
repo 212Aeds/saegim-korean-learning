@@ -1,13 +1,17 @@
 import "reflect-metadata";
 import { config } from "dotenv";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 
 config({ path: "../../.env.local" });
 config({ path: "../../.env" });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Full-course review collections exceed Express's 100 KB default.
+  // Keep a bounded request envelope; the progress schema also caps each field.
+  app.useBodyParser("json", { limit: "2mb" });
   app.setGlobalPrefix("v1");
   const webOrigins = (
     process.env.WEB_ORIGINS ??

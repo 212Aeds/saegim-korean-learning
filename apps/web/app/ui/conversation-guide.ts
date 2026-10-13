@@ -18,4 +18,8 @@ export const conversationSituations = [
   { id: "cafe", title: "At a café", prompt: "You are the café staff. Help me order a drink at my level.", phrase: "물을 마셔요.", meaning: "I drink water." },
   { id: "travel", title: "Finding your way", prompt: "Let’s practice asking for directions at my level.", phrase: "역이 어디예요?", meaning: "Where is the station?" },
   { id: "friends", title: "Meeting a friend", prompt: "Let’s meet as friends and talk about our hobbies at my level.", phrase: "취미가 뭐예요?", meaning: "What is your hobby?" },
+  { id:"home",title:"At home",prompt:"Let's describe our home and daily routine at my level.",phrase:"집에 가요.",meaning:"I go home." },
+  { id:"stay",title:"Checking in",prompt:"Help me practice arriving at a hotel and asking for a key at my level.",phrase:"예약이 있어요.",meaning:"I have a reservation." },
+  { id:"messages",title:"Staying in touch",prompt:"Let's practice sending a message and exchanging contact details at my level. Use fictional details.",phrase:"메시지를 보내요.",meaning:"I send a message." },
+  { id:"plans",title:"Making plans",prompt:"Let's arrange a time and place to meet at my level.",phrase:"약속이 있어요.",meaning:"I have an appointment." },
 ] as const;

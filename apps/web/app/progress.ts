@@ -117,7 +117,7 @@ export function recordActivity(
     ...progress,
     streak,
     lastActivity: today,
-    activityDates: [...new Set([...progress.activityDates, today])].slice(-90),
+    activityDates: [...new Set([...progress.activityDates, today])].slice(-3660),
   };
 }
 

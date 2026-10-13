@@ -30,7 +30,7 @@ export function habitProgress(
     run = i > 0 && localDateKey(next) === dates[i - 1] ? run + 1 : 1;
     best = Math.max(best, run);
   }
-  const goals = [3, 7, 14, 30, 60, 90];
+  const goals = [3, 7, 14, 30, 60, 90, 180, 365, 730];
   const nextGoal =
     goals.find((goal) => goal > current) ?? Math.ceil((current + 1) / 30) * 30;
   return {

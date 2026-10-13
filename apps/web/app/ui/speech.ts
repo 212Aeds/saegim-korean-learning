@@ -240,8 +240,14 @@ async function localAudio(text: string, voice: ElevenLabsVoice): Promise<Blob> {
   try { return await task; } finally { localAudioPreparing.delete(key); }
 }
 // Prepare only explicitly configured local audio; never warm a paid provider.
+let preparationVersion = 0;
 export async function prefetchLocalKorean(text: string, voice = selectedElevenLabsVoice()) {
   if (!localSpeechUrl || typeof window === "undefined") return;
+  const version = ++preparationVersion;
+  // Rapid navigation keeps only the latest background preparation.
+  // An explicit Listen request still shares its in-flight clip immediately.
+  await Promise.allSettled([...localAudioPreparing.values()]);
+  if (version !== preparationVersion) return;
   try { await localAudio(text, voice); } catch { /* The Listen button can retry. */ }
 }
 

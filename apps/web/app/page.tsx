@@ -51,6 +51,7 @@ import {
   learningPathways,
   lessonsForPathway,
   pathwayProgress,
+  pathwayForLesson,
   prerequisiteLabel,
 } from "./learning-pathways";
 import { additionalVocabulary, hangulLetters, hangulSyllableExamples } from "./more-lessons";
@@ -259,6 +260,7 @@ export default function Home() {
   function navigateTo(next: Tab) {
     if (next === tab) return;
     setTab(next);
+    window.scrollTo({top:0,behavior:"instant"});
     setLoadingSection(next);
     window.setTimeout(() => setLoadingSection((current) => current === next ? null : current), 240);
   }
@@ -1092,7 +1094,7 @@ function LearnView({
         </p>
       </div>
       <div className="learning-pathways">
-        <LearningCollection completed={progress.completedLessonIds} />
+        <LearningCollection completed={progress.completedLessonIds} profile={learningProfile} onLesson={onLesson} />
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         {[...learningPathways].sort((left, right) => pathwayOrder.indexOf(left.id) - pathwayOrder.indexOf(right.id)).map((pathway) => {
@@ -1111,6 +1113,8 @@ function LearnView({
                 </span>
               </div>
               <progress className="pathway-completion-bar" max={pathwayStats.total} value={pathwayStats.completed} aria-label={`${pathway.title} lessons completed`} />
+              <details className="pathway-courses" open={pathwayForLesson(recommendation)===pathway.id}>
+              <summary>Explore {pathwayStats.total} lessons <span>{pathwayStats.completed} completed</span></summary>
               <div className="course-list">
                 {pathwayLessons.map((lesson, index) => {
                   const complete = progress.completedLessonIds.includes(lesson.id);
@@ -1130,6 +1134,7 @@ function LearnView({
                   );
                 })}
               </div>
+              </details>
             </section>
           );
         })}

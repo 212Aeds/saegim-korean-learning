@@ -53,6 +53,14 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     const current=capture.current;
     if(current?.recorder.state==="recording"){setState("checking");current.recorder.stop();}
   }
+  async function listen() {
+    const attempt=++version.current;
+    setState("playing");setNotice("Preparing Korean audio…");
+    try {
+      const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});
+      if(attempt===version.current)setNotice(result.played?"Your turn. Try saying the phrase.":"Korean audio is unavailable. You can still type your answer.");
+    } finally { if(attempt===version.current)setState("ready"); }
+  }
   async function start() {
     if(!ready||state!=="ready")return;
     const attempt=++version.current;setState("starting");setMatch(null);stopKoreanPlayback();
@@ -95,8 +103,8 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     {match!==null&&<SoriMascot className="speech-feedback-mascot" thumbsUp={match} />}
     {variant !== "lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speech-practice-actions">
-      <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={async()=>{setState("playing");setNotice("Preparing Korean audio…");try{const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});setNotice(result.played?"Your turn. Try saying the phrase.":"Korean audio is unavailable. You can still type your answer.");}finally{setState("ready");}}}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
-      {state==="playing"&&<button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setState("ready");}}>Stop audio</button>}
+      <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={()=>void listen()}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
+      {state==="playing"&&<button type="button" className="button button-quiet" onClick={()=>{version.current++;stopKoreanPlayback();setState("ready");setNotice("Audio stopped. Ready when you are.");}}>Stop audio</button>}
       <button type="button" className="button button-dark" disabled={!ready||(state!=="ready"&&state!=="listening")} onClick={state==="listening"?stop:()=>void start()}>{state==="listening"?"Stop recording":state==="checking"?"Checking…":"Speak Korean"}</button>
     </div>
     {state==="listening"&&<meter min={0} max={100} value={level} aria-label="Microphone input level" />}

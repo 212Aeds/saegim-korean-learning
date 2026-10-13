@@ -44,3 +44,18 @@ test('faster saved pace is accepted by progress storage and used with the select
  try{const {preferredSpeechRate}=require('../apps/web/app/ui/speech.ts');assert.equal(preferredSpeechRate(),1.3);assert.equal((await playKorean('안녕하세요')).source,'local');assert.equal(body.voice,'chris');assert.equal(audio.playbackRate,1.3);}
  finally{stopKoreanPlayback();global.fetch=oldFetch;global.Audio=oldAudio;global.window=oldWindow;}
 });
+
+test('rapid card navigation prepares the newest pending clip without queuing obsolete cards',async()=>{
+ const {prefetchLocalKorean}=require('../apps/web/app/ui/speech.ts');
+ const oldFetch=global.fetch,oldWindow=global.window;const requests=[],finishes=new Map();
+ global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null}};
+ global.fetch=async(_,options)=>{const text=JSON.parse(options.body).text;requests.push(text);await new Promise(resolve=>finishes.set(text,resolve));return {ok:true,headers:new Headers({'content-type':'audio/wav'}),blob:async()=>new Blob(['clip'])};};
+ try{
+  const first=prefetchLocalKorean('첫 준비','chris');await new Promise(resolve=>setImmediate(resolve));
+  const obsolete=prefetchLocalKorean('지난 준비','chris'),latest=prefetchLocalKorean('마지막 준비','chris');
+  assert.deepEqual(requests,['첫 준비']);
+  finishes.get('첫 준비')();await first;await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(requests,['첫 준비','마지막 준비']);
+  finishes.get('마지막 준비')();await Promise.all([obsolete,latest]);
+ }finally{global.fetch=oldFetch;global.window=oldWindow;}
+});

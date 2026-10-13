@@ -28,7 +28,7 @@ export const progressSchema = z.object({
   quizCorrect: z.number().int().min(0).max(1_000_000).default(0),
   streak: z.number().int().min(0).max(100_000),
   lastActivity: z.string().date().nullable(),
-  activityDates: z.array(z.string().date()).max(90),
+  activityDates: z.array(z.string().date()).max(3660),
   reviewItems: z
     .array(
       z.object({
@@ -43,7 +43,7 @@ export const progressSchema = z.object({
         dueAt: z.string().datetime(),
       }),
     )
-    .max(500),
+    .max(2000),
 });
 
 export type ProgressPayload = z.infer<typeof progressSchema>;

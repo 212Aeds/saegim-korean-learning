@@ -47,6 +47,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   const [pausedForThinking, setPausedForThinking] = useState(false);
   const [canSendTurn, setCanSendTurn] = useState(false);
   const [scenario, setScenario] = useState<(typeof conversationSituations)[number]["id"]>("everyday");
+  const listeningAttempt=useRef(0);
   const guide = conversationGuides[profile.level];
   const situation = conversationSituations.find((item) => item.id === scenario)!;
   const koreanTurns = turns.filter((turn) => turn.role === "user" && /[가-힣]/u.test(turn.content)).length;
@@ -74,6 +75,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     setPace(1);
     return () => {
       mounted.current = false;
+      listeningAttempt.current++;
       call.current?.abort();
       request.current?.abort();
       stopKoreanPlayback();
@@ -86,16 +88,17 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     });
   }, [turns.length, thinking, pendingMessage]);
   async function listen(text: string, partner = voice) {
+    const attempt=++listeningAttempt.current;
     setPlaying(true);
     try {
       const result = await playElevenLabsKorean(text, partner, pace, {
         naturalOnly: true,
         waitForEnd: true,
       });
-      if (!result.played && mounted.current)
+      if (!result.played && mounted.current && attempt===listeningAttempt.current)
         setNotice("Voice playback is unavailable. You can continue by typing.");
     } finally {
-      if (mounted.current) setPlaying(false);
+      if (mounted.current && attempt===listeningAttempt.current) setPlaying(false);
     }
   }
   async function replyTo(text: string, signal?: AbortSignal): Promise<Reply> {
@@ -359,7 +362,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>A gentle natural pace at 1.00×.</small></label>
         <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
-        {playing && <button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
+        {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
       <section className="conversation-guide" aria-label="Conversation practice for your level">
         <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>

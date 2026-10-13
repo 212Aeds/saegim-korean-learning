@@ -1,4 +1,5 @@
 import { lessons } from "./curriculum";
+import { journeyTopics } from "./journey-content";
 import { hangulLetters } from "./more-lessons";
 import {
   recommendedLessons,
@@ -21,6 +22,7 @@ type Phrase = {
 };
 
 export type SpeakingCard = {
+  lessonId?: string;
   id: string;
   kind: "phrase" | "pronunciation" | "grammar" | "recall";
   promptLabel: string;
@@ -341,15 +343,23 @@ const letterCards: SpeakingCard[] = hangulLetters.map((entry) => ({
   grammarTip:
     "Listen to the Korean letter name or vowel sound, then repeat. English sound cues are approximate.",
 }));
-const conversationCards: SpeakingCard[] = lessons
+const topicExampleCards: SpeakingCard[] = journeyTopics.filter(topic=>topic.pathwayId).flatMap(topic=>topic.items.map(([word,meaning,example,translation],index)=>({
+  id:`speak-example-${topic.id}-${index}`,lessonId:`${topic.id}-dialogue`,kind:"phrase" as const,
+  promptLabel:topic.title,prompt:example,korean:example,romanization:transcriptRomanization(example),meaning:translation,
+  focus:word,focusRomanization:transcriptRomanization(word),focusMeaning:meaning,
+  grammarTitle:"One familiar word, one useful sentence",
+  grammarTip:`${word} means ${meaning} in this chapter. Listen to the whole sentence, then recall it before revealing the guide.`,
+})));
+const conversationCards: SpeakingCard[] = [...topicExampleCards,...lessons
   .filter(
     (lesson) =>
       lesson.category === "Conversation" &&
       lesson.briefing &&
       /^[가-힣][가-힣\s,.!?]*$/u.test(lesson.briefing.example),
   )
-  .map((lesson) => ({
+  .map((lesson): SpeakingCard => ({
     id: `speak-lesson-${lesson.id}`,
+    lessonId: lesson.id,
     kind: "phrase",
     promptLabel: lesson.title,
     prompt: lesson.briefing!.example,
@@ -361,7 +371,7 @@ const conversationCards: SpeakingCard[] = lessons
     focusMeaning: lesson.briefing!.translation,
     grammarTitle: lesson.briefing!.focus,
     grammarTip: lesson.briefing!.explanation,
-  }));
+  }))];
 export function speakingCardsForProfile(
   profile: LearningProfile,
   completed: string[],
@@ -382,12 +392,10 @@ export function speakingCardsForProfile(
   const route = new Map(
     learningRoute(profile).map((lesson, index) => [lesson.id, index]),
   );
-  const extras =
-    profile.level === "basic" || profile.level === "intermediate" || profile.level === "advanced"
-      ? conversationCards
+  const extras = conversationCards
           .filter((card) => {
             const lesson = lessons.find(
-              (item) => `speak-lesson-${item.id}` === card.id,
+              (item) => item.id === card.lessonId,
             )!;
             return isLessonUnlocked(
               lesson,
@@ -397,10 +405,9 @@ export function speakingCardsForProfile(
           })
           .sort(
             (left, right) =>
-              (route.get(left.id.slice(13)) ?? 999) -
-              (route.get(right.id.slice(13)) ?? 999),
-          )
-      : [];
+              (route.get(left.lessonId!) ?? 999) -
+              (route.get(right.lessonId!) ?? 999),
+          );
   const deck = extras.length ? [...extras, ...speakingCards] : speakingCards;
   return [...new Map(deck.map((card) => [card.korean, card])).values()];
 }
