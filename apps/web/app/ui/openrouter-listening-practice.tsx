@@ -37,6 +37,7 @@ function compareHangul(expected: string, heard: string) {
 function PaidListeningPractice({ korean, english, expectedRomanization, variant = "combined", onResult, onVoiceChange, onPaceChange, selectedVoice }: {
   korean: string;
   selectedVoice?: ElevenLabsVoice;
+  selectedPace?: number;
   english?: string;
   expectedRomanization?: string;
   variant?: "combined" | "lesson-speaking";

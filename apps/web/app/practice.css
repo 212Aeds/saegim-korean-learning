@@ -1,4 +1,28 @@
 .korean-input { width: 100%; }
+.korean-input > input, .korean-input > textarea { display: block; width: 100%; min-width: 0; min-height: 48px; padding: 13px 15px; border: 1px solid #d8dfd2; border-radius: 12px; color: var(--ink); background: var(--paper-strong); font: inherit; font-size: 15px; line-height: 1.6; box-sizing: border-box; }
+.korean-input > textarea { resize: vertical; }
+.korean-input > input:focus-visible, .korean-input > textarea:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.keyboard-toggle { display: block; margin: 9px 0 0; padding: 5px 0; border: 0; color: var(--forest); background: transparent; font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.speech-practice form { display: grid; gap: 12px; margin: 20px 0 12px; }
+.speech-practice form > .button { justify-self: start; }
+.speech-written-label { color: var(--soft-ink); font-size: 12px; font-weight: 650; }
+.speech-practice { border-radius: 18px; background: var(--paper-strong); }
+.tutor-thread { display: grid; gap: 20px; max-height: 62vh; overflow: auto; scroll-padding: 16px; padding: 2px; }
+.tutor-thread:empty { display: none; }
+.tutor-exchange { display: grid; gap: 14px; }
+.tutor-user-question { justify-self: end; max-width: 85%; padding: 14px 18px; border-radius: 16px 16px 4px 16px; background: #edf2e5; color: var(--forest-deep); }
+.tutor-user-question p { margin: 5px 0 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.tutor-bottom-composer { border-top: 1px solid var(--line); padding-top: 20px; width: 100%; }
+.tutor-chat-card .tutor-bottom-composer textarea { min-height: 98px; border: 1px solid #d8dfd2; border-radius: 14px; color: var(--ink); background: var(--paper-strong); font: inherit; line-height: 1.6; box-sizing: border-box; width: 100%; resize: vertical; }
+.tutor-chat-card .tutor-bottom-composer textarea:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.tutor-page button:focus-visible, .keyboard-toggle:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.tutor-page .button:disabled { opacity: .5; cursor: not-allowed; }
+.conversation-starters .button { border: 1px solid #aebfa5; min-height: 46px; padding: 12px 15px; line-height: 1.5; text-align: left; justify-content: space-between; white-space: normal; }
+.conversation-starters .button > span { font-size: 18px; flex: none; }
+.partner-switch .button[aria-pressed="true"] { color: var(--paper-strong); border-color: var(--forest); background: var(--forest); }
+.conversation-situations button { min-height: 48px; }
+.tutor-starter-questions button:hover:not(:disabled), .conversation-starters .button:hover:not(:disabled) { background: #dce8d3; border-color: #8da27f; }
+@media (max-width: 600px) { .tutor-user-question { max-width: 95%; } .tutor-thread { max-height: 54vh; } .tutor-prompt-thinking { flex-wrap: wrap; } }
 .avatar-choices { display: flex; flex-wrap: wrap; gap: 10px; }
 .avatar-choices button { width: 50px; height: 50px; border: 2px solid transparent; background: #f1eddf; border-radius: 14px; font-size: 28px; cursor: pointer; }
 .avatar-choices button[aria-pressed="true"] { border-color: #385442; background: #dce7d0; }

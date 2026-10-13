@@ -11,7 +11,6 @@ import {
 } from "./conversation-history";
 import {
   playElevenLabsKorean,
-  preferredSpeechRate,
   selectedElevenLabsVoice,
   saveElevenLabsVoice,
   stopKoreanPlayback,
@@ -43,7 +42,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
   const [pendingMessage, setPendingMessage] = useState("");
-  const [pace,setPace] = useState(0.9);
+  const [pace,setPace] = useState(1);
   const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
   const [canSendTurn, setCanSendTurn] = useState(false);
@@ -72,7 +71,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   useEffect(() => {
     mounted.current = true;
     setVoice(selectedElevenLabsVoice());
-    setPace(Math.min(0.9,preferredSpeechRate()));
+    setPace(1);
     return () => {
       mounted.current = false;
       call.current?.abort();
@@ -166,14 +165,14 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       }
     }
   }
-  async function send(event: FormEvent) {
-    event.preventDefault();
-    const text = draft.trim().replace(/\s+/gu, " ").slice(0, 600);
+  async function sendMessage(message: string) {
+    const text = message.trim().replace(/\s+/gu, " ").slice(0, 600);
     if (!text || request.current || calling || playing) return;
+    setDraft(text);
     setNotice("");
     try {
       const reply = await replyTo(text);
-      setDraft((current) => (current === draft ? "" : current));
+      setDraft((current) => (current === text ? "" : current));
       if (speakReplies && mounted.current) await listen(reply.korean);
     } catch (error) {
       if (mounted.current)
@@ -185,6 +184,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         );
     }
   }
+  async function send(event: FormEvent) { event.preventDefault(); await sendMessage(draft); }
   async function startCall() {
     if (call.current || request.current || playing) return;
     const controller = new AbortController();
@@ -357,7 +357,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         </div>
       </div>
       <div className="listening-controls">
-        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>Start gently; adjust whenever you need.</small></label>
+        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>A gentle natural pace at 1.00×.</small></label>
         <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
         {playing && <button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
@@ -390,9 +390,10 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
                   key={topic}
                   className="button button-soft"
                   disabled={calling || thinking}
-                  onClick={() => setDraft(topic)}
+                  type="button"
+                  onClick={() => void sendMessage(topic)}
                 >
-                  {topic}
+                  {topic} <span aria-hidden="true">↗</span>
                 </button>
               ))}
             </div>
@@ -466,7 +467,6 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         <p lang="ko">{situation.phrase}</p><p className="conversation-roman">{transcriptRomanization(situation.phrase)}</p><p>{situation.meaning}</p>
         <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling || thinking} onClick={() => setDraft(situation.phrase)}>Use this phrase</button><button type="button" className="button button-quiet" disabled={calling || thinking || playing} onClick={() => void listen(situation.phrase)}>Listen</button></div>
         <WordReference word={situation.phrase} />
-        <small>App-authored practice example; reference lookup is provided for comparison.</small>
       </details>
       <div className={`voice-conversation-panel ${calling ? "is-active" : ""}`}>
         <div>
@@ -587,12 +587,6 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           {notice}
         </p>
       )}
-      <small>
-        AI dialogue can contain mistakes. In local mode, voice turns send microphone clips to your local speech server to
-        generate replies; this chat stays in this visit. Microphone recording
-        pauses while your partner speaks. Each voice session pauses after 10
-        exchanges or 10 minutes.
-      </small>
     </section>
   );
 }

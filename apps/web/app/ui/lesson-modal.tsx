@@ -195,8 +195,7 @@ export function LessonModal({
               <strong lang="ko">{lesson.briefing.example}</strong>
               <span>{lesson.briefing.translation}</span>
               <div className="lesson-audio-actions">
-                <button type="button" className="button button-quiet lesson-briefing-listen" onClick={() => { if (lesson.briefing) void listen(lesson.briefing.example, 1); }}><SpeakerHigh size={16} /> Hear Korean · 1.00×</button>
-                <button type="button" className="button button-quiet lesson-briefing-listen lesson-slow-listen" onClick={() => { if (lesson.briefing) void listen(lesson.briefing.example, 0.75); }}>Slower · 0.75×</button>
+                <button type="button" disabled={audioBusy} className="button button-quiet lesson-briefing-listen" onClick={() => { if (lesson.briefing) void listen(lesson.briefing.example); }}><SpeakerHigh size={16} /> {audioBusy ? "Playing Korean…" : `Hear Korean · ${preferences.speechPace.toFixed(2)}×`}</button>
               </div>
             </div>
             {lesson.briefing.watchFor && (
@@ -235,10 +234,9 @@ export function LessonModal({
             </span>
             <div className="letter-stage"><span lang="ko">{!speechPracticeTurn && (question.id.startsWith("word-hangul-") || (question.id.startsWith("letter-build-") || question.id.includes("-shape-"))) ? "?" : question.korean}</span></div>
             <WordReference word={question.korean} readingSample={Boolean(currentSyllable) || (lesson.category === "Hangul" && (question.korean.includes("+") || lesson.id.startsWith("hangul-read-")))} source={currentWord?.source} license={currentWord?.license} reviewStatus={currentWord?.reviewStatus} />
-            <div className="lesson-audio-actions">
+            {!speechPracticeTurn && <div className="lesson-audio-actions">
               <button type="button" className="lesson-listen-button" aria-label="Hear this Korean phrase at the selected pace" disabled={audioBusy} onClick={() => void listen(question.korean)}><SpeakerHigh size={17} weight="fill" /><span>{audioBusy ? "Loading voice…" : `Listen · ${!paidFeaturesEnabled && !localSpeechUrl ? "Device voice" : preferences.speechVoice === "chris" ? "Chris" : "Jessica"} · ${preferences.speechPace.toFixed(2)}×`}</span></button>
-              <button type="button" className="lesson-listen-button lesson-slow-listen" aria-label="Hear this Korean phrase more slowly" disabled={audioBusy} onClick={() => void listen(question.korean, 0.75)}>Slower · 0.75×</button>
-            </div>
+            </div>}
             {preferences.romanization && romanization && !question.id.startsWith("word-hangul-") && !(question.id.startsWith("letter-build-") || question.id.includes("-shape-")) && (showTip || (phase !== "quiz" && !romanizationRevealsAnswer)) && (
               <p className="lesson-romanization" lang="ko-Latn">{romanization}</p>
             )}
@@ -250,6 +248,7 @@ export function LessonModal({
                 korean={question.korean}
                 expectedRomanization={romanization}
                 selectedVoice={preferences.speechVoice}
+                selectedPace={preferences.speechPace}
                 onVoiceChange={(speechVoice) => onPreferencesChange({ ...preferences, speechVoice })}
                 onResult={(transcript, matches) => {
                   setSpeechResult({ transcript, matches });

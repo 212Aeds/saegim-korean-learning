@@ -84,6 +84,6 @@ all learners or microphones. CPU inference can take longer than realtime.
 
 The default recognizer is medium for short Korean answers. A fixed alphabet context helps letter names; the target answer is never supplied to recognition. Larger models trade more local compute for improved recognition and still can make mistakes.
 
-Generated audio is cached in RAM with a maximum of 32 entries / 8 MB, keyed by voice and a hash of text. Microphone recordings are not cached. Native synthesis uses 1.1× speed and shorter inter-chunk pauses; the app offers 0.65×–1.40× listening pace and applies the saved pace to tutor playback.
+Generated audio is cached in RAM with a maximum of 32 entries / 8 MB, keyed by voice and a hash of text. Microphone recordings are not cached. Native synthesis uses a gentler 0.9 engine speed, a 120 ms lead-in and a 300 ms tail for both presets. The app displays this baseline as 1.00× and offers 0.65×–1.40× listening pace. Conversation pace starts at 1.00× and can be adjusted for the session.
 
 Supertonic sample code is MIT; weights use OpenRAIL-M and retain their LICENSE in the downloaded model folder. This is an archived upstream project with no ongoing support. Model source: https://huggingface.co/supertone-oss-archive/supertonic-3

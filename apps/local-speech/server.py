@@ -54,6 +54,7 @@ class Models:
         return " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.8).strip()
 
     def synthesize(self, text, voice="jessica"):
+        import numpy as np
         import soundfile
         from supertonic import TTS
         preset = "M1" if voice == "chris" else "F1"
@@ -66,10 +67,14 @@ class Models:
             self.tts = TTS(model="supertonic-3", model_dir=model_dir, auto_download=False,
                            intra_op_num_threads=4, inter_op_num_threads=1)
         style = self.tts.get_voice_style(voice_name=preset)
-        wav, _ = self.tts.synthesize(text, lang="ko", voice_style=style, total_steps=8,
-                                   speed=1.1, silence_duration=0.15)
+        sentence = text if text.endswith((".", "!", "?", "。", "！", "？")) else text + "."
+        wav, _ = self.tts.synthesize(sentence, lang="ko", voice_style=style, total_steps=8,
+                                   speed=0.9, silence_duration=0.25)
+        # Preserve all generated samples and leave breathing room at both edges.
+        # Both presets use the same envelope; never crop Jessica's final syllable.
+        samples = np.pad(wav.flatten(), (int(self.tts.sample_rate * 0.12), int(self.tts.sample_rate * 0.3)))
         output = io.BytesIO()
-        soundfile.write(output, wav.flatten(), self.tts.sample_rate, format="WAV", subtype="PCM_16")
+        soundfile.write(output, samples, self.tts.sample_rate, format="WAV", subtype="PCM_16")
         audio = output.getvalue()
         self.audio_cache[cache_key] = audio
         # Bounded, volatile cache of generated audio. Never cache recordings.

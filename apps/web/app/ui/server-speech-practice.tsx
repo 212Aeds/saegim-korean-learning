@@ -7,18 +7,21 @@ import { compareSpeech } from "./speech-check";
 import { transcriptRomanization } from "./transcript-romanization";
 import { KoreanInput } from "./korean-keyboard";
 import { SoriMascot } from "./sori-mascot";
+import { WordReference } from "./word-reference";
 
 type Capture = { recorder: MediaRecorder; stream: MediaStream; context: AudioContext; frame: number; timer: number };
-export function ServerSpeechPractice({ korean, expectedRomanization, onResult, selectedVoice, onVoiceChange, onPaceChange }: {
+export function ServerSpeechPractice({ korean, expectedRomanization, onResult, selectedVoice, selectedPace, onVoiceChange, onPaceChange, variant }: {
   korean: string; expectedRomanization?: string; onResult?: (text: string, matches: boolean) => void;
   selectedVoice?: ElevenLabsVoice; onVoiceChange?: (voice: ElevenLabsVoice) => void; onPaceChange?: (pace: number) => void;
+  selectedPace?: number;
+  variant?: "combined" | "lesson-speaking";
 }) {
   const [voice,setVoice]=useState<ElevenLabsVoice>("jessica"), [pace,setPace]=useState(1);
-  useEffect(()=>{setVoice(selectedVoice ?? selectedElevenLabsVoice());setPace(preferredSpeechRate());},[selectedVoice]);
+  useEffect(()=>{setVoice(selectedVoice ?? selectedElevenLabsVoice());setPace(selectedPace ?? preferredSpeechRate());},[selectedVoice,selectedPace]);
   useEffect(()=>{void prefetchLocalKorean(korean,voice);},[korean,voice]);
   const [ready,setReady]=useState(false);
   const [state,setState]=useState<"ready"|"starting"|"listening"|"checking"|"playing">("ready");
-  const [notice,setNotice]=useState("Connecting to your local speech server…");
+  const [notice,setNotice]=useState("Getting speech practice ready…");
   const [written,setWritten]=useState("");
   const [heard,setHeard]=useState("");
   const [match,setMatch]=useState<boolean|null>(null);
@@ -36,7 +39,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   }
   useEffect(()=>{
     let alive=true;
-    void localSpeechAvailable().then(available=>{if(alive){setReady(available);setNotice(available?"Ready. Say the phrase; a pause finishes the recording.":"The local speech server is unavailable. Start it and reopen this section, or type your answer.");}});
+    void localSpeechAvailable().then(available=>{if(alive){setReady(available);setNotice(available?"Ready. Say the phrase; a pause finishes the recording.":"Speech practice is unavailable right now. Try again shortly or write your answer.");}});
     return ()=>{alive=false;version.current++;controller.current?.abort();if(capture.current){capture.current.recorder.onstop=null;if(capture.current.recorder.state==="recording")capture.current.recorder.stop();}release();stopKoreanPlayback();};
   },[]);
   function check(text: string) {
@@ -70,7 +73,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         try {const text=await transcribeOnLocalServer(new Blob(chunks,{type:recorder.mimeType}),controller.current.signal);
           if(attempt!==version.current)return;
           if(text.trim())check(text);else setNotice("No speech was detected. Try again or type your answer.");
-        }catch{if(attempt===version.current)setNotice("Local transcription failed. Try again or type your answer; no paid service was used.");}
+        }catch{if(attempt===version.current)setNotice("Couldn’t hear that clearly. Try again or write your answer.");}
         finally{if(attempt===version.current)setState("ready");}
       };
       recorder.onerror=()=>{recorder.onstop=null;release();setState("ready");setNotice("Recording failed. Check your microphone permission or type your answer.");};
@@ -90,7 +93,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     <h3>Listen, then try saying it</h3>
     <p role="status">{notice}</p>
     {match!==null&&<SoriMascot className="speech-feedback-mascot" thumbsUp={match} />}
-    <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />
+    {variant !== "lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speech-practice-actions">
       <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={async()=>{setState("playing");setNotice("Preparing Korean audio…");try{const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});setNotice(result.played?"Your turn. Try saying the phrase.":"Korean audio is unavailable. You can still type your answer.");}finally{setState("ready");}}}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
       {state==="playing"&&<button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setState("ready");}}>Stop audio</button>}
@@ -98,10 +101,11 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     </div>
     {state==="listening"&&<meter min={0} max={100} value={level} aria-label="Microphone input level" />}
     <form onSubmit={event=>{event.preventDefault();check(written);}}>
-      <KoreanInput value={written} onChange={setWritten} label="Type Korean or romanization" maxLength={240} openOnFocus={false}/>
+      <span className="speech-written-label">Or write your answer</span>
+      <KoreanInput value={written} onChange={setWritten} label="Type Korean or romanization" placeholder="Type Korean or romanization…" maxLength={240} openOnFocus={false}/>
       <button className="button button-quiet" disabled={!written.trim()||state!=="ready"}>Check phrase</button>
     </form>
     {heard&&<div className="speech-transcript"><p lang="ko">{heard}</p><small>{transcriptRomanization(heard)}</small><strong>{match?"Match":"Try again"}</strong></div>}
-    <small>Recording is sent to the local server you configured. No paid speech service is used. Feedback compares recognized text, not individual pronunciation sounds.</small>
+    {variant !== "lesson-speaking" && <WordReference word={korean} />}
   </section>;
 }

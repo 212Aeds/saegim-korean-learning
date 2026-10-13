@@ -1,6 +1,8 @@
 import io
 import unittest
-from server import create_app
+from unittest.mock import patch
+import types
+from server import create_app, Models
 
 class FakeModels:
     def transcribe(self, audio):
@@ -9,6 +11,33 @@ class FakeModels:
         return b"RIFFtest"
 
 class ServerTests(unittest.TestCase):
+    def test_both_voices_keep_all_audio_and_use_gentle_baseline(self):
+        import numpy as np
+        import soundfile
+        class VoiceEngine:
+            sample_rate = 24000
+            calls = []
+            def get_voice_style(self, voice_name):
+                return voice_name
+            def synthesize(self, text, **options):
+                self.calls.append((text, options))
+                return np.full((1, 2400), 0.25, dtype=np.float32), None
+        engine = VoiceEngine()
+        models = Models()
+        models.tts = engine
+        with patch.dict('sys.modules', {'supertonic': types.SimpleNamespace(TTS=object)}):
+            for voice in ('jessica', 'chris'):
+                audio = models.synthesize('안녕하세요', voice)
+                samples, rate = soundfile.read(io.BytesIO(audio))
+                self.assertEqual(rate, 24000)
+                self.assertEqual(len(samples), 2400 + 2880 + 7200)
+                self.assertTrue(np.all(samples[:2880] == 0))
+                self.assertTrue(np.all(samples[2880:5280] == 0.25))
+                self.assertTrue(np.all(samples[5280:] == 0))
+        self.assertEqual([call[1]['voice_style'] for call in engine.calls], ['F1', 'M1'])
+        for text, options in engine.calls:
+            self.assertEqual(text, '안녕하세요.')
+            self.assertEqual(options['speed'], 0.9)
     def setUp(self):
         self.client = create_app(FakeModels(), ["http://localhost:3016"]).test_client()
     def test_transcription(self):

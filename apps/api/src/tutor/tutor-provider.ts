@@ -61,9 +61,9 @@ export class OpenRouterTutorProvider extends TutorProvider {
           options:{temperature:0.2,num_ctx:4096,num_predict:localModel.startsWith("gpt-oss") ? 1600 : 900,
             ...(process.env.LOCAL_TUTOR_CPU_ONLY === "true" ? {num_gpu:0} : {})},
           messages: input.conversation ? [
-            {role:"system",content:conversationPolicy(input.conversation) + " Follow this pattern: a brief acknowledgment of the latest statement, then exactly ONE question about a new detail. For a correct sentence, give an encouraging tip. Example learner message: 저는 커피를 좋아해요. Example explanation: 좋아요! 어떤 커피를 좋아하세요? Example hint: Nice! What kind of coffee do you like? Example nextExercise: You can answer with a coffee name, such as 아메리카노. Apply the pattern to the actual topic. Put the single follow-up question in explanation. Reply with the JSON fields explanation, hint, nextExercise."},
+            {role:"system",content:conversationPolicy(input.conversation) + " Keep spoken replies brief: one short acknowledgment and one short question, no repeated summary. Keep the translation and tip concise. Follow this pattern: a brief acknowledgment of the latest statement, then exactly ONE question about a new detail. For a correct sentence, give an encouraging tip. Example learner message: 저는 커피를 좋아해요. Example explanation: 좋아요! 어떤 커피를 좋아하세요? Example hint: Nice! What kind of coffee do you like? Example nextExercise: You can answer with a coffee name, such as 아메리카노. Apply the pattern to the actual topic. Put the single follow-up question in explanation. Reply with the JSON fields explanation, hint, nextExercise."},
             ...input.conversation.messages,
-          ] : [{role:"system",content:payload.messages[0].content + "\n" + lessonGrounding},payload.messages[1]],
+          ] : [{role:"system",content:payload.messages[0].content + " Answer directly in 1–2 short sentences with one useful example. Keep the hint and practice prompt to one short sentence each. Avoid repeating the explanation. Only include romanization if explicitly requested. Keep speech levels precise: 감사합니다 and 고맙습니다 are both formal polite; 고마워 is informal. Do not label a 합니다/습니다 ending as casual.\n" + lessonGrounding},payload.messages[1]],
         } : payload),
       });
       if (!response.ok || !response.body) throw new Error("Provider failure");
