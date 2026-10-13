@@ -16,8 +16,9 @@ child.on('exit',code=>{stopped=true;process.exitCode=code??1;});
  console.log('Warming local tutor. First GPU startup can take a few minutes…');
  const response=await fetch('http://127.0.0.1:11434/api/chat',{
   method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(300000),
-  body:JSON.stringify({model:process.env.LOCAL_TUTOR_MODEL||'qwen3:14b',stream:false,think:false,
-   keep_alive:'30m',options:{num_ctx:4096,num_predict:8},messages:[{role:'user',content:'Say hello in Korean.'}]}),
+  body:JSON.stringify({model:process.env.LOCAL_TUTOR_MODEL||'qwen3:14b',stream:false,
+   think:(process.env.LOCAL_TUTOR_MODEL||'').startsWith('gpt-oss')?'low':false,
+   keep_alive:'30m',options:{num_ctx:4096,num_predict:128,...(process.env.LOCAL_TUTOR_CPU_ONLY==='true'?{num_gpu:0}:{})},messages:[{role:'user',content:'Say hello in Korean.'}]}),
  });
  if(!response.ok)throw Error('Download qwen3:14b with ollama pull before starting the tutor.');
  await response.json();console.log('Local tutor ready.');

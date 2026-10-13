@@ -1,11 +1,11 @@
 """Local Korean speech. No paid APIs; bind to loopback by default."""
 import io
 import os
-import tempfile
 import threading
 import wave
 import sys
-import importlib.util
+from collections import OrderedDict
+from hashlib import sha256
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file
@@ -20,6 +20,7 @@ class Models:
     def __init__(self):
         self.whisper = None
         self.tts = None
+        self.audio_cache = OrderedDict()
 
     def transcribe(self, audio):
         import numpy as np
@@ -52,21 +53,29 @@ class Models:
             vad_parameters={"min_silence_duration_ms": 600})
         return " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.8).strip()
 
-    def synthesize(self, text):
-        if sys.platform == "win32" and importlib.util.find_spec("eunjeon") is None:
-            raise RuntimeError("Install requirements-voice.txt before starting speech.")
-        # Melo imports its Japanese tokenizer even for Korean; use the bundled
-        # lightweight dictionary instead of downloading the full Japanese one.
-        import unidic
-        import unidic_lite
-        unidic.DICDIR = unidic_lite.DICDIR
-        from melo.api import TTS
+    def synthesize(self, text, voice="jessica"):
+        import soundfile
+        from supertonic import TTS
+        preset = "M1" if voice == "chris" else "F1"
+        cache_key = sha256((preset + "|" + text).encode()).digest()
+        if cache_key in self.audio_cache:
+            self.audio_cache.move_to_end(cache_key)
+            return self.audio_cache[cache_key]
         if self.tts is None:
-            self.tts = TTS(language="KR", device=os.getenv("TTS_DEVICE", "cpu"))
-        with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "speech.wav"
-            self.tts.tts_to_file(text, self.tts.hps.data.spk2id["KR"], str(path), speed=1.0, quiet=True)
-            return path.read_bytes()
+            model_dir = os.getenv("LOCAL_TTS_MODEL_DIR") or str(Path(__file__).resolve().parents[3] / "work/supertonic-3")
+            self.tts = TTS(model="supertonic-3", model_dir=model_dir, auto_download=False,
+                           intra_op_num_threads=4, inter_op_num_threads=1)
+        style = self.tts.get_voice_style(voice_name=preset)
+        wav, _ = self.tts.synthesize(text, lang="ko", voice_style=style, total_steps=8,
+                                   speed=1.1, silence_duration=0.15)
+        output = io.BytesIO()
+        soundfile.write(output, wav.flatten(), self.tts.sample_rate, format="WAV", subtype="PCM_16")
+        audio = output.getvalue()
+        self.audio_cache[cache_key] = audio
+        # Bounded, volatile cache of generated audio. Never cache recordings.
+        while len(self.audio_cache) > 32 or sum(len(value) for value in self.audio_cache.values()) > 8 * 1024 * 1024:
+            self.audio_cache.popitem(last=False)
+        return audio
 
 
 def create_app(models=None, origins=None):
@@ -109,8 +118,8 @@ def create_app(models=None, origins=None):
 
     @app.get("/health")
     def health():
-        return jsonify(status="ok", transcription=os.getenv("WHISPER_ENGINE", "openai") + "-whisper", speech="MeloTTS-Korean",
-                       paidFallback=False)
+        return jsonify(status="ok", transcription=os.getenv("WHISPER_ENGINE", "openai") + "-whisper", speech="Supertonic-3",
+                       voices={"chris":"M1", "jessica":"F1"}, paidFallback=False)
 
     def run_model(fn):
         if not lock.acquire(blocking=False):
@@ -136,7 +145,10 @@ def create_app(models=None, origins=None):
         text = body.get("text") if isinstance(body, dict) else None
         if not isinstance(text, str) or not text.strip() or len(text) > 500:
             return jsonify(error="Provide 1–500 characters of text."), 400
-        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip())), mimetype="audio/wav"))
+        voice = body.get("voice", "jessica")
+        if voice not in ("chris", "jessica"):
+            return jsonify(error="Choose chris or jessica."), 400
+        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip(), voice)), mimetype="audio/wav"))
 
     return app
 

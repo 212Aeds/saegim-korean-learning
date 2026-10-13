@@ -28,15 +28,15 @@ export function saveSpeechRate(rate: number) {
   if (typeof window !== "undefined" && Number.isFinite(rate)) {
     window.localStorage.setItem(
       "sori-speech-rate",
-      String(Math.min(1.1, Math.max(0.65, rate))),
+      String(Math.min(1.4, Math.max(0.65, rate))),
     );
   }
 }
 
-function preferredSpeechRate() {
+export function preferredSpeechRate() {
   if (typeof window === "undefined") return 1;
   const saved = Number(window.localStorage.getItem("sori-speech-rate"));
-  return saved >= 0.65 && saved <= 1.1 ? saved : 1;
+  return saved >= 0.65 && saved <= 1.4 ? saved : 1;
 }
 
 let queuedStart: number | undefined;
@@ -150,7 +150,7 @@ function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}) {
       : (options.voiceURI ?? savedURI),
     rate:
       options.rate ??
-      (savedRate >= 0.65 && savedRate <= 1.1 ? savedRate : undefined),
+      (savedRate >= 0.65 && savedRate <= 1.4 ? savedRate : undefined),
   };
   const voice = selectedKoreanVoice(voices, playbackOptions);
   // Never let the browser fall back to an English voice for Korean text.
@@ -159,7 +159,7 @@ function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}) {
   utterance.lang = voice.lang.toLowerCase().startsWith("ko")
     ? voice.lang
     : "ko-KR";
-  utterance.rate = Math.min(1.1, Math.max(0.65, playbackOptions.rate ?? 1));
+  utterance.rate = Math.min(1.4, Math.max(0.65, playbackOptions.rate ?? 1));
   utterance.pitch = 1;
   utterance.voice = voice;
   window.speechSynthesis.cancel();
@@ -264,7 +264,7 @@ export async function playElevenLabsKorean(
     const audio = new Audio(url);
     activeUrl = url;
     activeAudio = audio;
-    audio.playbackRate = Math.min(1.1, Math.max(0.65, rate));
+    audio.playbackRate = Math.min(1.4, Math.max(0.65, rate));
     const release = () => {
       URL.revokeObjectURL(url);
       if (activeAudio === audio) {
@@ -394,7 +394,7 @@ async function playCachedAsset(
   const audio = new Audio(url);
   activeUrl = url;
   activeAudio = audio;
-  audio.playbackRate = Math.min(1.1, Math.max(0.65, rate));
+  audio.playbackRate = Math.min(1.4, Math.max(0.65, rate));
   const release = () => {
     URL.revokeObjectURL(url);
     if (activeAudio === audio) {

@@ -11,7 +11,7 @@ export const progressSchema = z.object({
     hangulSize: z.enum(["standard", "large"]),
     hintLevel: z.enum(["gentle", "standard", "challenge"]),
     speechVoice: z.enum(["jessica", "chris"]),
-    speechPace: z.number().min(0.65).max(1.1),
+    speechPace: z.number().min(0.65).max(1.4),
   }).partial()
     .transform((preferences) => ({
       romanization: preferences.romanization ?? true,

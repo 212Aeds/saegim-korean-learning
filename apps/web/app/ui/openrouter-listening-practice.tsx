@@ -28,7 +28,7 @@ function DevicePractice({korean,onResult}: Parameters<typeof PaidListeningPracti
 function savedSpeechRate() {
   if (typeof window === "undefined") return 1;
   const rate = Number(window.localStorage.getItem("sori-speech-rate"));
-  return rate >= 0.65 && rate <= 1.1 ? rate : 1;
+  return rate >= 0.65 && rate <= 1.4 ? rate : 1;
 }
 function compareHangul(expected: string, heard: string) {
   return compareSpeech(expected, heard, true);
@@ -218,7 +218,7 @@ function PaidListeningPractice({ korean, english, expectedRomanization, variant 
             <option value="jessica">Jessica</option><option value="chris">Chris</option>
           </select>
         </label>
-        <label className="openrouter-pace-picker"><span>Speaking pace <strong>{rate.toFixed(2)}×</strong></span><input type="range" min="0.65" max="1.1" step="0.05" value={rate} onChange={(event) => { const next = Number(event.target.value); setRate(next); onPaceChange?.(next); }} aria-label="Speaking pace" /></label>
+        <label className="openrouter-pace-picker"><span>Speaking pace <strong>{rate.toFixed(2)}×</strong></span><input type="range" min="0.65" max="1.4" step="0.05" value={rate} onChange={(event) => { const next = Number(event.target.value); setRate(next); onPaceChange?.(next); }} aria-label="Speaking pace" /></label>
         <div className="speech-practice-actions">
           <button type="button" className="button button-soft" onClick={() => void listen()} disabled={!synthesisAvailable || busy !== null}>
             <SpeakerHigh size={16} /> {busy === "tts" ? "Preparing voice…" : `Listen with ${voice === "jessica" ? "Jessica" : "Chris"}`}

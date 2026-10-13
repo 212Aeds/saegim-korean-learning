@@ -5,7 +5,7 @@ from server import create_app
 class FakeModels:
     def transcribe(self, audio):
         return "이거 얼마예요?"
-    def synthesize(self, text):
+    def synthesize(self, text, voice="jessica"):
         return b"RIFFtest"
 
 class ServerTests(unittest.TestCase):
@@ -29,6 +29,17 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(response.headers['Access-Control-Allow-Origin'], 'http://localhost:3016')
     def test_health_no_paid_fallback(self):
         self.assertFalse(self.client.get('/health').json['paidFallback'])
+    def test_selected_voice_is_forwarded_and_unknown_voice_rejected(self):
+        class Voices(FakeModels):
+            calls = []
+            def synthesize(self, text, voice="jessica"):
+                self.calls.append(voice)
+                return super().synthesize(text, voice)
+        models=Voices(); client=create_app(models,[]).test_client()
+        for voice in ('chris','jessica'):
+            self.assertEqual(client.post('/v1/speech/synthesize',json={'text':'안녕하세요','voice':voice}).status_code,200)
+        self.assertEqual(models.calls,['chris','jessica'])
+        self.assertEqual(client.post('/v1/speech/synthesize',json={'text':'안녕하세요','voice':'unknown'}).status_code,400)
 
 if __name__ == '__main__':
     unittest.main()

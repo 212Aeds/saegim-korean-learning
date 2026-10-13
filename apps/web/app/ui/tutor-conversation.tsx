@@ -11,6 +11,7 @@ import {
 } from "./conversation-history";
 import {
   playElevenLabsKorean,
+  preferredSpeechRate,
   selectedElevenLabsVoice,
   saveElevenLabsVoice,
   stopKoreanPlayback,
@@ -85,7 +86,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function listen(text: string, partner = voice) {
     setPlaying(true);
     try {
-      const result = await playElevenLabsKorean(text, partner, 1, {
+      const result = await playElevenLabsKorean(text, partner, preferredSpeechRate(), {
         naturalOnly: true,
         waitForEnd: true,
       });
@@ -260,7 +261,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         setDraft("");
         if (controller.signal.aborted) break;
         setPhase(`${voice === "chris" ? "Chris" : "Jessica"} is speaking…`);
-        const playback = await playElevenLabsKorean(reply.korean, voice, 1, {
+        const playback = await playElevenLabsKorean(reply.korean, voice, preferredSpeechRate(), {
           naturalOnly: true,
           waitForEnd: true,
         });

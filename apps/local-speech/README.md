@@ -1,19 +1,20 @@
 # Local Korean speech
 
 Flask + Waitress on `http://127.0.0.1:5055`. Original Whisper recognizes Korean by default; faster-whisper is optional (`WHISPER_ENGINE=faster`);
-MeloTTS speaks Korean with its own KR voice, not ElevenLabs Chris/Jessica.
+Supertonic 3 speaks Korean locally. Chris uses the M1 male preset; Jessica uses the F1 female preset. These are local presets, not clones of ElevenLabs voices.
 No API keys, billed inference, or paid fallback. Initial model downloads need
 internet and disk space; later inference runs on this machine. Electricity and
 hardware are still your responsibility.
 
 ## Windows setup (repository root)
 
-Use Python 3.10 for MeloTTS compatibility, in an isolated environment:
+Use Python 3.10 for Supertonic 3 compatibility, in an isolated environment:
 
 ```powershell
 python -m pip install uv
 python -m uv venv --python 3.10 apps/local-speech/.venv
-python -m uv pip install --python apps/local-speech/.venv/Scripts/python.exe -r apps/local-speech/requirements-voice.txt
+python -m uv pip install --python apps/local-speech/.venv/Scripts/python.exe -r apps/local-speech/requirements-supertonic.txt
+apps/local-speech/.venv/Scripts/python.exe scripts/download-local-voices.py
 apps/local-speech/.venv/Scripts/python.exe apps/local-speech/server.py
 ```
 
@@ -33,7 +34,7 @@ CPU transcription is the default, with multilingual Whisper `medium`.
 For a compatible CUDA/CTranslate2 installation, set `WHISPER_DEVICE=cuda`
 and `WHISPER_COMPUTE_TYPE=float16`. `WHISPER_MODEL=large` increases model
 size and compute requirements. GPU configuration is optional, not automatic.
-Melo's upstream recommends Docker on Windows if native dependencies fail.
+The pinned Supertonic 3 model snapshot is downloaded once to ../work/supertonic-3. LOCAL_TTS_MODEL_DIR can select another local directory. Runtime auto-download is disabled.
 
 ## App integration
 
@@ -69,16 +70,20 @@ apps/local-speech/.venv/Scripts/python.exe -m unittest discover -s apps/local-sp
 ```
 
 Sources: [Whisper](https://github.com/openai/whisper), [faster-whisper](https://github.com/SYSTRAN/faster-whisper),
-[MeloTTS Korean model](https://huggingface.co/myshell-ai/MeloTTS-Korean),
-[MeloTTS license and installation](https://github.com/myshell-ai/MeloTTS).
+[Supertonic 3 Korean model](https://huggingface.co/myshell-ai/Supertonic 3-Korean),
+[Supertonic 3 license and installation](https://github.com/myshell-ai/Supertonic 3).
 
 Local commands: `npm run speech:local` and `npm run build:local-speech`. Serve apps/web/.next-local-speech on port 3019. The public publishing build remains separate.
 
 On this Windows machine PyAV was blocked by Application Control. The default original Whisper engine uses browser-converted PCM WAV without PyAV; no security policy is changed.
 
-Verified locally: Korean MeloTTS synthesis of “안녕하세요. 이거 얼마예요?”
+Verified locally: Korean Supertonic 3 synthesis of “안녕하세요. 이거 얼마예요?”
 was transcribed to the same text by Whisper small; silent WAV returned an empty
 transcript. This generated-audio check does not prove recognition accuracy for
 all learners or microphones. CPU inference can take longer than realtime.
 
 The default recognizer is medium for short Korean answers. A fixed alphabet context helps letter names; the target answer is never supplied to recognition. Larger models trade more local compute for improved recognition and still can make mistakes.
+
+Generated audio is cached in RAM with a maximum of 32 entries / 8 MB, keyed by voice and a hash of text. Microphone recordings are not cached. Native synthesis uses 1.1× speed and shorter inter-chunk pauses; the app offers 0.65×–1.40× listening pace and applies the saved pace to tutor playback.
+
+Supertonic sample code is MIT; weights use OpenRAIL-M and retain their LICENSE in the downloaded model folder. This is an archived upstream project with no ongoing support. Model source: https://huggingface.co/supertone-oss-archive/supertonic-3

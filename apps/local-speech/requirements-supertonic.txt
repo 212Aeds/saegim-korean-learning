@@ -1,0 +1,6 @@
+-r requirements.txt
+torch==2.5.1
+numpy==1.26.4
+onnxruntime==1.23.2
+soundfile==0.14.0
+supertonic @ git+https://github.com/supertone-oss-archive/supertonic-py.git@df0f9686dac7fbbde391b759e2ee5286a3737622

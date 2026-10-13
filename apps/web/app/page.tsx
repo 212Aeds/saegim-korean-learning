@@ -112,7 +112,7 @@ function normalizeProgress(
         : defaultLearningPreferences.hintLevel,
       speechVoice: value?.learningPreferences?.speechVoice === "chris" ? "chris" : "jessica",
       speechPace: Number.isFinite(value?.learningPreferences?.speechPace) &&
-        Number(value?.learningPreferences?.speechPace) >= 0.65 && Number(value?.learningPreferences?.speechPace) <= 1.1
+        Number(value?.learningPreferences?.speechPace) >= 0.65 && Number(value?.learningPreferences?.speechPace) <= 1.4
         ? Number(value?.learningPreferences?.speechPace)
         : 1,
     },

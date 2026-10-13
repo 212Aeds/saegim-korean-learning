@@ -5,8 +5,8 @@ database and saved account progress. The separate static device-only package
 remains available; its browser progress is not imported automatically.
 
 Local mode uses Qwen3 14B in Ollama for the existing question tutor and skill-based
-text/voice conversations. Whisper transcribes speech; MeloTTS reads Korean.
-Chris and Jessica remain simulated chat profiles. Both use the local KR voice;
+text/voice conversations. Whisper transcribes speech; Supertonic 3 reads Korean.
+Chris and Jessica remain simulated chat profiles. Chris uses the M1 male preset and Jessica uses the F1 female preset;
 these are not ElevenLabs-generated voices.
 
 No paid API is enabled. Local tutor requests skip provider spend reservations,
@@ -53,3 +53,15 @@ Speech checks with medium correctly transcribed 너, 이거 얼마예요?, and �
 The isolated letter name 기역 was misrecognized in a generated-audio check.
 Letter-name and very short sound exercises can still need retries or typed answers.
 These checks do not establish accuracy for every learner or microphone.
+
+Voice generation uses pinned local Supertonic 3 weights with distinct male/female presets, bounded RAM caching, and saved listening pace up to 1.40×. Standard dev commands now default to local providers and explicitly disable paid APIs. Model licensing conditions still apply; see the voice setup guide.
+
+## OpenAI model evaluation
+
+Local `gpt-oss:20b` has no OpenAI API charges. It was installed and evaluated,
+but CUDA initialization failed on this laptop. CPU mode ran successfully;
+however, the Hangul check produced an incorrect vowel-placement statement and
+an invalid syllable-building exercise. Qwen3 14B remains the default tutor.
+The local adapter supports GPT-OSS low reasoning effort and CPU-only execution
+for future evaluation via `LOCAL_TUTOR_MODEL` and `LOCAL_TUTOR_CPU_ONLY=true`.
+Hosted OpenAI API models and ElevenLabs are not enabled in this configuration.

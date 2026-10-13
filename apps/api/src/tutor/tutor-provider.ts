@@ -26,6 +26,7 @@ export class OpenRouterTutorProvider extends TutorProvider {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const local = usesLocalTutor();
+      const localModel = process.env.LOCAL_TUTOR_MODEL || "qwen3:14b";
       const payload = {
 
           model: tutorModel,
@@ -55,9 +56,10 @@ export class OpenRouterTutorProvider extends TutorProvider {
         headers: local ? {"Content-Type":"application/json"} : {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY?.trim()}`, "Content-Type":"application/json"},
         body: JSON.stringify(local ? {
-          model: process.env.LOCAL_TUTOR_MODEL || "qwen3:14b", stream:false, think:false, keep_alive:"30m",
+          model: localModel, stream:false, think:localModel.startsWith("gpt-oss") ? "low" : false, keep_alive:"30m",
           format:payload.response_format.json_schema.schema,
-          options:{temperature:0.2,num_ctx:4096,num_predict:900},
+          options:{temperature:0.2,num_ctx:4096,num_predict:localModel.startsWith("gpt-oss") ? 1600 : 900,
+            ...(process.env.LOCAL_TUTOR_CPU_ONLY === "true" ? {num_gpu:0} : {})},
           messages: input.conversation ? [
             {role:"system",content:conversationPolicy(input.conversation) + " Follow this pattern: a brief acknowledgment of the latest statement, then exactly ONE question about a new detail. For a correct sentence, give an encouraging tip. Example learner message: 저는 커피를 좋아해요. Example explanation: 좋아요! 어떤 커피를 좋아하세요? Example hint: Nice! What kind of coffee do you like? Example nextExercise: You can answer with a coffee name, such as 아메리카노. Apply the pattern to the actual topic. Put the single follow-up question in explanation. Reply with the JSON fields explanation, hint, nextExercise."},
             ...input.conversation.messages,

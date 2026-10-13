@@ -1,5 +1,6 @@
 "use client";
 import { freePublishing, paidFeaturesEnabled, deviceProgressKey } from "../release";
+import { localSpeechUrl } from "./local-speech-server";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle, SignOut, X } from "./icons";
@@ -262,7 +263,7 @@ export function AccountModal({
                     <option value="challenge">Challenge · less detail</option>
                   </select>
                 </label>
-                {paidFeaturesEnabled && <label>
+                {(paidFeaturesEnabled || localSpeechUrl) && <label>
                   Korean listening voice
                   <select
                     value={preferences.speechVoice}
@@ -277,13 +278,13 @@ export function AccountModal({
                   <input
                     type="range"
                     min="0.65"
-                    max="1.1"
+                    max="1.4"
                     step="0.05"
                     value={preferences.speechPace}
                     onChange={(event) => onPreferencesChange({ ...preferences, speechPace: Number(event.target.value) })}
                     aria-label="Default Korean listening pace"
                   />
-                  <small>Normal is 1.00×. Move left for slower audio.</small>
+                  <small>Normal is 1.00×. Move left for slower audio or right for faster audio.</small>
                 </label>
               </section>
             )}

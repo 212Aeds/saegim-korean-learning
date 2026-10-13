@@ -10,7 +10,7 @@ const env = {
   ...process.env,
   PORT: target === "web" ? "3016" : "4004",
   ...(target === "web" ? { SORI_WEB_DIST_DIR: ".next-live" } : {}),
-  ...(process.env.SAEGIM_LOCAL_FULL === "true" ? {
+  ...(process.env.SAEGIM_LOCAL_FULL !== "false" ? {
     PAID_FEATURES_ENABLED:"false", TUTOR_PROVIDER:"local", LOCAL_TUTOR_MODEL:process.env.LOCAL_TUTOR_MODEL||"qwen3:14b",
     ...(target === "web" ? {
       STATIC_PUBLISH:"false", SORI_WEB_DIST_DIR:".next-local-full", NEXT_PUBLIC_FREE_PUBLISHING:"false",
