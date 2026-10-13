@@ -1,4 +1,5 @@
 import { paidFeaturesEnabled } from "../release";
+import { localSpeechUrl } from "./local-speech-server";
 import { naturalSpeechText, consonantName } from "./hangul-answers";
 export type KoreanSpeechOptions = {
   voiceId?: string;
@@ -202,7 +203,7 @@ export type CatalogVoice = {
 };
 export type KoreanPlayback = {
   played: boolean;
-  source: "catalog" | "elevenlabs" | "device" | "unavailable";
+  source: "catalog" | "elevenlabs" | "local" | "device" | "unavailable";
 };
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 let activeAudio: HTMLAudioElement | undefined;
@@ -220,7 +221,7 @@ export async function playElevenLabsKorean(
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
   stopKoreanPlayback();
-  if (!paidFeaturesEnabled) {
+  if (!paidFeaturesEnabled && !localSpeechUrl) {
     await waitForKoreanVoices();
     const played=playDeviceKorean(naturalSpeechText(text), {...fallbackOptions,rate});
     return {played,source:played ? "device" : "unavailable"};
@@ -228,12 +229,12 @@ export async function playElevenLabsKorean(
   const version = playbackVersion;
   const controller = new AbortController();
   pendingAudio = controller;
-  const timeout = window.setTimeout(() => controller.abort(), 20_000);
+  const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
   try {
-    if (!apiUrl) throw new Error();
-    const response = await fetch(`${apiUrl}/v1/speech/synthesize`, {
+    if (!localSpeechUrl && !apiUrl) throw new Error();
+    const response = await fetch(`${localSpeechUrl ?? apiUrl}/v1/speech/synthesize`, {
       method: "POST",
-      credentials: "include",
+      credentials: localSpeechUrl ? "omit" : "include",
       cache: "no-store",
       signal: controller.signal,
       headers: { "Content-Type": "application/json" },
@@ -298,7 +299,7 @@ export async function playElevenLabsKorean(
     }
     if (fallbackOptions.waitForEnd && !(await ended))
       return { played: false, source: "unavailable" };
-    return { played: true, source: "elevenlabs" };
+    return { played: true, source: localSpeechUrl ? "local" : "elevenlabs" };
   } catch {
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };
@@ -422,6 +423,7 @@ export async function playKorean(
 ): Promise<KoreanPlayback> {
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
+  if (localSpeechUrl) return playElevenLabsKorean(text, selectedElevenLabsVoice(), options.rate ?? preferredSpeechRate(), options);
   stopKoreanPlayback();
   if (!paidFeaturesEnabled) {
     await waitForKoreanVoices();

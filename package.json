@@ -20,7 +20,9 @@
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "db:seed:words": "npm --workspace @sori/api run db:seed:words",
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "speech:local": "node scripts/start-local-speech.cjs",
+    "build:local-speech": "node scripts/build-local-speech-site.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

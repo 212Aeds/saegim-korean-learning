@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { paidFeaturesEnabled } from "../release";
+import { localSpeechUrl } from "./local-speech-server";
+import { ServerSpeechPractice } from "./server-speech-practice";
 import { Microphone, SpeakerHigh, Stop } from "./icons";
 import { SoriMascot } from "./sori-mascot";
 import { KoreanInput } from "./korean-keyboard";
@@ -14,6 +16,7 @@ import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElev
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function OpenRouterListeningPractice(props: Parameters<typeof PaidListeningPractice>[0]) {
+  if (localSpeechUrl) return <ServerSpeechPractice korean={props.korean} expectedRomanization={props.expectedRomanization} onResult={props.onResult} />;
   return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DevicePractice {...props} />;
 }
 function DevicePractice({korean,onResult}: Parameters<typeof PaidListeningPractice>[0]) {

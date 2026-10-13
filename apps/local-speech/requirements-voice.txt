@@ -1,0 +1,7 @@
+-r requirements.txt
+MeloTTS @ git+https://github.com/myshell-ai/MeloTTS.git@209145371cff8fc3bd60d7be902ea69cbdb7965a
+setuptools==80.10.2
+torch==2.5.1
+torchaudio==2.5.1
+mecab-python3==1.0.9
+eunjeon==0.4.0; sys_platform == "win32"

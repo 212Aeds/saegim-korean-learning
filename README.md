@@ -1,5 +1,13 @@
 # Saegim
 
+## Optional local speech server
+
+See [local speech setup](apps/local-speech/README.md) for Flask/Waitress,
+local Whisper transcription, and MeloTTS Korean playback without paid APIs.
+Run `npm run speech:local`, wait for the ready message, and use
+`npm run build:local-speech` for the separate local web build.
+The normal `build:free` publishing package keeps this connection disabled.
+
 ## Device-only publishing build
 
 Run `npm run build:free` to generate a static website in `apps/web/.next-public`.
