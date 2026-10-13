@@ -1081,7 +1081,7 @@ function LearnView({
   onLesson: (lesson?: Lesson) => void;
 }) {
   const routeOrder = new Map(learningRoute(learningProfile).map((lesson, index) => [lesson.id, index]));
-  const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "stretch"] : (learningProfile.level === "intermediate" || learningProfile.level === "advanced") ? ["stretch", "grammar", "everyday", "hangul"] : ["everyday", "grammar", "hangul", "stretch"];
+  const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "daily-life", "connections", "stretch"] : (learningProfile.level === "intermediate" || learningProfile.level === "advanced") ? ["stretch", "grammar", "everyday", "daily-life", "connections", "hangul"] : ["everyday", "grammar", "daily-life", "connections", "hangul", "stretch"];
   const recommendation = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   return (
     <div className="content-page">

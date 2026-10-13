@@ -13,7 +13,7 @@ export function WordPacks() {
       className="journey-word-packs"
       aria-label="Themed vocabulary packs"
     >
-      <span className="micro-label">48 GUIDED WORDS · 8 EVERYDAY TOPICS</span>
+      <span className="micro-label">{journeyVocabulary.length} GUIDED WORDS · {journeyTopics.length} TOPICS</span>
       <h3>Meet words you can use together.</h3>
       <p>
         Choose a topic for contextual meanings and examples. Explore freely;

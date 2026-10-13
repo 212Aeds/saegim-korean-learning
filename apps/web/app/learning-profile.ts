@@ -18,10 +18,10 @@ export function learningRoute(profile = defaultLearningProfile) {
     : profile.level === "hangul" ? ["hello-there", "family-and-friends", "at-the-cafe", "introductions", "sentence-order"]
     : profile.level === "basic" ? ["at-the-cafe", "shopping-prices", "everyday-actions", "ask-a-question"]
     : profile.level === "advanced" ? ["opinions-dialogue", "work-dialogue", "study-dialogue", "mixed-conversation-lab"] : ["conversation-weekend", "conversation-cafe", "conversation-plans", "descriptive-comparisons", "stretch-sentence-lab"];
-  const interests = profile.reasons.flatMap((reason) => reason === "food" ? ["food-words","food-dialogue","at-the-cafe"] : reason === "living" ? ["neighborhood-words","health-words","health-dialogue","transport-words"] : reason === "friends" ? ["hobbies-words","hobbies-dialogue","family-and-friends"] : reason === "exams" ? ["study-words","study-dialogue","time-and-routine"] : reason === "travel"
-    ? ["transport-words", "transport-dialogue", "at-the-cafe", "ask-a-question", "shopping-prices", "places-around-you", "travel-find-places", "give-directions"]
+  const interests = profile.reasons.flatMap((reason) => reason === "food" ? ["food-words","food-dialogue","at-the-cafe"] : reason === "living" ? ["home-words","home-dialogue","calendar-words","calendar-dialogue","neighborhood-words","health-words","health-dialogue","transport-words"] : reason === "friends" ? ["messages-words","messages-dialogue","meetups-words","meetups-dialogue","hobbies-words","hobbies-dialogue","family-and-friends"] : reason === "exams" ? ["study-words","study-dialogue","time-and-routine"] : reason === "travel"
+    ? ["stay-words", "stay-dialogue", "clothes-words", "clothes-dialogue", "transport-words", "transport-dialogue", "at-the-cafe", "ask-a-question", "shopping-prices", "places-around-you", "travel-find-places", "give-directions"]
     : reason === "family" ? ["family-and-friends", "family-short-introductions", "hello-there", "time-and-routine"]
-    : reason === "work-study" ? ["work-words","work-dialogue","study-words","time-and-routine", "time-expressions", "polite-requests", "plans-and-intentions"]
+    : reason === "work-study" ? ["calendar-words","calendar-dialogue","messages-words","messages-dialogue","work-words","work-dialogue","study-words","time-and-routine", "time-expressions", "polite-requests", "plans-and-intentions"]
     : ["hobbies-and-free-time", "describe-things", "weather-and-feelings"]);
   const byId = new Map(lessons.map((lesson) => [lesson.id, lesson]));
   const assumed = new Set(placementKnowledge(profile));

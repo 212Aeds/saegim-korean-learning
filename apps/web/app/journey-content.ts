@@ -3,6 +3,8 @@ import type { KoreanWord } from "./word-bank";
 import { transcriptRomanization } from "./ui/transcript-romanization";
 // App-authored teaching adaptations of dictionary senses. Examples await editorial review.
 type Topic = {
+  pathwayId?: "daily-life" | "connections";
+  dialoguePrerequisites?: string[];
   id: string;
   title: string;
   category: KoreanWord["category"];
@@ -10,6 +12,72 @@ type Topic = {
   dialogue: [string, string];
 };
 export const journeyTopics: Topic[] = [
+  {
+    id:"clothes", title:"Clothes and getting ready", category:"Everyday", pathwayId:"daily-life",
+    items:[
+      ["옷","clothes","옷을 사요.","I buy clothes."],
+      ["신발","shoes","신발을 신어요.","I put on shoes."],
+      ["바지","pants","바지를 입어요.","I wear pants."],
+      ["치마","skirt","치마가 예뻐요.","The skirt is pretty."],
+      ["모자","hat","모자를 써요.","I wear a hat."],
+      ["양말","socks","양말이 있어요.","I have socks."],
+    ], dialogue:["옷을 사요. 모자를 써요.","I buy clothes. I wear a hat."],
+  },
+  {
+    id:"home", title:"At home", category:"Everyday", pathwayId:"daily-life",
+    items:[
+      ["집","home","집에 가요.","I go home."],
+      ["부엌","kitchen","부엌에서 요리해요.","I cook in the kitchen."],
+      ["거실","living room","거실에서 쉬어요.","I rest in the living room."],
+      ["침대","bed","침대가 커요.","The bed is big."],
+      ["책상","desk","책상에서 공부해요.","I study at the desk."],
+      ["창문","window","창문을 열어요.","I open the window."],
+    ], dialogue:["집에 가요. 거실에서 쉬어요.","I go home. I rest in the living room."],
+  },
+  {
+    id:"stay", title:"Arriving and staying", category:"Everyday", pathwayId:"daily-life", dialoguePrerequisites:["polite-requests"],
+    items:[
+      ["호텔","hotel","호텔에 가요.","I go to a hotel."],
+      ["예약","reservation","예약이 있어요.","I have a reservation."],
+      ["방","room","방이 커요.","The room is big."],
+      ["열쇠","key","열쇠가 있어요.","I have a key."],
+      ["짐","luggage","짐이 많아요.","I have a lot of luggage."],
+      ["숙소","lodging","숙소가 가까워요.","The lodging is nearby."],
+    ], dialogue:["예약이 있어요. 열쇠를 주세요.","I have a reservation. Please give me the key."],
+  },
+  {
+    id:"calendar", title:"Days and making time", category:"Everyday", pathwayId:"daily-life", dialoguePrerequisites:["ask-a-question"],
+    items:[
+      ["요일","day of the week","무슨 요일이에요?","What day of the week is it?"],
+      ["주말","weekend","주말에 쉬어요.","I rest on the weekend."],
+      ["오전","morning; a.m.","오전에 공부해요.","I study in the morning."],
+      ["오후","afternoon; p.m.","오후에 만나요.","We meet in the afternoon."],
+      ["오늘","today","오늘 일해요.","I work today."],
+      ["내일","tomorrow","내일 공부해요.","I study tomorrow."],
+    ], dialogue:["주말에 쉬어요. 오후에 만나요.","I rest on the weekend. We meet in the afternoon."],
+  },
+  {
+    id:"messages", title:"Messages and staying in touch", category:"Everyday", pathwayId:"connections",
+    items:[
+      ["메시지","message","메시지를 보내요.","I send a message."],
+      ["전화","telephone","전화가 있어요.","There is a telephone."],
+      ["번호","number","번호를 알아요.","I know the number."],
+      ["연락","contact","연락을 기다려요.","I wait to hear from someone."],
+      ["주소","address","주소를 써요.","I write the address."],
+      ["이메일","email","이메일을 읽어요.","I read an email."],
+    ], dialogue:["메시지를 보내요. 이메일을 읽어요.","I send a message. I read an email."],
+  },
+  {
+    id:"meetups", title:"Making plans together", category:"People", pathwayId:"connections", dialoguePrerequisites:["polite-past"],
+    items:[
+      ["약속","appointment","약속이 있어요.","I have an appointment."],
+      ["일정","schedule","일정이 바빠요.","The schedule is busy."],
+      ["날짜","date","날짜를 알아요.","I know the date."],
+      ["장소","place","장소가 어디예요?","Where is the place?"],
+      ["모임","gathering","모임이 있어요.","There is a gathering."],
+      ["초대","invitation","초대를 받았어요.","I received an invitation."],
+    ], dialogue:["약속이 있어요. 장소가 어디예요?","I have an appointment. Where is the place?"],
+  },
   {
     id: "food",
     title: "Food and meals",
@@ -221,7 +289,7 @@ export const journeyLessons: Lesson[] = journeyTopics.flatMap((topic) => {
       detail: "Six useful words, with meanings and writing practice",
       category: "Vocabulary",
       minutes: 10,
-      pathwayId: "everyday",
+      pathwayId: topic.pathwayId ?? "everyday",
       level: "foundation",
       prerequisiteLessonIds: ["hello-there"],
       words: topic.items.map((item) => item[0]),
@@ -243,11 +311,12 @@ export const journeyLessons: Lesson[] = journeyTopics.flatMap((topic) => {
       detail: "Understand familiar words in complete, polite sentences",
       category: "Conversation",
       minutes: 12,
-      pathwayId: advanced ? "stretch" : "everyday",
+      pathwayId: advanced ? "stretch" : topic.pathwayId ?? "everyday",
       level: advanced ? "stretch" : "intermediate",
       prerequisiteLessonIds: [
         `${topic.id}-words`,
         advanced ? "connect-with-go" : "polite-present",
+        ...(topic.dialoguePrerequisites ?? []),
       ],
       words: topic.items.map((item) => item[0]),
       authoredOnly: true,

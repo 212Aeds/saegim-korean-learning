@@ -8,7 +8,7 @@ import { consonantAnswers, hangulName } from "./ui/hangul-answers";
 const topicPractice: Lesson[] = journeyTopics.map((topic) => ({
   id: `${topic.id}-consolidation`, title: `${topic.title}: put it together`,
   detail: "Sentence gaps, contextual meanings, and connected reading",
-  category: "Conversation", pathwayId: topic.id === "opinions" ? "stretch" : "everyday",
+  category: "Conversation", pathwayId: topic.id === "opinions" ? "stretch" : topic.pathwayId ?? "everyday",
   level: topic.id === "opinions" ? "stretch" : "intermediate", minutes: 12,
   words: topic.items.map((item) => item[0]), prerequisiteLessonIds: [`${topic.id}-dialogue`], authoredOnly: true,
   briefing: { focus: "Use the words you met in the previous two lessons.", explanation: "Recall a missing word from a familiar sentence, recognize its contextual meaning, then connect two sentences. These drills reuse earlier examples; they do not introduce a new grammar rule.", useWhen: "Try this after the topic's word and exchange lessons, then use the same topic with your conversation partner.", example: topic.items[0][2], translation: topic.items[0][3] },

@@ -2,13 +2,15 @@ import { basicReadingPrerequisites } from "./foundation-lessons";
 import { lessons, type Lesson } from "./curriculum";
 
 export type LearningPathway = {
-  id: "hangul" | "grammar" | "everyday" | "stretch";
+  id: "hangul" | "grammar" | "everyday" | "stretch" | "daily-life" | "connections";
   title: string;
   description: string;
   level: "foundation" | "intermediate" | "stretch";
 };
 
 export const learningPathways: LearningPathway[] = [
+  {id:"daily-life",title:"Living Korean",description:"Clothes, home, accommodation, and making time: words, exchanges, then connected recall.",level:"intermediate"},
+  {id:"connections",title:"Korean connections",description:"Stay in touch, arrange a meeting, and build small conversations with other people.",level:"intermediate"},
   {
     id: "hangul",
     title: "Hangul foundations",
@@ -42,7 +44,9 @@ export function pathwayForLesson(lesson: Lesson): LearningPathway["id"] {
     lesson.pathwayId === "hangul" ||
     lesson.pathwayId === "grammar" ||
     lesson.pathwayId === "everyday" ||
-    lesson.pathwayId === "stretch"
+    lesson.pathwayId === "stretch" ||
+    lesson.pathwayId === "daily-life" ||
+    lesson.pathwayId === "connections"
   ) {
     return lesson.pathwayId;
   }
