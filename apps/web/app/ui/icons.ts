@@ -13,6 +13,7 @@ export { Compass } from "@phosphor-icons/react/Compass";
 export { Fire } from "@phosphor-icons/react/Fire";
 export { ForkKnife } from "@phosphor-icons/react/ForkKnife";
 export { GraduationCap } from "@phosphor-icons/react/GraduationCap";
+export { Gear } from "@phosphor-icons/react/Gear";
 export { House } from "@phosphor-icons/react/House";
 export { Lightning } from "@phosphor-icons/react/Lightning";
 export { MapPin } from "@phosphor-icons/react/MapPin";

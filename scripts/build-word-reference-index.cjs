@@ -15,6 +15,8 @@ async function main() {
     const entries = JSON.parse(await readFile(resolve(directory, sourceBatch.file), 'utf8'));
     entries.forEach((entry) => words.add(entry.korean ?? entry.word));
   }
+  const journey = JSON.parse(await readFile(resolve(__dirname, "journey-reference-headwords.json"), "utf8"));
+  journey.forEach(entry => words.add(entry.korean));
   const lines = {};
   bytes.toString('utf8').split('\n').forEach((line, index) => {
     if (!line.startsWith('- word: ')) return;

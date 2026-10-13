@@ -1,0 +1,2 @@
+import type {SavedProgress} from "../progress";
+export async function readOptionalProgress(response:Pick<Response,"text">):Promise<Partial<SavedProgress>|null>{const text=await response.text();if(!text.trim())return null;const value:unknown=JSON.parse(text);if(value===null)return null;if(typeof value!=="object"||Array.isArray(value))throw new Error("Invalid saved progress response.");return value as Partial<SavedProgress>;}

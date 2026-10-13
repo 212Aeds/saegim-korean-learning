@@ -18,10 +18,12 @@ import {
   Sparkle,
   Target,
   UserCircle,
+  Gear,
   X,
   ChatCircleDots,
 } from "./ui/icons";
 import { LessonModal } from "./ui/lesson-modal";
+import { readOptionalProgress } from "./ui/progress-response";
 import { LearningOnboarding } from "./ui/learning-onboarding";
 import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
@@ -31,7 +33,10 @@ import { PracticePage } from "./ui/practice-page";
 import { TutorPage } from "./ui/tutor-page";
 import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
+import {habitProgress} from "./habit-progress";
+import {HabitGarden} from "./ui/habit-garden";
 import { DailyPractice } from "./ui/daily-practice";
+import { WordPacks } from "./ui/word-packs";
 import { WordReference } from "./ui/word-reference";
 import { LearningRoadmap } from "./ui/learning-roadmap";
 import { accountAvatar, weeklyProgress } from "./account-personalization";
@@ -126,11 +131,13 @@ function normalizeProgress(
 export default function Home() {
   const [tab, setTab] = useState<Tab>("today");
   const [progress, setProgress] = useState(initialProgress);
+  const currentStreak=habitProgress(progress).current;
   const [lessonOpen, setLessonOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(lessons[0]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewFocus, setReviewFocus] = useState<"due" | "missed" | "practice">("due");
   const [accountOpen, setAccountOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountMode, setAccountMode] = useState<"create" | "login">("create");
   const [account, setAccount] = useState<LearnerAccount | null>(null);
   const [ready, setReady] = useState(false);
@@ -165,9 +172,10 @@ export default function Home() {
               });
               if (progressResponse.ok) {
                 const remote =
-                  (await progressResponse.json()) as Partial<SavedProgress> | null;
+                  await readOptionalProgress(progressResponse);
                 if (remote) current = normalizeProgress(remote);
                 else {
+                  current = {...initialProgress, dailyGoalMinutes: user.learningProfile?.dailyMinutes ?? initialProgress.dailyGoalMinutes};
                   await fetch(`${apiUrl}/v1/progress/me`, {
                     method: "PUT",
                     credentials: "include",
@@ -311,17 +319,19 @@ export default function Home() {
       const response = await fetch(`${apiUrl}/v1/progress/me`, {
         credentials: "include",
       });
-      const remote = response.ok
-        ? ((await response.json()) as Partial<SavedProgress> | null)
-        : null;
+      if (!response.ok) throw new Error("Your saved progress could not be loaded. Please try signing in again.");
+      const remote = await readOptionalProgress(response);
       if (remote) setProgress(normalizeProgress(remote));
       else {
-        await fetch(`${apiUrl}/v1/progress/me`, {
+        const fresh = {...initialProgress, dailyGoalMinutes:user.learningProfile?.dailyMinutes ?? initialProgress.dailyGoalMinutes};
+        const saved = await fetch(`${apiUrl}/v1/progress/me`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(progress),
+          body: JSON.stringify(fresh),
         });
+        if (!saved.ok) throw new Error("Your new learning space could not be saved. Please try again.");
+        setProgress(fresh);
       }
     }
     setAccount(user);
@@ -442,8 +452,8 @@ export default function Home() {
             <span>
               {account
                 ? "Free learner account"
-                : progress.streak
-                  ? `Beginner · ${progress.streak} day${progress.streak === 1 ? "" : "s"}`
+                : currentStreak
+                  ? `Beginner · ${currentStreak} day${currentStreak === 1 ? "" : "s"}`
                   : "Beginner · New learner"}
             </span>
           </div>
@@ -458,6 +468,7 @@ export default function Home() {
             <strong>{title}</strong>
           </div>
           <div className="topbar-right">
+            <button className="settings-icon-button" aria-label="Open Settings" onClick={()=>{setAccountOpen(false);setSettingsOpen(true);}}><Gear size={22}/></button>
             <span className="free-pill">
               <span /> Always free
             </span>
@@ -502,12 +513,12 @@ export default function Home() {
               </span>
               <span>
                 <strong>
-                  {progress.streak
-                    ? `${progress.streak} day${progress.streak === 1 ? "" : "s"}`
+                  {currentStreak
+                    ? `${currentStreak} day${currentStreak === 1 ? "" : "s"}`
                     : "Start your streak"}
                 </strong>
                 <small>
-                  {progress.streak
+                  {currentStreak
                     ? "learning streak"
                     : "One lesson is enough to begin"}
                 </small>
@@ -517,7 +528,7 @@ export default function Home() {
                   <i
                     key={index}
                     className={
-                      index >= 7 - Math.min(progress.streak, 7) ? "active" : ""
+                      index >= 7 - Math.min(currentStreak, 7) ? "active" : ""
                     }
                     style={{ height }}
                   />
@@ -652,8 +663,10 @@ export default function Home() {
           onClose={() => { setReviewOpen(false); setReviewFocus("due"); }}
         />
       )}
-      {accountOpen && (
+      {(accountOpen || settingsOpen) && (
         <AccountModal
+          settingsOnly={settingsOpen}
+          onOpenSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}}
           apiUrl={process.env.NEXT_PUBLIC_API_URL}
           account={{...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
           preferences={progress.learningPreferences}
@@ -661,7 +674,7 @@ export default function Home() {
           onPreferencesChange={(learningPreferences) =>
             setProgress((current) => ({ ...current, learningPreferences }))
           }
-          onClose={() => setAccountOpen(false)}
+          onClose={() => {setAccountOpen(false);setSettingsOpen(false);}}
           onAuthenticated={authenticateLearner}
           onSignOut={signOut}
           onDelete={deleteAccount}
@@ -734,6 +747,7 @@ function TodayView({
           </select>
         </label>
       </div>
+      <HabitGarden progress={progress} onPractice={()=>onLesson(nextLesson)}/>
       <DailyPractice profile={learningProfile} progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
       <section className="weekly-plan"><div><span className="micro-label">YOUR WEEK, YOUR PACE</span><h3>{weekly.complete ? "Your weekly goal is met!" : `${weekly.studied} of ${weekly.goal} study days this week`}</h3><p>{weekly.complete ? "Keep exploring or take a well-earned break. Your progress stays here." : `${weekly.remaining} more study ${weekly.remaining === 1 ? "day" : "days"} to your goal. A lesson, review, or speaking practice counts.`}</p></div><progress value={Math.min(weekly.studied, weekly.goal)} max={weekly.goal} aria-label="Weekly study goal" /></section>
       <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
@@ -1025,7 +1039,7 @@ function LearnView({
   onLesson: (lesson?: Lesson) => void;
 }) {
   const routeOrder = new Map(learningRoute(learningProfile).map((lesson, index) => [lesson.id, index]));
-  const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "stretch"] : learningProfile.level === "intermediate" ? ["stretch", "grammar", "everyday", "hangul"] : ["everyday", "grammar", "hangul", "stretch"];
+  const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "stretch"] : (learningProfile.level === "intermediate" || learningProfile.level === "advanced") ? ["stretch", "grammar", "everyday", "hangul"] : ["everyday", "grammar", "hangul", "stretch"];
   const recommendation = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   return (
     <div className="content-page">
@@ -1237,10 +1251,11 @@ function WordsView({
       <div className="page-intro words-intro">
         <h2>Your growing word bank</h2>
         <p>
-          Browse 5,000 community-dictionary and Saegim references with local access when the database is offline. Reference entries await editor review before they can become lesson material.
+          Browse 5,000 community-dictionary and Saegim references with local access when the database is offline. Definitions and app-authored examples retain their source and review status.
           Tap a word to hear it.
         </p>
       </div>
+      <WordPacks/>
       <label className="word-search">
         <span className="sr-only">Search Korean words</span>
         <input

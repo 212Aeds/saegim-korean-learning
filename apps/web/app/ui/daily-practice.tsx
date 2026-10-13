@@ -1,5 +1,6 @@
 "use client";
 import type { LearningProfile } from "../learning-profile";
+import {habitProgress} from "../habit-progress";
 import { useState } from "react";
 import { type SavedProgress } from "../progress";
 import { SoriMascot } from "./sori-mascot";
@@ -67,7 +68,7 @@ export function DailyPractice({
       label: "Finding your voice",
       earned: progress.speakingCardIds.length >= 5,
     },
-    { label: "Growing habit", earned: progress.streak >= 3 },
+    { label: "Growing habit", earned: habitProgress(progress).best >= 3 },
   ];
   return (
     <section className="daily-practice" aria-label="Your daily practice plan">

@@ -18,7 +18,7 @@ const modes: Record<PracticeMode, { title: string; description: string }> = {
 };
 export function PracticePage({ progress, profile, preferences, onSessionComplete }: { progress: SavedProgress; profile: LearningProfile; preferences: LearningPreferences; onSessionComplete: () => void }) {
   const pool = useMemo(() => practicePool(progress, profile, "mixed"), [progress, profile]);
-  const [mode, setMode] = useState<PracticeMode>(profile.level === "new" ? "letters" : profile.level === "intermediate" ? "sentences" : "words");
+  const [mode, setMode] = useState<PracticeMode>(profile.level === "new" ? "letters" : (profile.level === "intermediate" || profile.level === "advanced") ? "sentences" : "words");
   const [count, setCount] = useState(10);
   const [session, setSession] = useState<PracticeCard[]>([]);
   const [index, setIndex] = useState(0);

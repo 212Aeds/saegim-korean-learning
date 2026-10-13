@@ -16,6 +16,7 @@ import {
   stopKoreanPlayback,
   type ElevenLabsVoice,
 } from "./speech";
+import { voiceTiming, thinkingPause } from "./conversation-timing";
 import { recordConversationTurn } from "./conversation-recording";
 type Reply = { korean: string; english: string; feedback: string };
 type Turn = ConversationTurn & { reply?: Reply; partner?: ElevenLabsVoice };
@@ -38,6 +39,11 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [calling, setCalling] = useState(false),
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
+  const [pendingMessage, setPendingMessage] = useState("");
+  const [pausedForThinking, setPausedForThinking] = useState(false);
+  const [canSendTurn, setCanSendTurn] = useState(false);
+  const sendTurn = useRef<(() => void) | null>(null),
+    readyToSpeak = useRef<(() => void) | null>(null);
   const request = useRef<AbortController | null>(null),
     call = useRef<AbortController | null>(null),
     history = useRef<Turn[]>([]),
@@ -49,6 +55,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     request.current?.abort();
     stopKoreanPlayback();
     setCalling(false);
+    setPausedForThinking(false);
+    setCanSendTurn(false);
     setPhase("");
     setLevel(0);
   }
@@ -67,7 +75,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       top: log.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [turns.length, thinking]);
+  }, [turns.length, thinking, pendingMessage]);
   async function listen(text: string, partner = voice) {
     setPlaying(true);
     try {
@@ -91,6 +99,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     if (signal?.aborted) controller.abort();
     const timer = window.setTimeout(abort, 65000);
     setThinking(true);
+    setPendingMessage(text);
     try {
       const response = await fetch(`${apiUrl}/v1/tutor/conversation`, {
         method: "POST",
@@ -139,7 +148,10 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       signal?.removeEventListener("abort", abort);
       if (request.current === controller) {
         request.current = null;
-        if (mounted.current) setThinking(false);
+        if (mounted.current) {
+          setThinking(false);
+          setPendingMessage("");
+        }
       }
     }
   }
@@ -188,9 +200,19 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           turn === 0 ? draft.trim().replace(/\s+/gu, " ").slice(0, 600) : "";
         if (!text) {
           setPhase("Listening · speak, then pause");
-          wav = await recordConversationTurn(controller.signal, (value) => {
-            if (!controller.signal.aborted) setLevel(value);
-          });
+          wav = await recordConversationTurn(
+            controller.signal,
+            (value) => {
+              if (!controller.signal.aborted) setLevel(value);
+            },
+            {
+              silenceMs: voiceTiming(profile.level).silenceMs,
+              onReady: (finish) => {
+                sendTurn.current = finish;
+                if (!controller.signal.aborted) setCanSendTurn(!!finish);
+              },
+            },
+          );
           setPhase("Transcribing your message…");
           const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
             method: "POST",
@@ -236,6 +258,23 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           throw new Error(
             "Voice playback could not finish. Continue by typing, or try the conversation again.",
           );
+        if (!controller.signal.aborted && turn < 9) {
+          setPausedForThinking(true);
+          await thinkingPause(
+            voiceTiming(profile.level).thinkingSeconds,
+            controller.signal,
+            (seconds) => {
+              if (!controller.signal.aborted)
+                setPhase(
+                  `Think about your reply · microphone off · listening in ${seconds}s`,
+                );
+            },
+            (skip) => {
+              readyToSpeak.current = skip;
+            },
+          );
+          setPausedForThinking(false);
+        }
       }
       if (!controller.signal.aborted)
         setNotice("Conversation paused. Start again whenever you’re ready.");
@@ -253,6 +292,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         call.current = null;
         if (mounted.current) {
           setCalling(false);
+          setPausedForThinking(false);
+          setCanSendTurn(false);
           setPhase("");
           setLevel(0);
         }
@@ -307,7 +348,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         aria-live="polite"
         aria-relevant="additions"
       >
-        {!turns.length && (
+        {!turns.length && !pendingMessage && (
           <div className="conversation-empty">
             <PartnerAvatar voice={voice} />
             <strong>What would you like to talk about?</strong>
@@ -371,6 +412,19 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             </div>
           </article>
         ))}
+        {pendingMessage && (
+          <article className="conversation-turn is-user">
+            <div className="chat-bubble">
+              <span className="micro-label">YOU · WAITING FOR A REPLY</span>
+              <p lang="ko">{pendingMessage}</p>
+              {/[가-힣]/u.test(pendingMessage) && (
+                <p className="conversation-roman">
+                  {transcriptRomanization(pendingMessage)}
+                </p>
+              )}
+            </div>
+          </article>
+        )}
         {thinking && (
           <p className="conversation-thinking" role="status">
             <span className="typing-dots" aria-hidden="true">
@@ -388,7 +442,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           <p>
             {calling
               ? phase
-              : "Your partner speaks, then listens to your reply. A short pause sends your speech automatically."}
+              : "Your partner speaks, then listens to your reply. A short pause sends your speech. After the reply, you get time to think; tap Ready to speak to begin sooner."}
           </p>
         </div>
         {calling ? (
@@ -402,6 +456,22 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             onClick={() => void startCall()}
           >
             Start voice conversation
+          </button>
+        )}
+        {calling && pausedForThinking && (
+          <button
+            className="button button-soft"
+            onClick={() => readyToSpeak.current?.()}
+          >
+            Ready to speak
+          </button>
+        )}
+        {calling && canSendTurn && (
+          <button
+            className="button button-soft"
+            onClick={() => sendTurn.current?.()}
+          >
+            Send my turn
           </button>
         )}
         {calling && (

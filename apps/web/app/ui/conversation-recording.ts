@@ -8,6 +8,10 @@ import { silenceDecision } from "./speech-check";
 export async function recordConversationTurn(
   signal: AbortSignal,
   onLevel: (level: number) => void,
+  options: {
+    silenceMs?: number;
+    onReady?: (finish: (() => void) | null) => void;
+  } = {},
 ): Promise<ArrayBuffer> {
   if (signal.aborted) throw new DOMException("Stopped", "AbortError");
   if (!navigator.mediaDevices?.getUserMedia)
@@ -66,6 +70,7 @@ export async function recordConversationTurn(
         } finally {
           releaseCapture(clip);
           released = true;
+          options.onReady?.(null);
           onLevel(0);
         }
       };
@@ -95,8 +100,9 @@ export async function recordConversationTurn(
         }
         if (
           clip.samples >= context.sampleRate * maxClipSeconds ||
-          silenceDecision(elapsed, lastSpeech, !!clip.speechDetected) !==
-            "continue"
+          (clip.speechDetected
+            ? elapsed - lastSpeech >= (options.silenceMs ?? 1800)
+            : silenceDecision(elapsed, lastSpeech, false) !== "continue")
         )
           finish();
       };
@@ -104,6 +110,7 @@ export async function recordConversationTurn(
       processor.connect(mute);
       mute.connect(context.destination);
       clip.timer = window.setTimeout(() => finish(), maxClipSeconds * 1000);
+      options.onReady?.(() => finish());
       void context.resume().catch((error) => {
         reject(error);
         finish(true);

@@ -19,6 +19,8 @@ export function AccountModal({
   apiUrl,
   account,
   initialMode = "create",
+  settingsOnly = false,
+  onOpenSettings,
   onClose,
   onAuthenticated,
   onSignOut,
@@ -30,6 +32,8 @@ export function AccountModal({
   apiUrl?: string;
   account: LearnerAccount | null;
   initialMode?: "create" | "login";
+  settingsOnly?: boolean;
+  onOpenSettings?: () => void;
   onClose: () => void;
   onAuthenticated: (account: LearnerAccount) => Promise<void>;
   onSignOut: () => Promise<void>;
@@ -185,14 +189,14 @@ export function AccountModal({
           <button
             className="modal-close"
             onClick={onClose}
-            aria-label="Close Account"
+            aria-label={settingsOnly ? "Close Settings" : "Close Account"}
           >
             <X size={19} />
           </button>
         </div>
         {account ? (
           <div className="account-content">
-            <h2 id="account-title">Your Account, your pace.</h2>
+            <h2 id="account-title">{settingsOnly ? "Settings, at your pace." : "Your Account."}</h2>
             <p>
               Signed in as <strong>{account.displayName}</strong> ·{" "}
               {account.email}
@@ -203,18 +207,19 @@ export function AccountModal({
                 Your lesson and review progress syncs to your account.
               </span>
             </div>
-            <form className="account-profile-form" onSubmit={(event) => void saveProfileName(event)}>
+            {!settingsOnly && onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>⚙ Open Settings</button>}
+            {settingsOnly && <form className="account-profile-form" onSubmit={(event) => void saveProfileName(event)}>
               <label htmlFor="profile-name">Name to use around Saegim</label>
               <div>
                 <input id="profile-name" value={profileName} onChange={(event) => setProfileName(event.target.value)} maxLength={40} required />
                 <button className="button button-quiet" type="submit" disabled={busy || !profileName.trim() || !learningProfile.reasons.length || (!profileChanged && profileName.trim() === account.displayName)}>
-                  Save profile
+                  Save settings
                 </button>
               </div>
               <details className="account-learning-settings" open><summary aria-label="Learning settings">⚙ Learning settings</summary><LearningProfileFields profile={learningProfile} onChange={setLearningProfile} /></details>
               <fieldset className="learning-profile-fields"><legend>Make it yours</legend><span>Choose your avatar</span><div className="avatar-choices">{Object.entries(avatars).map(([id, symbol]) => <button key={id} type="button" aria-label={`Choose ${id} avatar`} aria-pressed={(learningProfile.avatar ?? "sprout") === id} onClick={() => setLearningProfile({ ...learningProfile, avatar: id as NonNullable<LearningProfile["avatar"]> })}>{symbol}</button>)}</div><label>Your weekly study goal<select value={learningProfile.weeklyGoal ?? 5} onChange={(event) => setLearningProfile({ ...learningProfile, weeklyGoal: Number(event.target.value) as 3 | 5 | 7 })}><option value={3}>3 days · a gentle start</option><option value={5}>5 days · a steady rhythm</option><option value={7}>7 days · a daily habit</option></select></label></fieldset>
-            </form>
-            {preferences && onPreferencesChange && (
+            </form>}
+            {settingsOnly && preferences && onPreferencesChange && (
               <section className="learning-preferences" aria-labelledby="learning-preferences-title">
                 <div>
                   <span className="micro-label">MAKE IT YOURS</span>
@@ -275,7 +280,7 @@ export function AccountModal({
                 </label>
               </section>
             )}
-            <div className="account-data-actions">
+            {!settingsOnly && <div className="account-data-actions">
               <button
                 className="button button-quiet"
                 onClick={exportData}
@@ -290,19 +295,19 @@ export function AccountModal({
               >
                 Delete account and synced progress
               </button>
-            </div>
+            </div>}
             {message && (
               <p className="account-message" role="alert">
                 {message}
               </p>
             )}
-            <button
+            {!settingsOnly && <button
               className="button button-quiet account-action"
               onClick={signOut}
               disabled={busy}
             >
               <SignOut size={17} /> Sign out
-            </button>
+            </button>}
           </div>
         ) : (
           <div className="account-content">

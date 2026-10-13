@@ -1,6 +1,7 @@
 import type { HangulSyllableExample, Lesson, LessonBriefing, LessonQuestion } from "./curriculum";
 import type { KoreanWord, WordCategory } from "./word-bank";
 
+import {journeyVocabulary} from "./journey-content";
 type VocabularyRow = [string, string, string, WordCategory, string];
 
 const rows: VocabularyRow[] = [
@@ -117,7 +118,7 @@ const rows: VocabularyRow[] = [
   ["여행", "yeohaeng", "travel; trip", "Everyday", "한국 여행을 해요."],
 ];
 
-export const additionalVocabulary: KoreanWord[] = rows.map(
+const existingAdditionalVocabulary: KoreanWord[] = rows.map(
   ([korean, romanization, meaning, category, example]) => ({
     id: `extra-${korean}`,
     korean,
@@ -127,6 +128,8 @@ export const additionalVocabulary: KoreanWord[] = rows.map(
     example,
   }),
 );
+
+export const additionalVocabulary:KoreanWord[] = [...existingAdditionalVocabulary,...journeyVocabulary];
 
 const letterRows: VocabularyRow[] = [
   ["ㄱ", "giyeok", "light g / k sound", "Hangul", "가"],

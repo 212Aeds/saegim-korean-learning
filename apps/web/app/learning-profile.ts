@@ -1,7 +1,7 @@
 import { coreLetterLessonIds } from "./foundation-lessons";
 import { lessons } from "./curriculum";
 import { isLessonUnlocked } from "./learning-pathways";
-export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate"; reasons: Array<"family" | "travel" | "culture" | "work-study">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7; dailyMinutes?: 5 | 10 | 15 | 20 | 30 | 45 | 60; onboardingCompleted?: boolean };
+export type LearningProfile = { level: "new" | "hangul" | "basic" | "intermediate" | "advanced"; reasons: Array<"family" | "travel" | "culture" | "work-study" | "friends" | "food" | "living" | "exams">; avatar?: "sprout" | "cat" | "star" | "moon"; weeklyGoal?: 3 | 5 | 7; dailyMinutes?: 5 | 10 | 15 | 20 | 30 | 45 | 60; onboardingCompleted?: boolean };
 export const defaultLearningProfile: LearningProfile = { level: "new", reasons: ["culture"] };
 // Self-reported placement opens an entry point; it never awards completion or XP.
 export function placementKnowledge(profile = defaultLearningProfile) {
@@ -9,6 +9,7 @@ export function placementKnowledge(profile = defaultLearningProfile) {
   const hangul = lessons.filter((lesson) => lesson.category === "Hangul").map((lesson) => lesson.id);
   if (profile.level === "hangul") return hangul;
   const basic = ["hello-there", "introductions", "sentence-order", "sentence-particles", "polite-present", "count-to-ten"];
+  if(profile.level === "advanced") return [...hangul,...lessons.filter(lesson=>lesson.pathwayId === "grammar" || lesson.level === "foundation" || lesson.level === "intermediate").map(lesson=>lesson.id)];
   return profile.level === "basic" ? [...hangul, ...basic] : [...hangul, ...basic, "at-the-cafe", "ask-a-question", "polite-past", "plans-and-intentions", "connect-with-go"];
 }
 export function learningRoute(profile = defaultLearningProfile) {
@@ -16,11 +17,11 @@ export function learningRoute(profile = defaultLearningProfile) {
     ? ["hangul-first-sounds", ...coreLetterLessonIds, "hangul-more-sounds", "build-a-syllable", "hangul-syllable-blocks", "hangul-batchim", "first-readable-words", "hello-there", "introductions", "sentence-order"]
     : profile.level === "hangul" ? ["hello-there", "family-and-friends", "at-the-cafe", "introductions", "sentence-order"]
     : profile.level === "basic" ? ["at-the-cafe", "shopping-prices", "everyday-actions", "ask-a-question"]
-    : ["conversation-weekend", "conversation-cafe", "conversation-plans", "descriptive-comparisons", "stretch-sentence-lab"];
-  const interests = profile.reasons.flatMap((reason) => reason === "travel"
-    ? ["at-the-cafe", "ask-a-question", "shopping-prices", "places-around-you", "travel-find-places", "give-directions"]
+    : profile.level === "advanced" ? ["opinions-dialogue", "work-dialogue", "study-dialogue", "mixed-conversation-lab"] : ["conversation-weekend", "conversation-cafe", "conversation-plans", "descriptive-comparisons", "stretch-sentence-lab"];
+  const interests = profile.reasons.flatMap((reason) => reason === "food" ? ["food-words","food-dialogue","at-the-cafe"] : reason === "living" ? ["neighborhood-words","health-words","health-dialogue","transport-words"] : reason === "friends" ? ["hobbies-words","hobbies-dialogue","family-and-friends"] : reason === "exams" ? ["study-words","study-dialogue","time-and-routine"] : reason === "travel"
+    ? ["transport-words", "transport-dialogue", "at-the-cafe", "ask-a-question", "shopping-prices", "places-around-you", "travel-find-places", "give-directions"]
     : reason === "family" ? ["family-and-friends", "family-short-introductions", "hello-there", "time-and-routine"]
-    : reason === "work-study" ? ["time-and-routine", "time-expressions", "polite-requests", "plans-and-intentions"]
+    : reason === "work-study" ? ["work-words","work-dialogue","study-words","time-and-routine", "time-expressions", "polite-requests", "plans-and-intentions"]
     : ["hobbies-and-free-time", "describe-things", "weather-and-feelings"]);
   const byId = new Map(lessons.map((lesson) => [lesson.id, lesson]));
   const assumed = new Set(placementKnowledge(profile));

@@ -383,7 +383,7 @@ export function speakingCardsForProfile(
     learningRoute(profile).map((lesson, index) => [lesson.id, index]),
   );
   const extras =
-    profile.level === "basic" || profile.level === "intermediate"
+    profile.level === "basic" || profile.level === "intermediate" || profile.level === "advanced"
       ? conversationCards
           .filter((card) => {
             const lesson = lessons.find(

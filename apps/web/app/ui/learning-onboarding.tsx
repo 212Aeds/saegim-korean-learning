@@ -26,7 +26,7 @@ export function LearningOnboarding({
         <h1>Let’s find your starting point.</h1>
         <p>
           Three small choices for a learning path that fits you. Change them
-          anytime in My Account → learning settings.
+          anytime in ⚙ Settings.
         </p>
         <form
           onSubmit={async (event) => {

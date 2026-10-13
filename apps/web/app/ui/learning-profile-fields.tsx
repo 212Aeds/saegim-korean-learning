@@ -25,7 +25,7 @@ export function LearningProfileFields({
           <option value="new">I’m brand new to Korean</option>
           <option value="hangul">I can read Hangul</option>
           <option value="basic">I know some words and simple sentences</option>
-          <option value="intermediate">I can have basic conversations</option>
+          <option value="intermediate">I can have basic conversations</option><option value="advanced">I can discuss opinions and connect ideas</option>
         </select>
       </label>
       <span>What brings you here? Choose one or more.</span>
@@ -35,6 +35,7 @@ export function LearningProfileFields({
           ["travel", "Travel and everyday situations"],
           ["culture", "Music, shows, and curiosity"],
           ["work-study", "Work or study"],
+          ["friends", "Friends and relationships"], ["food", "Food and cooking"], ["living", "Living in Korea"], ["exams", "TOPIK and study goals"],
         ] as const
       ).map(([reason, label]) => (
         <label className="profile-reason" key={reason}>
