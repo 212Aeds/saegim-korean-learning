@@ -1,0 +1,20 @@
+.conversation-guide { background: #f3f5ed; border: 1px solid #dde3d4; border-radius: 20px; padding: 22px; margin: 22px 0 0; }
+.conversation-guide h3 { font-size: 23px; letter-spacing: -.5px; margin: 9px 0; }
+.conversation-guide p { color: #53604c; font-size: 14px; line-height: 1.6; margin: 8px 0; }
+.conversation-guide .conversation-goal { border-left: 2px solid #889e68; padding-left: 14px; margin: 18px 0; }
+.conversation-goal strong { display: block; color: #36492d; margin-bottom: 3px; }
+.conversation-situations { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+.conversation-situations button { font: inherit; font-size: 12px; text-align: left; background: #fffdf8; border: 1px solid #dbe1d1; border-radius: 12px; padding: 14px 12px; color: #425137; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }
+.conversation-situations button[aria-pressed=true] { background: #dfe9d2; border-color: #81976a; }
+.conversation-situations button:disabled { cursor: default; opacity: .65; }
+.conversation-guide > small { display: block; color: #59644e; line-height: 1.5; margin-top: 10px; }
+.conversation-session-meter { display: flex; align-items: center; gap: 20px; margin-top: 19px; font-size: 12px; color: #526146; }
+.conversation-session-meter progress { width: 100px; margin-left: auto; height: 6px; accent-color: #70894f; }
+.conversation-checkpoint { border-top: 1px solid #d5dfc9; padding-top: 12px; }
+.conversation-phrase-help { border: 1px solid #e1e5db; border-radius: 16px; padding: 16px 18px; margin: 0 0 18px; }
+.conversation-phrase-help > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: #425637; }
+.conversation-phrase-help > p[lang=ko] { font-size: 25px; margin: 18px 0 4px; }
+.conversation-phrase-help > small { color: #65705b; display: block; line-height: 1.5; }
+@media (hover:hover) and (prefers-reduced-motion:no-preference) { .conversation-situations button:hover:not(:disabled) { transform: translateY(-2px); border-color: #81976a; } }
+@media (max-width:600px) { .conversation-situations { grid-template-columns: repeat(2,minmax(0,1fr)); } .conversation-guide { padding: 18px; } }
+@media (prefers-reduced-motion:reduce) { .conversation-situations button { transition: none; } }

@@ -18,6 +18,7 @@ import {
 } from "./speech";
 import { voiceTiming, thinkingPause } from "./conversation-timing";
 import { recordConversationTurn } from "./conversation-recording";
+import { conversationGuides, conversationSituations } from "./conversation-guide";
 type Reply = { korean: string; english: string; feedback: string };
 type Turn = ConversationTurn & { reply?: Reply; partner?: ElevenLabsVoice };
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -42,6 +43,10 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   const [pendingMessage, setPendingMessage] = useState("");
   const [pausedForThinking, setPausedForThinking] = useState(false);
   const [canSendTurn, setCanSendTurn] = useState(false);
+  const [scenario, setScenario] = useState<(typeof conversationSituations)[number]["id"]>("everyday");
+  const guide = conversationGuides[profile.level];
+  const situation = conversationSituations.find((item) => item.id === scenario)!;
+  const koreanTurns = turns.filter((turn) => turn.role === "user" && /[가-힣]/u.test(turn.content)).length;
   const sendTurn = useRef<(() => void) | null>(null),
     readyToSpeak = useRef<(() => void) | null>(null);
   const request = useRef<AbortController | null>(null),
@@ -73,7 +78,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   useEffect(() => {
     log.current?.scrollTo({
       top: log.current.scrollHeight,
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
   }, [turns.length, thinking, pendingMessage]);
   async function listen(text: string, partner = voice) {
@@ -111,6 +116,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             ({ role, content }) => ({ role, content }),
           ),
           level: profile.level,
+          scenario,
           consent: true,
         }),
         signal: controller.signal,
@@ -340,6 +346,16 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           ))}
         </div>
       </div>
+      <section className="conversation-guide" aria-label="Conversation practice for your level">
+        <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>
+        <p className="conversation-goal"><strong>Try this today</strong>{guide.goal}</p>
+        <div className="conversation-situations" role="group" aria-label="Choose a practice situation">
+          {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || turns.length > 0} onClick={() => { setScenario(item.id); setDraft(item.prompt); }}>{item.title}</button>)}
+        </div>
+        {turns.length > 0 && <small>Start a new conversation to choose another situation, or tell your partner where you want to go next.</small>}
+        <div className="conversation-session-meter"><span><strong>{koreanTurns}</strong> / {guide.turns} Korean replies in this visit</span><progress max={guide.turns} value={Math.min(koreanTurns, guide.turns)} aria-label="Korean replies practiced in this conversation" /></div>
+        {koreanTurns >= guide.turns && <p className="conversation-checkpoint" role="status">A little conversation, completed. Keep going or take a break. This counts replies, not fluency or pronunciation.</p>}
+      </section>
       <div
         ref={log}
         className="conversation-log"
@@ -354,15 +370,11 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             <strong>What would you like to talk about?</strong>
             <p>Start in Korean or describe a situation in English.</p>
             <div className="conversation-starters">
-              {[
-                "Help me order a drink at a café.",
-                "Let’s introduce ourselves in simple Korean.",
-                "Ask me about my day.",
-              ].map((topic) => (
+              {guide.starters.map((topic) => (
                 <button
                   key={topic}
                   className="button button-soft"
-                  disabled={calling}
+                  disabled={calling || thinking}
                   onClick={() => setDraft(topic)}
                 >
                   {topic}
@@ -434,6 +446,13 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           </p>
         )}
       </div>
+      <details className="conversation-phrase-help">
+        <summary>Need a phrase to get started?</summary>
+        <p lang="ko">{situation.phrase}</p><p className="conversation-roman">{transcriptRomanization(situation.phrase)}</p><p>{situation.meaning}</p>
+        <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling || thinking} onClick={() => setDraft(situation.phrase)}>Use this phrase</button><button type="button" className="button button-quiet" disabled={calling || thinking || playing} onClick={() => void listen(situation.phrase)}>Listen</button></div>
+        <WordReference word={situation.phrase} />
+        <small>App-authored practice example; reference lookup is provided for comparison.</small>
+      </details>
       <div className={`voice-conversation-panel ${calling ? "is-active" : ""}`}>
         <div>
           <strong>
@@ -532,11 +551,12 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             <button
               type="button"
               className="button button-quiet"
-              disabled={thinking || calling}
+              disabled={thinking || calling || playing}
               onClick={() => {
                 stopKoreanPlayback();
                 history.current = [];
                 setTurns([]);
+                setDraft("");
                 setNotice("");
               }}
             >
