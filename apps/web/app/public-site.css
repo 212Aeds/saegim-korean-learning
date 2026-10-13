@@ -1,0 +1,32 @@
+.public-nav-link { color: var(--forest); text-decoration: none; font-size: 13px; padding: 10px 0; }
+.landing-copy h1 { font-size: clamp(43px,5.8vw,72px); line-height: 1.05; }
+.landing-note { max-width: 390px; line-height: 1.6; }
+.landing-art { overflow: visible; }
+.public-course-facts { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 24px 0; color: var(--muted); font-size: 13px; }
+.public-course-facts strong { color: var(--forest); font-size: 20px; margin-right: 8px; font-weight: 550; }
+.public-path { padding: 72px 0; scroll-margin-top: 30px; }
+.public-section-heading { max-width: 600px; }
+.public-section-heading h2,.public-invitation h2,.public-faq h2 { font-family: Georgia,serif; font-size: clamp(29px,4vw,44px); font-weight: 450; letter-spacing: -1.3px; line-height: 1.15; margin: 16px 0; color: var(--forest-deep); }
+.public-section-heading p,.public-path-grid p,.public-invitation p,.public-faq p { color: var(--muted); line-height: 1.75; font-size: 14px; }
+.public-path-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 28px; margin-top: 36px; }
+.public-path-grid article { border-top: 2px solid #afbc97; padding-top: 18px; }
+.public-step-number { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+.public-path-sample { padding: 30px 0 24px; color: #65804c; font-size: 18px; letter-spacing: 1px; }
+.public-path-grid article:first-child .public-path-sample { font-size: 32px; padding-top: 19px; padding-bottom: 20px; }
+.public-path-grid h3 { font-size: 19px; margin: 0 0 12px; letter-spacing: -.4px; }
+.public-invitation { display: flex; gap: 25px; align-items: center; background: #eaf0df; border-radius: 26px; padding: 35px; }
+.public-invitation > svg { width: 84px; height: 84px; flex: none; }
+.public-invitation > div { flex: 1; }
+.public-invitation h2 { font-size: 30px; margin: 10px 0; }
+.public-invitation p { margin: 0; max-width: 460px; }
+.public-invitation .button { flex: none; }
+.public-faq { display: grid; grid-template-columns: .85fr 1.15fr; gap: 50px; padding: 75px 0; }
+.public-faq h2 { font-size: 33px; }
+.public-faq details { border-bottom: 1px solid var(--line); padding: 18px 0; }
+.public-faq summary { font-size: 15px; font-weight: 600; cursor: pointer; color: var(--forest-deep); line-height: 1.5; }
+.public-faq p { margin: 14px 0 0; }
+.public-nav-link:focus-visible { outline: 2px solid var(--forest); outline-offset: 4px; }
+.landing-footer a { color: var(--forest); text-underline-offset: 3px; }
+@media(max-width:760px) { .public-nav-link { font-size: 12px; } .landing-nav-actions { gap: 12px; } .public-course-facts { flex-wrap: wrap; justify-content: start; gap: 18px 28px; } .public-course-facts strong { display: block; margin-bottom: 5px; } .public-path-grid { grid-template-columns: 1fr; gap: 28px; } .public-path { padding: 48px 0; } .public-path-sample { padding: 15px 0; } .public-invitation { flex-wrap: wrap; padding: 24px; gap: 16px; } .public-invitation > svg { width: 55px; height: 55px; } .public-invitation > div { min-width: 170px; } .public-faq { grid-template-columns: 1fr; gap: 12px; padding: 48px 0; } }
+@media(max-width:760px) { .public-invitation { display:grid; grid-template-columns:55px minmax(0,1fr); } .public-invitation > div { min-width:0; } .public-invitation .button { grid-column:1/-1; justify-self:start; } }
+@media(max-width:390px) { .landing-nav-actions .free-pill { display: none; } }

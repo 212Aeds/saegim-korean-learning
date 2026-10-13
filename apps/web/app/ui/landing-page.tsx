@@ -8,6 +8,7 @@ import {
   Sparkle,
 } from "./icons";
 import { SoriMascot } from "./sori-mascot";
+import { lessons } from "../curriculum";
 
 export function LandingPage({
   onCreateAccount,
@@ -26,6 +27,8 @@ export function LandingPage({
           <span>saegim<span>.</span></span>
         </a>
         <div className="landing-nav-actions">
+          <a className="public-nav-link" href="#your-path">Explore</a>
+          <a className="public-nav-link" href="/about/">About</a>
           <span className="free-pill"><span /> Always free</span>
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
@@ -34,15 +37,15 @@ export function LandingPage({
       <section className="landing-hero" id="home">
         <div className="landing-copy">
           <span className="micro-label"><Sparkle size={14} /> YOUR KOREAN, YOUR WAY</span>
-          <h1>Make room for<br /><em>one more word.</em></h1>
+          <h1>Korean, one<br /><em>small win at a time.</em></h1>
           <p>
-            Learn Hangul, build real sentences, and keep the words you meet.
-            Small, thoughtful practice — free, for as long as you like.
+            Start with the letters. Find your words. Build sentences you can use.
+            A welcoming place to practice Korean, at your own pace.
           </p>
           <button className="button button-dark landing-cta" onClick={onCreateAccount}>
-            {freeMode ? "Start learning on this device" : "Create your free account"} <ArrowRight size={17} weight="bold" />
+            {freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
-          <span className="landing-note">{freeMode ? "Progress is saved in this browser. No account or subscription needed. Clearing browser data removes it; export a backup from Account." : "A free account keeps your lessons and reviews together."}</span>
+          <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "A free account keeps your lessons and reviews together."}</span>
         </div>
         <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">
           <span className="landing-orbit orbit-one" />
@@ -61,10 +64,12 @@ export function LandingPage({
         </div>
       </section>
 
+      <div className="public-course-facts" aria-label="What you can explore"><span><strong>{lessons.length}</strong> lessons to explore</span><span><strong>5</strong> starting levels</span><span><strong>Your pace</strong> always</span></div>
+
       <section className="landing-promises" aria-label="How Saegim helps you learn">
         <article>
           <BookOpenText size={20} />
-          <div><strong>Practice that sticks</strong><span>Recall, write, and revisit words at the right time.</span></div>
+          <div><strong>Come back to what you learn</strong><span>Recall, write, and revisit earlier words.</span></div>
         </article>
         <article>
           <CheckCircle size={20} />
@@ -75,6 +80,22 @@ export function LandingPage({
           <div><strong>Speak one step at a time</strong><span>Listen, learn the pattern, and say it yourself.</span></div>
         </article>
       </section>
+      <section className="public-path" id="your-path" aria-labelledby="public-path-title">
+        <div className="public-section-heading"><span className="micro-label">A PATH THAT MEETS YOU WHERE YOU ARE</span><h2 id="public-path-title">From your first letter<br />to your next conversation.</h2><p>Brand new, returning, or ready to stretch? Choose your starting point and interests. Change them whenever you like.</p></div>
+        <div className="public-path-grid">{[
+          ["01", "ㄱ · ㅏ · 가", "Find your foundations", "Meet Hangul shapes and sounds before tackling whole words."],
+          ["02", "WORDS → SENTENCES", "Make Korean useful", "Explore everyday themes, sentence patterns, and writing practice."],
+          ["03", "RECALL · REVISIT", "Keep a little more", "Turn your lessons into review cards. Give tricky answers another try."],
+        ].map(([number, sample, title, text]) => <article key={number}><span className="public-step-number">{number}</span><div className="public-path-sample" aria-hidden="true">{sample}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
+      </section>
+      <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
+      <section className="public-faq" aria-labelledby="public-faq-title"><div><span className="micro-label">BEFORE YOU BEGIN</span><h2 id="public-faq-title">A few helpful answers.</h2></div><div>{[
+        ["Do I need to know Hangul?", "No. Choose “brand new” and start with letters and syllable blocks. If you already know some Korean, choose a suitable starting level."],
+        ["Is it free?", "Yes. The lessons, review cards, word collection, and practice in this version are available without a subscription."],
+        ["Where is my progress saved?", freeMode ? "In this browser on this device. It does not sync between devices. Clearing site data or using private browsing can remove progress. Download your learning data from Account before clearing it; automatic backup import is not available yet." : "Your signed-in account keeps your progress together. You can download your learning data from Account."],
+        ["Can I listen to Korean?", "Listening uses an installed local Korean voice when your browser supports one. If none is available, you can keep learning with writing and reading practice."],
+        ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. About & feedback links to our public issue tracker; please keep personal information out of reports."],
+      ].map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
       <footer className="landing-footer">
         <span><a href="/privacy/">Privacy</a> · <a href="/about/">About & feedback</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
