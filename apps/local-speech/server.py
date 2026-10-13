@@ -35,14 +35,15 @@ class Models:
         if os.getenv("WHISPER_ENGINE", "openai") == "openai":
             import whisper
             if self.whisper is None:
-                self.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "small"),
+                self.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"),
                     device=os.getenv("WHISPER_DEVICE", "cpu"))
             result = self.whisper.transcribe(samples, language="ko", task="transcribe",
-                fp16=os.getenv("WHISPER_DEVICE", "cpu") != "cpu", condition_on_previous_text=False)
+                fp16=os.getenv("WHISPER_DEVICE", "cpu") != "cpu", condition_on_previous_text=False,
+                initial_prompt="한국어 대화와 한글 연습입니다. 기역, 니은, 디귿, 리을, 미음, 비읍, 시옷, 이응, 지읒, 치읓, 키읔, 티읕, 피읖, 히읗.")
             return " ".join(s["text"].strip() for s in result["segments"] if s["no_speech_prob"] < 0.8).strip()
         from faster_whisper import WhisperModel
         if self.whisper is None:
-            self.whisper = WhisperModel(os.getenv("WHISPER_MODEL", "small"),
+            self.whisper = WhisperModel(os.getenv("WHISPER_MODEL", "medium"),
                 device=os.getenv("WHISPER_DEVICE", "cpu"),
                 compute_type=os.getenv("WHISPER_COMPUTE_TYPE", "int8"))
         # Never supply the expected answer as a prompt: it can bias recognition.
@@ -149,6 +150,6 @@ if __name__ == "__main__":
     models.synthesize("안녕하세요.")
     if os.getenv("WHISPER_ENGINE", "openai") == "openai":
         import whisper
-        models.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "small"), device=os.getenv("WHISPER_DEVICE", "cpu"))
+        models.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"), device=os.getenv("WHISPER_DEVICE", "cpu"))
     print("Local Korean speech ready at http://127.0.0.1:5055", flush=True)
     serve(create_app(models), host="127.0.0.1", port=5055, threads=4)

@@ -1,5 +1,5 @@
 "use client";
-import { freePublishing, paidFeaturesEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
+import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -81,7 +81,7 @@ const allTabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "speak", label: "Speak", Icon: Microphone },
   { id: "tutor", label: "AI Tutor", Icon: ChatCircleDots },
 ];
-const tabs = allTabs.filter(item => paidFeaturesEnabled || item.id !== "tutor");
+const tabs = allTabs.filter(item => tutorEnabled || item.id !== "tutor");
 
 function nextAvailableLesson(completedLessonIds: string[], profile = defaultLearningProfile) {
   return recommendedLessons(completedLessonIds, profile)[0] ?? lessons[0];
@@ -631,7 +631,7 @@ export default function Home() {
             />
           )}
           {tab === "practice" && <PracticePage key={account.learningProfile?.level ?? "new"} progress={progress} profile={account.learningProfile ?? defaultLearningProfile} preferences={progress.learningPreferences} onSessionComplete={() => setProgress((current) => recordActivity(current))} />}
-          {tab === "tutor" && paidFeaturesEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
+          {tab === "tutor" && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
           </div>
 
           {loadingSection && (

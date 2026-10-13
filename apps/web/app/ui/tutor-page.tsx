@@ -49,7 +49,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
           lessonContext: `This is a Korean-learning question. Learner's self-reported starting level: ${learningProfile.level}. Goals: ${learningProfile.reasons.join(", ")}. Tailor difficulty to this level, treating it as self-assessment rather than a tested ability. Explain Korean grammar, vocabulary, writing, pronunciation, or usage with a short example and practice prompt. Keep examples accurate; distinguish pronunciation guides from exact sounds.`,
           consent: true,
         }),
-        signal: AbortSignal.timeout(65_000),
+        signal: AbortSignal.timeout(process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" ? 125_000 : 65_000),
       });
       if (!response.ok) {
         if (response.status === 429) {

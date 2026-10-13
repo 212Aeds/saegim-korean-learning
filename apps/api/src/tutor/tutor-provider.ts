@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { conversationPolicy } from "./conversation-policy";
+import { lessonGrounding } from "./lesson-grounding";
 import { tutorAnswerSchema, type TutorAnswer, type ConversationRequest } from "./tutor.schema";
 
 export abstract class TutorProvider {
@@ -10,12 +11,13 @@ export abstract class TutorProvider {
 const endpoint = "https://openrouter.ai/api/v1/chat/completions";
 const tutorModel = "google/gemini-3-flash-preview";
 const maxResponseBytes = 65_536;
-const timeoutMs = 60_000;
+const timeoutMs = 120_000;
+export const usesLocalTutor = () => process.env.TUTOR_PROVIDER === "local";
 
 @Injectable()
 export class OpenRouterTutorProvider extends TutorProvider {
   isAvailable() {
-    return process.env.PAID_FEATURES_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    return usesLocalTutor() || process.env.PAID_FEATURES_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
   }
 
   async answer(input: { question: string; lessonContext: string; conversation?: ConversationRequest }): Promise<TutorAnswer> {
@@ -23,14 +25,9 @@ export class OpenRouterTutorProvider extends TutorProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY?.trim()}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const local = usesLocalTutor();
+      const payload = {
+
           model: tutorModel,
           max_tokens: 1500,
           temperature: 0.3,
@@ -52,7 +49,20 @@ export class OpenRouterTutorProvider extends TutorProvider {
             },
             { role: "user", content: JSON.stringify(input) },
           ],
-        }),
+      };
+      const response = await fetch(local ? "http://127.0.0.1:11434/api/chat" : endpoint, {
+        method: "POST", signal: controller.signal,
+        headers: local ? {"Content-Type":"application/json"} : {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY?.trim()}`, "Content-Type":"application/json"},
+        body: JSON.stringify(local ? {
+          model: process.env.LOCAL_TUTOR_MODEL || "qwen3:14b", stream:false, think:false, keep_alive:"30m",
+          format:payload.response_format.json_schema.schema,
+          options:{temperature:0.2,num_ctx:4096,num_predict:900},
+          messages: input.conversation ? [
+            {role:"system",content:conversationPolicy(input.conversation) + " Follow this pattern: a brief acknowledgment of the latest statement, then exactly ONE question about a new detail. For a correct sentence, give an encouraging tip. Example learner message: 저는 커피를 좋아해요. Example explanation: 좋아요! 어떤 커피를 좋아하세요? Example hint: Nice! What kind of coffee do you like? Example nextExercise: You can answer with a coffee name, such as 아메리카노. Apply the pattern to the actual topic. Put the single follow-up question in explanation. Reply with the JSON fields explanation, hint, nextExercise."},
+            ...input.conversation.messages,
+          ] : [{role:"system",content:payload.messages[0].content + "\n" + lessonGrounding},payload.messages[1]],
+        } : payload),
       });
       if (!response.ok || !response.body) throw new Error("Provider failure");
       const contentLength = Number(response.headers.get("content-length"));
@@ -71,7 +81,8 @@ export class OpenRouterTutorProvider extends TutorProvider {
         chunks.push(chunk.value);
       }
       const data = JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-      const completion = data as { choices?: Array<{ finish_reason?: unknown; message?: { content?: unknown } }> };
+      const localReply = data as {done?:boolean; done_reason?:string; message?:{content?:unknown}};
+      const completion = (local ? {choices:[{finish_reason:localReply.done && localReply.done_reason === "stop" ? "stop" : "error",message:localReply.message}]} : data) as { choices?: Array<{ finish_reason?: unknown; message?: { content?: unknown } }> };
       const content = completion.choices?.[0]?.message?.content;
       if (completion.choices?.[0]?.finish_reason !== "stop" || typeof content !== "string") {
         throw new Error("Invalid provider response");

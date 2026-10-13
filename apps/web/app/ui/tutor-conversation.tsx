@@ -21,6 +21,7 @@ import { recordConversationTurn } from "./conversation-recording";
 import { conversationGuides, conversationSituations } from "./conversation-guide";
 type Reply = { korean: string; english: string; feedback: string };
 type Turn = ConversationTurn & { reply?: Reply; partner?: ElevenLabsVoice };
+import { localSpeechUrl, transcribeOnLocalServer } from "./local-speech-server";
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 function PartnerAvatar({ voice }: { voice: ElevenLabsVoice }) {
   return (
@@ -102,7 +103,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     const abort = () => controller.abort();
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) controller.abort();
-    const timer = window.setTimeout(abort, 65000);
+    const timer = window.setTimeout(abort, process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" ? 125000 : 65000);
     setThinking(true);
     setPendingMessage(text);
     try {
@@ -220,27 +221,30 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             },
           );
           setPhase("Transcribing your message…");
-          const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
-            method: "POST",
-            credentials: "include",
-            cache: "no-store",
-            headers: {
-              "Content-Type": "audio/wav",
-              "X-Saegim-Speech-Consent": "true",
-            },
-            body: wav,
-            signal: AbortSignal.any([
-              controller.signal,
-              AbortSignal.timeout(20000),
-            ]),
-          });
-          new Uint8Array(wav).fill(0);
-          wav = undefined;
-          if (!response.ok)
-            throw new Error(
-              "Your speech could not be transcribed. The conversation is paused.",
-            );
-          const result = await response.json();
+          let result: {transcript?:unknown};
+          if (localSpeechUrl) result = {transcript:await transcribeOnLocalServer(new Blob([wav],{type:"audio/wav"}),controller.signal)};
+          else {
+            const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                "Content-Type": "audio/wav",
+                "X-Saegim-Speech-Consent": "true",
+              },
+              body: wav,
+              signal: AbortSignal.any([
+                controller.signal,
+                AbortSignal.timeout(20000),
+              ]),
+            });
+            if (!response.ok)
+              throw new Error(
+                "Your speech could not be transcribed. The conversation is paused.",
+              );
+            result = await response.json();
+          }
+          new Uint8Array(wav).fill(0); wav = undefined;
           if (controller.signal.aborted) break;
           if (
             typeof result.transcript !== "string" ||
@@ -571,7 +575,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         </p>
       )}
       <small>
-        AI dialogue can contain mistakes. Voice turns send microphone clips to
+        AI dialogue can contain mistakes. In local mode, voice turns send microphone clips to your local speech server to
         generate replies; this chat stays in this visit. Microphone recording
         pauses while your partner speaks. Each voice session pauses after 10
         exchanges or 10 minutes.

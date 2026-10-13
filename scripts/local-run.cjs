@@ -10,6 +10,14 @@ const env = {
   ...process.env,
   PORT: target === "web" ? "3016" : "4004",
   ...(target === "web" ? { SORI_WEB_DIST_DIR: ".next-live" } : {}),
+  ...(process.env.SAEGIM_LOCAL_FULL === "true" ? {
+    PAID_FEATURES_ENABLED:"false", TUTOR_PROVIDER:"local", LOCAL_TUTOR_MODEL:process.env.LOCAL_TUTOR_MODEL||"qwen3:14b",
+    ...(target === "web" ? {
+      STATIC_PUBLISH:"false", SORI_WEB_DIST_DIR:".next-local-full", NEXT_PUBLIC_FREE_PUBLISHING:"false",
+      NEXT_PUBLIC_PAID_FEATURES_ENABLED:"false", NEXT_PUBLIC_LOCAL_TUTOR_ENABLED:"true",
+      NEXT_PUBLIC_API_URL:"http://localhost:4004", NEXT_PUBLIC_LOCAL_SPEECH_URL:"http://127.0.0.1:5055",
+    } : {WEB_ORIGINS:"http://localhost:3016,http://127.0.0.1:3016"}),
+  } : {}),
 };
 
 function run(script) {

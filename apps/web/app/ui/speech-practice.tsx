@@ -1,4 +1,5 @@
 "use client";
+import { localSpeechUrl, localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-server";
 import { paidFeaturesEnabled } from "../release";
 
 import { useEffect, useRef, useState } from "react";
@@ -115,18 +116,22 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       disposeCapture(recording);
       const controller = new AbortController();
       pending.current = controller;
-      timer = window.setTimeout(() => controller.abort(), 20_000);
+      timer = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
       uploading.current = true;
-      const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
-        method: "POST", credentials: "include", cache: "no-store", signal: controller.signal,
-        headers: { "Content-Type": "audio/wav", "X-Saegim-Speech-Consent": "true" }, body: audio,
-      });
-      if (!response.ok) {
-        throw new Error(response.status === 429 ? "The speech provider is temporarily busy. Type your response or try again." :
-          response.status === 401 ? "Sign in to use speech, or type your response." :
-            "Speech could not be transcribed. Try again or type your response.");
+      let data: unknown;
+      if (localSpeechUrl) data = {transcript:await transcribeOnLocalServer(new Blob([audio],{type:"audio/wav"}),controller.signal)};
+      else {
+        const response = await fetch(`${apiUrl}/v1/speech/transcribe`, {
+          method: "POST", credentials: "include", cache: "no-store", signal: controller.signal,
+          headers: { "Content-Type": "audio/wav", "X-Saegim-Speech-Consent": "true" }, body: audio,
+        });
+        if (!response.ok) {
+          throw new Error(response.status === 429 ? "The speech provider is temporarily busy. Type your response or try again." :
+            response.status === 401 ? "Sign in to use speech, or type your response." :
+              "Speech could not be transcribed. Try again or type your response.");
+        }
+        data = await response.json();
       }
-      const data: unknown = await response.json();
       if (!data || typeof data !== "object" || !("transcript" in data) ||
           typeof data.transcript !== "string" || !data.transcript.trim() || data.transcript.length > 2_000) throw new Error();
       if (sequence.current !== attempt) return;
@@ -165,13 +170,15 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
     let context: AudioContext | undefined;
     let timer: number | undefined;
     try {
-      if (!apiUrl) throw new Error("Speech is unavailable. Type your response instead.");
+      if (!apiUrl && !localSpeechUrl) throw new Error("Speech is unavailable. Type your response instead.");
       if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext || !AudioContext.prototype.createScriptProcessor) {
         throw new Error("Recording is unsupported in this browser. Type your response instead.");
       }
       const controller = new AbortController();
       pending.current = controller;
       timer = window.setTimeout(() => controller.abort(), 5_000);
+      if (localSpeechUrl) { if (!(await localSpeechAvailable())) throw new Error("Local speech is not ready. Type your response instead."); }
+      else {
       const status = await fetch(`${apiUrl}/v1/speech/status`, {
         credentials: "include", cache: "no-store", signal: controller.signal,
       });
@@ -179,6 +186,7 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       if (sequence.current !== attempt) return;
       if (status.status === 401) throw new Error("Sign in to use speech, or type your response.");
       if (!status.ok || (await status.json()).available !== true) throw new Error("Speech is unavailable. Type your response instead.");
+      }
       if (sequence.current !== attempt) return;
       pending.current = undefined;
       stopKoreanPlayback();
@@ -196,10 +204,14 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       recording.timer = window.setTimeout(() => void stopAndTranscribe(attempt), maxSeconds * 1000);
       await context.resume();
       if (sequence.current !== attempt || capture.current !== recording) return;
+      let heardSound=false,lastSound=performance.now();
       const sampleLimit = Math.min(Math.floor(context.sampleRate * maxSeconds), Math.floor((maxBytes - 44) / 2));
       processor.onaudioprocess = (event) => {
         if (capture.current !== recording || sequence.current !== attempt) return;
         const input = event.inputBuffer.getChannelData(0);
+        let energy=0;for(const sample of input)energy+=sample*sample;
+        if(Math.sqrt(energy/input.length)>=0.004){heardSound=true;lastSound=performance.now();}
+        else if(heardSound && performance.now()-lastSound>1800){void stopAndTranscribe(attempt);return;}
         const count = Math.min(input.length, sampleLimit - recording.samples);
         if (count > 0) { recording.chunks.push(input.slice(0, count)); recording.samples += count; }
         if (recording.samples >= sampleLimit) void stopAndTranscribe(attempt);
@@ -229,12 +241,12 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       <h3>Try saying it</h3>
       <p className="speech-practice-status" role="status" aria-live="polite">{message}</p>
       <div className="speech-practice-actions">
-        {!active && paidFeaturesEnabled && <button className="button button-soft" onClick={() => { setShowConsent(true); setConsented(false); }}>Try saying it</button>}
+        {!active && (localSpeechUrl || paidFeaturesEnabled) && <button className="button button-soft" onClick={() => { setShowConsent(true); setConsented(false); }}>Try saying it</button>}
         {state === "listening" && <button className="button button-dark" onClick={() => void stopAndTranscribe(sequence.current)}>Stop & transcribe</button>}
         {active && <button className="button button-quiet" onClick={() => cancel()}>Cancel</button>}
       </div>
       {showConsent && <div className="speech-consent">
-        <p>If speech becomes enabled, a short recording leaves Saegim for the speech provider to transcribe. Saegim keeps the recording and transcript only for this attempt. Provider terms about training use and project billing are still under review, so speech is currently unavailable.</p>
+        <p>A short recording is sent to your configured local speech server for transcription. It is not sent to a paid speech provider. The recording is discarded after this attempt.</p>
         <label><input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} /> I agree to send this one clip for transcription.</label>
         <div className="speech-practice-actions">
           <button className="button button-dark" disabled={!consented} onClick={() => void start()}>Start this attempt</button>

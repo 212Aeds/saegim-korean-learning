@@ -29,9 +29,9 @@ python -m http.server 3019 --bind 127.0.0.1 --directory apps/web/.next-local-spe
 
 Open http://127.0.0.1:3019/. This origin has separate browser progress from 3018.
 
-CPU transcription is the default, with multilingual Whisper `small`.
+CPU transcription is the default, with multilingual Whisper `medium`.
 For a compatible CUDA/CTranslate2 installation, set `WHISPER_DEVICE=cuda`
-and `WHISPER_COMPUTE_TYPE=float16`. `WHISPER_MODEL=medium` increases model
+and `WHISPER_COMPUTE_TYPE=float16`. `WHISPER_MODEL=large` increases model
 size and compute requirements. GPU configuration is optional, not automatic.
 Melo's upstream recommends Docker on Windows if native dependencies fail.
 
@@ -80,3 +80,5 @@ Verified locally: Korean MeloTTS synthesis of “안녕하세요. 이거 얼마�
 was transcribed to the same text by Whisper small; silent WAV returned an empty
 transcript. This generated-audio check does not prove recognition accuracy for
 all learners or microphones. CPU inference can take longer than realtime.
+
+The default recognizer is medium for short Korean answers. A fixed alphabet context helps letter names; the target answer is never supplied to recognition. Larger models trade more local compute for improved recognition and still can make mistakes.

@@ -1,5 +1,9 @@
 # Saegim
 
+The full app with local AI and speech is available through `npm run dev:local`.
+See [local full-app setup](docs/local-full-app.md) for the model downloads,
+restart commands, and the separate device-only publishing build.
+
 ## Optional local speech server
 
 See [local speech setup](apps/local-speech/README.md) for Flask/Waitress,
