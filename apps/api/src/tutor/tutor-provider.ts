@@ -79,7 +79,14 @@ export class OpenRouterTutorProvider extends TutorProvider {
       const start = content.indexOf("{");
       const end = content.lastIndexOf("}");
       if (start < 0 || end < start) throw new Error("Invalid tutor answer");
-      const parsed = tutorAnswerSchema.safeParse(JSON.parse(content.slice(start, end + 1)) as unknown);
+      const raw: unknown = JSON.parse(content.slice(start, end + 1));
+      // Plain-text line breaks are layout, not a malformed learning answer.
+      // Keep all keys and other characters so strict validation still rejects extras and markup.
+      const plain = raw && typeof raw === "object" && !Array.isArray(raw)
+        ? Object.fromEntries(Object.entries(raw).map(([key, value]) => [key,
+            typeof value === "string" ? value.replace(/[\r\n\t]+/gu, " ") : value]))
+        : raw;
+      const parsed = tutorAnswerSchema.safeParse(plain);
       if (!parsed.success) {
         // Only field names and validation codes; never values or provider bodies.
         console.warn("[tutor] Reply validation:", parsed.error.issues.map(issue=>({field:issue.path[0],code:issue.code})));
