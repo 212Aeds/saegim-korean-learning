@@ -14,6 +14,7 @@ import {
   selectedElevenLabsVoice,
   saveElevenLabsVoice,
   stopKoreanPlayback,
+  prefetchLocalKorean,
   type ElevenLabsVoice,
 } from "./speech";
 import { voiceTiming, thinkingPause } from "./conversation-timing";
@@ -42,7 +43,9 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
   const [pendingMessage, setPendingMessage] = useState("");
-  const [pace,setPace] = useState(1);
+  const [pace,setPace] = useState(1.1);
+  const [phraseAdded,setPhraseAdded]=useState(false);
+  const composer=useRef<HTMLFormElement|null>(null);
   const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
   const [canSendTurn, setCanSendTurn] = useState(false);
@@ -72,7 +75,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   useEffect(() => {
     mounted.current = true;
     setVoice(selectedElevenLabsVoice());
-    setPace(1);
+    setPace(1.1);
     return () => {
       mounted.current = false;
       listeningAttempt.current++;
@@ -81,6 +84,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       stopKoreanPlayback();
     };
   }, []);
+  useEffect(()=>{void prefetchLocalKorean(situation.phrase,voice);setPhraseAdded(false);},[situation.phrase,voice]);
   useEffect(() => {
     log.current?.scrollTo({
       top: log.current.scrollHeight,
@@ -154,6 +158,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         { role: "user", content: text },
         { role: "assistant", content: reply.korean, reply, partner: voice },
       ];
+      void prefetchLocalKorean(reply.korean,voice);
       setTurns(history.current);
       return reply;
     } finally {
@@ -360,7 +365,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         </div>
       </div>
       <div className="listening-controls">
-        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>A gentle natural pace at 1.00×.</small></label>
+        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
         <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
@@ -468,7 +473,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       <details className="conversation-phrase-help">
         <summary>Need a phrase to get started?</summary>
         <p lang="ko">{situation.phrase}</p><p className="conversation-roman">{transcriptRomanization(situation.phrase)}</p><p>{situation.meaning}</p>
-        <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling || thinking} onClick={() => setDraft(situation.phrase)}>Use this phrase</button><button type="button" className="button button-quiet" disabled={calling || thinking || playing} onClick={() => void listen(situation.phrase)}>Listen</button></div>
+        <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling || thinking} aria-pressed={phraseAdded} onClick={() => {setDraft(situation.phrase);setPhraseAdded(true);requestAnimationFrame(()=>{composer.current?.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});composer.current?.querySelector("textarea")?.focus({preventScroll:true});});}}>{phraseAdded?"Phrase added ↓":"Use this phrase"}</button><button type="button" className="button button-quiet" disabled={calling || thinking || playing} onClick={() => void listen(situation.phrase)}>{playing?"Preparing / speaking…":"Listen"}</button></div>
         <WordReference word={situation.phrase} />
       </details>
       <div className={`voice-conversation-panel ${calling ? "is-active" : ""}`}>
@@ -525,6 +530,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         )}
       </div>
       <form
+        ref={composer}
         className="conversation-form"
         onSubmit={(event) => void send(event)}
       >
@@ -537,7 +543,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           openOnFocus={false}
           maxLength={600}
           value={draft}
-          onChange={(value) => setDraft(value.slice(0, 600))}
+          onChange={(value) => {setDraft(value.slice(0, 600));setPhraseAdded(false);}}
           label="Your conversation message"
           placeholder="Say hello, write a reply, or tell your partner what to practice…"
           onKeyDown={(event) => {

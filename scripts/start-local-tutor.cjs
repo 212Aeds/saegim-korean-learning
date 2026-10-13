@@ -18,7 +18,7 @@ child.on('exit',code=>{stopped=true;process.exitCode=code??1;});
   method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(300000),
   body:JSON.stringify({model:process.env.LOCAL_TUTOR_MODEL||'qwen3:14b',stream:false,
    think:(process.env.LOCAL_TUTOR_MODEL||'').startsWith('gpt-oss')?'low':false,
-   keep_alive:'30m',options:{num_ctx:4096,num_predict:128,...(process.env.LOCAL_TUTOR_CPU_ONLY==='true'?{num_gpu:0}:{})},messages:[{role:'user',content:'Say hello in Korean.'}]}),
+   keep_alive:'2h',options:{num_ctx:4096,num_batch:512,num_predict:128,...(process.env.LOCAL_TUTOR_CPU_ONLY==='true'?{num_gpu:0}:{})},messages:[{role:'user',content:'Say hello in Korean.'}]}),
  });
  if(!response.ok)throw Error('Download qwen3:14b with ollama pull before starting the tutor.');
  await response.json();console.log('Local tutor ready.');

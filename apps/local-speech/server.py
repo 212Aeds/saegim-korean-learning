@@ -21,6 +21,27 @@ class Models:
         self.whisper = None
         self.tts = None
         self.audio_cache = OrderedDict()
+        self.whisper_device = None
+
+    def prepare_whisper(self):
+        import torch
+        import whisper
+        requested = os.getenv("WHISPER_DEVICE", "auto")
+        device = ("cuda" if torch.cuda.is_available() else "cpu") if requested == "auto" else requested
+        try:
+            self.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"), device=device)
+            if device == "cuda":
+                self.whisper.half()
+                # Whisper normalizes in float32 even when attention uses fp16.
+                for module in self.whisper.modules():
+                    if isinstance(module, torch.nn.LayerNorm):
+                        module.float()
+        except RuntimeError:
+            if device != "cuda" or requested != "auto":
+                raise
+            self.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"), device="cpu")
+            device = "cpu"
+        self.whisper_device = device
 
     def transcribe(self, audio):
         import numpy as np
@@ -36,10 +57,9 @@ class Models:
         if os.getenv("WHISPER_ENGINE", "openai") == "openai":
             import whisper
             if self.whisper is None:
-                self.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"),
-                    device=os.getenv("WHISPER_DEVICE", "cpu"))
+                self.prepare_whisper()
             result = self.whisper.transcribe(samples, language="ko", task="transcribe",
-                fp16=os.getenv("WHISPER_DEVICE", "cpu") != "cpu", condition_on_previous_text=False,
+                fp16=self.whisper_device == "cuda", condition_on_previous_text=False,
                 initial_prompt="한국어 대화와 한글 연습입니다. 기역, 니은, 디귿, 리을, 미음, 비읍, 시옷, 이응, 지읒, 치읓, 키읔, 티읕, 피읖, 히읗.")
             return " ".join(s["text"].strip() for s in result["segments"] if s["no_speech_prob"] < 0.8).strip()
         from faster_whisper import WhisperModel
@@ -90,7 +110,7 @@ def create_app(models=None, origins=None):
     models = models or Models()
     allowed = set(origins if origins is not None else os.getenv("SPEECH_ALLOWED_ORIGINS",
         "http://127.0.0.1:3018,http://127.0.0.1:3019,http://localhost:3016").split(","))
-    lock = threading.Lock()
+    locks = {"transcribe": threading.Lock(), "synthesize": threading.Lock()}
 
     @app.before_request
     def check_origin():
@@ -124,9 +144,10 @@ def create_app(models=None, origins=None):
     @app.get("/health")
     def health():
         return jsonify(status="ok", transcription=os.getenv("WHISPER_ENGINE", "openai") + "-whisper", speech="Supertonic-3",
-                       voices={"chris":"M1", "jessica":"F1"}, paidFallback=False)
+                       voices={"chris":"M1", "jessica":"F1"}, device=getattr(models,"whisper_device",None), paidFallback=False)
 
-    def run_model(fn):
+    def run_model(fn, kind):
+        lock = locks[kind]
         if not lock.acquire(timeout=10):
             return jsonify(error="Speech server is busy. Try again shortly."), 429
         try:
@@ -142,7 +163,7 @@ def create_app(models=None, origins=None):
         data = audio.read()
         if not data:
             return jsonify(error="No audio was captured."), 400
-        return run_model(lambda: jsonify(transcript=models.transcribe(data), language="ko"))
+        return run_model(lambda: jsonify(transcript=models.transcribe(data), language="ko"), "transcribe")
 
     @app.post("/v1/speech/synthesize")
     def synthesize():
@@ -153,7 +174,7 @@ def create_app(models=None, origins=None):
         voice = body.get("voice", "jessica")
         if voice not in ("chris", "jessica"):
             return jsonify(error="Choose chris or jessica."), 400
-        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip(), voice)), mimetype="audio/wav"))
+        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip(), voice)), mimetype="audio/wav"), "synthesize")
 
     return app
 
@@ -167,7 +188,7 @@ if __name__ == "__main__":
     for voice in ("jessica", "chris"):
         models.synthesize("안녕하세요.", voice)
     if os.getenv("WHISPER_ENGINE", "openai") == "openai":
-        import whisper
-        models.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"), device=os.getenv("WHISPER_DEVICE", "cpu"))
+        models.prepare_whisper()
+        print("Whisper ready on " + models.whisper_device, flush=True)
     print("Local Korean speech ready at http://127.0.0.1:5055", flush=True)
     serve(create_app(models), host="127.0.0.1", port=5055, threads=4)

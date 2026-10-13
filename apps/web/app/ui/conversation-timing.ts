@@ -1,11 +1,11 @@
 import type { LearningProfile } from "../learning-profile";
 export function voiceTiming(level: LearningProfile["level"]) {
   return {
-    new: { thinkingSeconds: 20, silenceMs: 2400 },
-    hangul: { thinkingSeconds: 15, silenceMs: 2200 },
-    basic: { thinkingSeconds: 10, silenceMs: 1800 },
-    intermediate: { thinkingSeconds: 6, silenceMs: 1600 },
-    advanced: { thinkingSeconds: 4, silenceMs: 1400 },
+    new: { thinkingSeconds: 8, silenceMs: 1500 },
+    hangul: { thinkingSeconds: 6, silenceMs: 1300 },
+    basic: { thinkingSeconds: 4, silenceMs: 1100 },
+    intermediate: { thinkingSeconds: 2, silenceMs: 1000 },
+    advanced: { thinkingSeconds: 1, silenceMs: 900 },
   }[level];
 }
 export function thinkingPause(

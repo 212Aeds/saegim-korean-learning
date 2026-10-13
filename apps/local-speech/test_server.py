@@ -11,6 +11,27 @@ class FakeModels:
         return b"RIFFtest"
 
 class ServerTests(unittest.TestCase):
+    def test_gpu_half_preserves_float_normalization_and_cpu_fallback(self):
+        from unittest.mock import Mock
+        class Norm:
+            def __init__(self): self.restored = False
+            def float(self): self.restored = True
+        norm = Norm()
+        model = Mock()
+        model.modules.return_value = [norm]
+        load = Mock(return_value=model)
+        fake_torch = types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda: True), nn=types.SimpleNamespace(LayerNorm=Norm))
+        with patch.dict('sys.modules', {'torch': fake_torch, 'whisper': types.SimpleNamespace(load_model=load)}), patch.dict('os.environ', {'WHISPER_DEVICE': 'auto'}):
+            models = Models()
+            models.prepare_whisper()
+            self.assertEqual(models.whisper_device, 'cuda')
+            model.half.assert_called_once()
+            self.assertTrue(norm.restored)
+            load.side_effect = [RuntimeError('GPU unavailable'), model]
+            models.prepare_whisper()
+            self.assertEqual(models.whisper_device, 'cpu')
+            self.assertEqual(load.call_args.kwargs['device'], 'cpu')
+
     def test_both_voices_keep_all_audio_and_use_gentle_baseline(self):
         import numpy as np
         import soundfile

@@ -1,5 +1,14 @@
 // Explicit build-time opt-in; public static exports keep this unset.
 export const localSpeechUrl = process.env.NEXT_PUBLIC_LOCAL_SPEECH_URL?.replace(/\/$/, "");
+export function isMono16kWav(buffer:ArrayBuffer) {
+  if(buffer.byteLength<44)return false;
+  const view=new DataView(buffer);
+  const word=(offset:number)=>String.fromCharCode(...new Uint8Array(buffer,offset,4));
+  return word(0)==="RIFF" && word(8)==="WAVE" && word(12)==="fmt " && word(36)==="data"
+    && view.getUint32(16,true)===16 && view.getUint16(20,true)===1
+    && view.getUint16(22,true)===1 && view.getUint32(24,true)===16000
+    && view.getUint16(34,true)===16 && view.getUint32(40,true)===buffer.byteLength-44;
+}
 export async function localSpeechAvailable(): Promise<boolean> {
   if (!localSpeechUrl) return false;
   try {
@@ -10,10 +19,13 @@ export async function localSpeechAvailable(): Promise<boolean> {
 }
 export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal): Promise<string> {
   if (!localSpeechUrl) throw Error("Local speech is not configured.");
-  const context = new AudioContext();
+  const raw=await blob.arrayBuffer();
   let wav: Blob;
+  if(isMono16kWav(raw)) wav=new Blob([raw],{type:"audio/wav"});
+  else {
+  const context = new AudioContext();
   try {
-    const decoded = await context.decodeAudioData(await blob.arrayBuffer());
+    const decoded = await context.decodeAudioData(raw);
     const rendering = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
     const source = rendering.createBufferSource(); source.buffer = decoded;
     source.connect(rendering.destination); source.start();
@@ -27,6 +39,7 @@ export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal):
     mono.forEach((sample,i) => view.setInt16(44+i*2, Math.round(Math.max(-1,Math.min(1,sample))*32767),true));
     wav = new Blob([buffer],{type:"audio/wav"});
   } finally { await context.close(); }
+  }
   const form = new FormData(); form.append("audio", wav, "recording.wav");
   const response = await fetch(`${localSpeechUrl}/v1/speech/transcribe`, {
     method:"POST", body:form, signal:signal ? AbortSignal.any([signal,AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000), cache:"no-store",

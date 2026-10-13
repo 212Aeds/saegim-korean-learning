@@ -87,3 +87,17 @@ The default recognizer is medium for short Korean answers. A fixed alphabet cont
 Generated audio is cached in RAM with a maximum of 32 entries / 8 MB, keyed by voice and a hash of text. Microphone recordings are not cached. Native synthesis uses a gentler 0.9 engine speed, a 120 ms lead-in and a 300 ms tail for both presets. The app displays this baseline as 1.00× and offers 0.65×–1.40× listening pace. Conversation pace starts at 1.00× and can be adjusted for the session.
 
 Supertonic sample code is MIT; weights use OpenRAIL-M and retain their LICENSE in the downloaded model folder. This is an archived upstream project with no ongoing support. Model source: https://huggingface.co/supertone-oss-archive/supertonic-3
+
+## GPU recognition and conversation latency
+
+Whisper selects CUDA automatically when available; `WHISPER_DEVICE=cpu` forces CPU. Automatic GPU initialization falls back to CPU if loading fails. On NVIDIA Blackwell hardware use the official CUDA 12.8 PyTorch wheels:
+
+```powershell
+python -m pip --python apps/local-speech/.venv/Scripts/python.exe install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+```
+
+For Windows installations in a deeply nested checkout, use a short directory junction to the virtual environment when installing wheels to avoid long header paths. This machine uses `C:/Users/aeden/Documents/Codex/saegim-speech-runtime` for that purpose.
+
+On this RTX 5080 laptop, three identical generated Korean clips took 8.1–8.6 seconds on CPU and 0.27–0.41 seconds after GPU warmup, with matching transcripts. The first GPU recognition took 1.4 seconds. These are sample measurements, not a guarantee for every speaker. Recognition and synthesis have separate locks so preparing a voice clip does not block transcription.
+
+Conversation speech now ends after 0.9–1.5 seconds of silence depending on level. Canonical 16 kHz conversation WAVs skip browser decoding. Phrase helpers and replies prepare local audio ahead of playback; conversation pace defaults to 1.10× and remains adjustable. Qwen retains a consistent batch size of 512 and stays loaded for two hours; an initial model load still takes longer than warm replies. No paid provider fallback is enabled.

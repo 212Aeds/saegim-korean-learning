@@ -4,9 +4,8 @@ import { localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-se
 import { playElevenLabsKorean, preferredSpeechRate, selectedElevenLabsVoice, saveSpeechRate, saveElevenLabsVoice, prefetchLocalKorean, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 import { ListeningControls } from "./listening-controls";
 import { compareSpeech } from "./speech-check";
-import { transcriptRomanization } from "./transcript-romanization";
+import { SpeechFeedback } from "./speech-feedback";
 import { KoreanInput } from "./korean-keyboard";
-import { SoriMascot } from "./sori-mascot";
 import { WordReference } from "./word-reference";
 
 type Capture = { recorder: MediaRecorder; stream: MediaStream; context: AudioContext; frame: number; timer: number };
@@ -92,7 +91,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         if(capture.current!==current||recorder.state!=="recording")return;
         analyser.getFloatTimeDomainData(samples);let sum=0;for(const value of samples)sum+=value*value;
         const rms=Math.sqrt(sum/samples.length);setLevel(Math.min(100,Math.round(rms*2200)));
-        if(rms>=0.004){sound=true;lastSound=now;}else if(sound&&now-lastSound>1800){stop();return;}
+        if(rms>=0.004){sound=true;lastSound=now;}else if(sound&&now-lastSound>1100){stop();return;}
         current.frame=requestAnimationFrame(tick);
       };current.frame=requestAnimationFrame(tick);
     }catch{stream?.getTracks().forEach(track=>track.stop());if(context&&context.state!=="closed")void context.close();if(attempt===version.current){setState("ready");setNotice("Microphone access is unavailable. Allow access or type your answer.");}}
@@ -100,7 +99,6 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   return <section className="speech-practice" aria-label="Korean speech practice">
     <h3>Listen, then try saying it</h3>
     <p role="status">{notice}</p>
-    {match!==null&&<SoriMascot className="speech-feedback-mascot" thumbsUp={match} />}
     {variant !== "lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speech-practice-actions">
       <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={()=>void listen()}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
@@ -113,7 +111,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       <KoreanInput value={written} onChange={setWritten} label="Type Korean or romanization" placeholder="Type Korean or romanization…" maxLength={240} openOnFocus={false}/>
       <button className="button button-quiet" disabled={!written.trim()||state!=="ready"}>Check phrase</button>
     </form>
-    {heard&&<div className="speech-transcript"><p lang="ko">{heard}</p><small>{transcriptRomanization(heard)}</small><strong>{match?"Match":"Try again"}</strong></div>}
+    {heard && match!==null && <SpeechFeedback transcript={heard} matches={match} />}
     {variant !== "lesson-speaking" && <WordReference word={korean} />}
   </section>;
 }

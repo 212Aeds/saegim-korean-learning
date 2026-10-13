@@ -1,4 +1,13 @@
 .korean-input { width: 100%; }
+.speech-feedback-card { display:block; margin-top:20px; padding:18px; border:1px solid var(--line); border-radius:16px; background:var(--paper-strong); }
+.speech-feedback-card[data-match=true] { background:#f1f6e9; border-color:#b9cbaa; }
+.speech-feedback-card p.speech-korean { display:block; margin:0; font-size:24px; line-height:1.5; color:var(--forest-deep); overflow-wrap:anywhere; }
+.speech-feedback-card p.transcript-romanization { display:block; margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); overflow-wrap:anywhere; }
+.speech-result { display:flex; align-items:center; gap:14px; margin-top:16px; padding-top:14px; border-top:1px solid #dce5d3; }
+.speech-result-mascot { width:60px; height:60px; flex:none; }
+.speech-result strong { display:block; color:var(--forest); font-size:16px; }
+.speech-result p { margin:5px 0 0; color:var(--soft-ink); font-size:12px; line-height:1.5; }
+@media(prefers-reduced-motion:no-preference) { .speech-feedback-card[data-match=true] .speech-result-mascot { animation:mascot-cheer 450ms ease-out both; } }
 .chapter-collection { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 17px; }
 .journey-word-packs .word-pack-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
 .journey-word-packs .word-pack-grid article { min-width:0; overflow-wrap:anywhere; }

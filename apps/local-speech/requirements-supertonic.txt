@@ -1,5 +1,5 @@
 -r requirements.txt
-torch==2.5.1
+torch==2.8.0
 numpy==1.26.4
 onnxruntime==1.23.2
 soundfile==0.14.0
