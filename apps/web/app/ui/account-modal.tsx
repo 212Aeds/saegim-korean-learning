@@ -1,4 +1,5 @@
 "use client";
+import { freePublishing, paidFeaturesEnabled, deviceProgressKey } from "../release";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle, SignOut, X } from "./icons";
@@ -103,7 +104,9 @@ export function AccountModal({
 
   async function saveProfileName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!apiUrl || !account || !onAccountUpdated) return;
+    if (!account || !onAccountUpdated) return;
+    if (freePublishing) { onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
+    if (!apiUrl) return;
     setBusy(true);
     setMessage("");
     try {
@@ -128,6 +131,10 @@ export function AccountModal({
   }
 
   async function exportData() {
+    if (freePublishing) {
+      const url=URL.createObjectURL(new Blob([JSON.stringify({account,progress:JSON.parse(window.localStorage.getItem(deviceProgressKey)??"null")},null,2)],{type:"application/json"}));
+      const link=document.createElement("a"); link.href=url; link.download="saegim-device-backup.json"; link.click(); URL.revokeObjectURL(url); return;
+    }
     if (!apiUrl) return;
     setBusy(true);
     setMessage("");
@@ -153,7 +160,7 @@ export function AccountModal({
 
   async function deleteAccount() {
     const confirmed = window.confirm(
-      "Delete your Saegim account and synced progress? This cannot be undone. Your copy on this device will stay here.",
+      freePublishing ? "Clear learning data on this device? Export a backup first. This cannot be undone." : "Delete your Saegim account and synced progress? This cannot be undone. Your copy on this device will stay here.",
     );
     if (!confirmed) return;
     setBusy(true);
@@ -198,13 +205,13 @@ export function AccountModal({
           <div className="account-content">
             <h2 id="account-title">{settingsOnly ? "Settings, at your pace." : "Your Account."}</h2>
             <p>
-              Signed in as <strong>{account.displayName}</strong> ·{" "}
+              {freePublishing ? "Practicing on this device as" : "Signed in as"} <strong>{account.displayName}</strong> ·{" "}
               {account.email}
             </p>
             <div className="account-benefit">
               <CheckCircle size={20} />
               <span>
-                Your lesson and review progress syncs to your account.
+                {freePublishing ? "Progress stays in this browser and does not sync. Keep a backup before clearing browser data." : "Your lesson and review progress syncs to your account."}
               </span>
             </div>
             {!settingsOnly && onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>⚙ Open Settings</button>}
@@ -224,7 +231,7 @@ export function AccountModal({
                 <div>
                   <span className="micro-label">MAKE IT YOURS</span>
                   <h3 id="learning-preferences-title">Learning comfort</h3>
-                  <p>Your choices are saved with your account and restored across devices.</p>
+                  <p>{freePublishing ? "Your choices are saved in this browser." : "Your choices are saved with your account and restored across devices."}</p>
                 </div>
                 <label className="preference-toggle">
                   <span><strong>Show romanization</strong><small>Keep pronunciation cues beside Hangul.</small></span>
@@ -255,7 +262,7 @@ export function AccountModal({
                     <option value="challenge">Challenge · less detail</option>
                   </select>
                 </label>
-                <label>
+                {paidFeaturesEnabled && <label>
                   Korean listening voice
                   <select
                     value={preferences.speechVoice}
@@ -264,7 +271,7 @@ export function AccountModal({
                     <option value="jessica">Jessica</option>
                     <option value="chris">Chris</option>
                   </select>
-                </label>
+                </label>}
                 <label className="preference-pace">
                   <span>Listening pace <strong>{preferences.speechPace.toFixed(2)}×</strong></span>
                   <input
@@ -293,7 +300,7 @@ export function AccountModal({
                 onClick={deleteAccount}
                 disabled={busy}
               >
-                Delete account and synced progress
+                {freePublishing ? "Clear this device’s learning data" : "Delete account and synced progress"}
               </button>
             </div>}
             {message && (
@@ -306,7 +313,7 @@ export function AccountModal({
               onClick={signOut}
               disabled={busy}
             >
-              <SignOut size={17} /> Sign out
+              <SignOut size={17} /> {freePublishing ? "Back to welcome" : "Sign out"}
             </button>}
           </div>
         ) : (

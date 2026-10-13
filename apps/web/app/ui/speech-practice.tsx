@@ -1,4 +1,5 @@
 "use client";
+import { paidFeaturesEnabled } from "../release";
 
 import { useEffect, useRef, useState } from "react";
 import { stopKoreanPlayback } from "./speech";
@@ -228,7 +229,7 @@ export function SpeechPractice({ onTranscript, onClear, feedback }: {
       <h3>Try saying it</h3>
       <p className="speech-practice-status" role="status" aria-live="polite">{message}</p>
       <div className="speech-practice-actions">
-        {!active && <button className="button button-soft" onClick={() => { setShowConsent(true); setConsented(false); }}>Try saying it</button>}
+        {!active && paidFeaturesEnabled && <button className="button button-soft" onClick={() => { setShowConsent(true); setConsented(false); }}>Try saying it</button>}
         {state === "listening" && <button className="button button-dark" onClick={() => void stopAndTranscribe(sequence.current)}>Stop & transcribe</button>}
         {active && <button className="button button-quiet" onClick={() => cancel()}>Cancel</button>}
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import { freePublishing } from "../release";
 import { useState } from "react";
 import { defaultLearningProfile } from "../learning-profile";
 import { LearningProfileFields } from "./learning-profile-fields";
@@ -34,6 +35,7 @@ export function LearningOnboarding({
             setBusy(true);
             setNotice("");
             try {
+              if (freePublishing) { onSaved({...account,learningProfile:{...profile,onboardingCompleted:true,dailyMinutes:profile.dailyMinutes??15}}); return; }
               const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/v1/account/me`,
                 {
@@ -80,7 +82,7 @@ export function LearningOnboarding({
           disabled={busy}
           onClick={() => void onSignOut()}
         >
-          Sign out
+          {freePublishing ? "Back to welcome" : "Sign out"}
         </button>
       </section>
     </main>

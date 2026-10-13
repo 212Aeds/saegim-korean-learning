@@ -11,6 +11,7 @@
     "dev:web": "node scripts/local-run.cjs web",
     "dev:api": "node scripts/local-run.cjs api",
     "build": "npm run build:web && npm run build:api",
+    "build:free": "node scripts/build-free-site.cjs",
     "build:web": "npm --workspace @sori/web run build",
     "build:api": "npm --workspace @sori/api run build",
     "start:web": "npm --workspace @sori/web run start",

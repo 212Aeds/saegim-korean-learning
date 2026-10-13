@@ -3,6 +3,8 @@ node_modules/
 .next-*/
 .next-local/
 .next-preview/
+.next-public/
+out/
 .next-natural/
 .impeccable-install-tmp/
 .neon

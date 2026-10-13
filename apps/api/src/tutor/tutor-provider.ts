@@ -15,7 +15,7 @@ const timeoutMs = 60_000;
 @Injectable()
 export class OpenRouterTutorProvider extends TutorProvider {
   isAvailable() {
-    return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    return process.env.PAID_FEATURES_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
   }
 
   async answer(input: { question: string; lessonContext: string; conversation?: ConversationRequest }): Promise<TutorAnswer> {

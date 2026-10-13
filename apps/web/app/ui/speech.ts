@@ -1,3 +1,4 @@
+import { paidFeaturesEnabled } from "../release";
 import { naturalSpeechText, consonantName } from "./hangul-answers";
 export type KoreanSpeechOptions = {
   voiceId?: string;
@@ -219,6 +220,11 @@ export async function playElevenLabsKorean(
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
   stopKoreanPlayback();
+  if (!paidFeaturesEnabled) {
+    await waitForKoreanVoices();
+    const played=playDeviceKorean(naturalSpeechText(text), {...fallbackOptions,rate});
+    return {played,source:played ? "device" : "unavailable"};
+  }
   const version = playbackVersion;
   const controller = new AbortController();
   pendingAudio = controller;
@@ -417,6 +423,11 @@ export async function playKorean(
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
   stopKoreanPlayback();
+  if (!paidFeaturesEnabled) {
+    await waitForKoreanVoices();
+    const played=playDeviceKorean(naturalSpeechText(text), options);
+    return {played,source:played ? "device" : "unavailable"};
+  }
   const version = playbackVersion;
   const voiceId =
     options.voiceId ??
@@ -472,6 +483,7 @@ export async function previewCatalogVoice(
   rate: number,
 ): Promise<KoreanPlayback> {
   stopKoreanPlayback();
+  if (!paidFeaturesEnabled) return {played:false,source:"unavailable"};
   const version = playbackVersion;
   const controller = new AbortController();
   pendingAudio = controller;

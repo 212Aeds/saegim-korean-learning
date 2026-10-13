@@ -40,7 +40,7 @@ export class SpeechProviderError extends Error {
 @Injectable()
 export class OpenRouterKoreanSpeechProvider extends KoreanSpeechProvider {
   isAvailable() {
-    return process.env.OPENROUTER_AUDIO_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    return process.env.PAID_FEATURES_ENABLED === "true" && process.env.OPENROUTER_AUDIO_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
   }
 
   async transcribe(audio: Uint8Array, contentType: string, locale: "ko-KR") {

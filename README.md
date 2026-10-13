@@ -1,4 +1,18 @@
-# Sori
+# Saegim
+
+## Device-only publishing build
+
+Run `npm run build:free` to generate a static website in `apps/web/.next-public`.
+Upload only that directory's contents to a static host. This version needs no backend
+or provider keys: onboarding, Settings, lessons, and review use separate browser storage.
+It has no AI Tutor, cloud sync, paid transcription, or generated Jessica/Chris voices.
+Local Korean device voices are used when available. Privacy and About pages describe
+the device-only beta. Clearing browser data removes progress; Account provides a JSON download.
+
+Paid API providers are disabled by default even if keys remain configured. They require
+an explicit `PAID_FEATURES_ENABLED=true`; the publishing client additionally forces paid
+features off. Keep paid features disabled for the cost-free release. Existing cloud accounts
+and Neon progress are preserved in the separate development version.
 
 Sori is a free, mobile-first Korean-learning app. Korean studies require an account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 20 lessons, a 1,050-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
 

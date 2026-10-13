@@ -1,4 +1,5 @@
 "use client";
+import { freePublishing, paidFeaturesEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -71,7 +72,7 @@ import {
 } from "./progress";
 
 type Tab = "today" | "learn" | "review" | "words" | "speak" | "tutor" | "practice";
-const tabs: { id: Tab; label: string; Icon: typeof House }[] = [
+const allTabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "today", label: "Today", Icon: House },
   { id: "learn", label: "Learn", Icon: Compass },
   { id: "practice", label: "Practice", Icon: Target },
@@ -80,6 +81,7 @@ const tabs: { id: Tab; label: string; Icon: typeof House }[] = [
   { id: "speak", label: "Speak", Icon: Microphone },
   { id: "tutor", label: "AI Tutor", Icon: ChatCircleDots },
 ];
+const tabs = allTabs.filter(item => paidFeaturesEnabled || item.id !== "tutor");
 
 function nextAvailableLesson(completedLessonIds: string[], profile = defaultLearningProfile) {
   return recommendedLessons(completedLessonIds, profile)[0] ?? lessons[0];
@@ -147,6 +149,15 @@ export default function Home() {
 
   useEffect(() => {
     async function restoreProgress() {
+      if (freePublishing) {
+        try {
+          const profile = JSON.parse(window.localStorage.getItem(deviceProfileKey) ?? "null");
+          if (profile?.id === "device-only" && ["new","hangul","basic","intermediate","advanced"].includes(profile.learningProfile?.level)) setAccount(profile);
+          const saved = JSON.parse(window.localStorage.getItem(deviceProgressKey) ?? "null");
+          if (saved) setProgress(normalizeProgress(saved));
+        } catch { /* Invalid device data can be replaced by a new practice session. */ }
+        setReady(true); return;
+      }
       let current = initialProgress;
       const saved = window.localStorage.getItem("sori-progress");
       if (saved) {
@@ -158,7 +169,7 @@ export default function Home() {
           window.localStorage.removeItem("sori-progress");
         }
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = publicApiUrl;
       if (apiUrl) {
         try {
           const accountResponse = await fetch(`${apiUrl}/v1/auth/me`, {
@@ -200,10 +211,11 @@ export default function Home() {
 
   useEffect(() => {
     if (!ready) return;
-    window.localStorage.setItem("sori-progress", JSON.stringify(progress));
+    window.localStorage.setItem(freePublishing ? deviceProgressKey : "sori-progress", JSON.stringify(progress));
+    if (freePublishing && account) window.localStorage.setItem(deviceProfileKey, JSON.stringify(account));
     saveElevenLabsVoice(progress.learningPreferences.speechVoice);
     saveSpeechRate(progress.learningPreferences.speechPace);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = publicApiUrl;
     if (apiUrl && account) {
       const timer = window.setTimeout(() => {
         void fetch(`${apiUrl}/v1/progress/me`, {
@@ -316,7 +328,7 @@ export default function Home() {
   }
 
   async function authenticateLearner(user: LearnerAccount) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = publicApiUrl;
     if (apiUrl) {
       const response = await fetch(`${apiUrl}/v1/progress/me`, {
         credentials: "include",
@@ -340,7 +352,7 @@ export default function Home() {
   }
 
   async function signOut() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = publicApiUrl;
     if (apiUrl) {
       await fetch(`${apiUrl}/v1/auth/logout`, {
         method: "POST",
@@ -351,7 +363,8 @@ export default function Home() {
   }
 
   async function deleteAccount() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (freePublishing) { window.localStorage.removeItem(deviceProfileKey); window.localStorage.removeItem(deviceProgressKey); setProgress(initialProgress); setAccount(null); return; }
+    const apiUrl = publicApiUrl;
     if (apiUrl) {
       const response = await fetch(`${apiUrl}/v1/account/me`, {
         method: "DELETE",
@@ -376,7 +389,14 @@ export default function Home() {
     return (
       <main className="landing-shell">
         <LandingPage
+          freeMode={freePublishing}
           onCreateAccount={() => {
+            if (freePublishing) {
+              try { const saved=JSON.parse(window.localStorage.getItem(deviceProfileKey)??"null");
+                if (saved?.id === "device-only" && saved.learningProfile?.onboardingCompleted) { setAccount(saved); return; }
+              } catch { /* Start a fresh profile if its stored copy is invalid. */ }
+              setAccount({id:"device-only",email:"",displayName:"Learner",learningProfile:{...defaultLearningProfile,onboardingCompleted:false}}); return;
+            }
             setAccountMode("create");
             setAccountOpen(true);
           }}
@@ -387,7 +407,7 @@ export default function Home() {
         />
         {accountOpen && (
           <AccountModal
-            apiUrl={process.env.NEXT_PUBLIC_API_URL}
+            apiUrl={publicApiUrl}
             account={null}
             initialMode={accountMode}
             onClose={() => setAccountOpen(false)}
@@ -453,7 +473,7 @@ export default function Home() {
             <strong>{account?.displayName ?? "Language learner"}</strong>
             <span>
               {account
-                ? "Free learner account"
+                ? freePublishing ? "Device-only learning" : "Free learner account"
                 : currentStreak
                   ? `Beginner · ${currentStreak} day${currentStreak === 1 ? "" : "s"}`
                   : "Beginner · New learner"}
@@ -576,7 +596,7 @@ export default function Home() {
           {tab === "words" && (
             <WordsView
               learnedWords={progress.wordsLearned}
-              apiUrl={process.env.NEXT_PUBLIC_API_URL}
+              apiUrl={publicApiUrl}
               onHear={(text) => speakKorean(text)}
             />
           )}
@@ -611,7 +631,7 @@ export default function Home() {
             />
           )}
           {tab === "practice" && <PracticePage key={account.learningProfile?.level ?? "new"} progress={progress} profile={account.learningProfile ?? defaultLearningProfile} preferences={progress.learningPreferences} onSessionComplete={() => setProgress((current) => recordActivity(current))} />}
-          {tab === "tutor" && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
+          {tab === "tutor" && paidFeaturesEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
           </div>
 
           {loadingSection && (
@@ -670,7 +690,7 @@ export default function Home() {
         <AccountModal
           settingsOnly={settingsOpen}
           onOpenSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}}
-          apiUrl={process.env.NEXT_PUBLIC_API_URL}
+          apiUrl={publicApiUrl}
           account={{...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
           preferences={progress.learningPreferences}
           onAccountUpdated={updated => {setAccount(updated);if(updated.learningProfile?.dailyMinutes)setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile!.dailyMinutes!}));}}

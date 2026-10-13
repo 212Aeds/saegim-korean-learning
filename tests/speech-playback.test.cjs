@@ -1,4 +1,5 @@
 const { readFileSync } = require('node:fs');
+process.env.NEXT_PUBLIC_PAID_FEATURES_ENABLED = 'true';
 const ts = require('typescript');
 require.extensions['.ts'] = (module, path) => module._compile(ts.transpileModule(readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, path);
 const { test } = require('node:test');

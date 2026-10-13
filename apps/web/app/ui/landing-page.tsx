@@ -12,9 +12,11 @@ import { SoriMascot } from "./sori-mascot";
 export function LandingPage({
   onCreateAccount,
   onSignIn,
+  freeMode = false,
 }: {
   onCreateAccount: () => void;
   onSignIn: () => void;
+  freeMode?: boolean;
 }) {
   return (
     <div className="landing-page">
@@ -25,7 +27,7 @@ export function LandingPage({
         </a>
         <div className="landing-nav-actions">
           <span className="free-pill"><span /> Always free</span>
-          <button className="landing-signin" onClick={onSignIn}>Sign in</button>
+          {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
       </header>
 
@@ -38,9 +40,9 @@ export function LandingPage({
             Small, thoughtful practice — free, for as long as you like.
           </p>
           <button className="button button-dark landing-cta" onClick={onCreateAccount}>
-            Create your free account <ArrowRight size={17} weight="bold" />
+            {freeMode ? "Start learning on this device" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
-          <span className="landing-note">A free account keeps your lessons and reviews together.</span>
+          <span className="landing-note">{freeMode ? "Progress is saved in this browser. No account or subscription needed. Clearing browser data removes it; export a backup from Account." : "A free account keeps your lessons and reviews together."}</span>
         </div>
         <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">
           <span className="landing-orbit orbit-one" />
@@ -74,6 +76,7 @@ export function LandingPage({
         </article>
       </section>
       <footer className="landing-footer">
+        <span><a href="/privacy/">Privacy</a> · <a href="/about/">About & feedback</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
         <span>한국어, 한 걸음씩 · Korean, one step at a time.</span>
       </footer>

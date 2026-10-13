@@ -1,3 +1,4 @@
+process.env.PAID_FEATURES_ENABLED='true';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),ts=require('typescript');
 require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}}).outputText,p);
 const {OpenRouterTutorProvider}=require('../apps/api/src/tutor/tutor-provider.ts');
