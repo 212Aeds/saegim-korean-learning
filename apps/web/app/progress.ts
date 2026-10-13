@@ -204,6 +204,7 @@ export function rateReviewItem(
   remembered: boolean,
   now = new Date(),
 ): SavedProgress {
+  if (!progress.reviewItems.some((item) => item.id === id)) return progress;
   const reviewItems = progress.reviewItems.map((item) => {
     if (item.id !== id) return item;
     const repetitions = remembered ? item.repetitions + 1 : 0;

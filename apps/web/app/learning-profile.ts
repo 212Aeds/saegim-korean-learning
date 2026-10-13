@@ -36,7 +36,10 @@ export function learningRoute(profile = defaultLearningProfile) {
     for (const prerequisite of lesson.prerequisiteLessonIds ?? []) if (!assumed.has(prerequisite)) visit(prerequisite);
     visiting.delete(id); visited.add(id); route.push(lesson);
   }
-  [...foundations, ...interests, ...lessons.map((lesson) => lesson.id)].forEach(visit);
+  const withPractice = (ids: string[]) => ids.flatMap((id) => [id,
+    ...(id === "hangul-round-vowels" ? ["checkpoint-vowels"] : id === "hangul-lips-consonants" ? ["checkpoint-consonants"] : id.endsWith("-dialogue") ? [id.replace(/-dialogue$/, "-consolidation")] : []),
+  ]);
+  [...withPractice(foundations), ...withPractice(interests), ...lessons.map((lesson) => lesson.id)].forEach(visit);
   return route;
 }
 export function recommendedLessons(completed: string[], profile = defaultLearningProfile) {

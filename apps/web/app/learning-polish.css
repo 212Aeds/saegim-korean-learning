@@ -1,0 +1,39 @@
+/* Quiet, purposeful motion and a consistent learning hierarchy. */
+.section-view { animation: section-settle 260ms cubic-bezier(.2,.7,.3,1) both; }
+.learning-collection { padding: 26px; background: #f4f5ee; border: 1px solid #dce2d2; border-radius: 22px; }
+.collection-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.collection-heading h3 { font-size: 25px; font-weight: 500; letter-spacing: -.7px; margin: 8px 0; }
+.collection-heading > strong { font-size: 35px; color: #456137; text-align: right; }
+.collection-heading small { display: block; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.learning-collection > p,.collection-topics p { font-size: 13px; line-height: 1.7; color: #59644f; }
+.collection-pathways { display: grid; gap: 17px; margin: 24px 0; }
+.collection-pathways > div { display: grid; grid-template-columns: 1fr 1fr 42px; gap: 16px; align-items: center; font-size: 12px; }
+.collection-pathways small { text-align: right; color: #647356; }
+.collection-pathways progress { width: 100%; height: 7px; accent-color: #778f59; }
+.collection-topics { display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid #dce2d2; padding-top: 20px; }
+.collection-topics > .micro-label { width: 100%; }
+.topic-seal { font-size: 12px; padding: 9px 13px; background: #e2ebd6; color: #38512b; border-radius: 99px; }
+.pathway-completion-bar { display: block; width: 100%; height: 4px; accent-color: #7e9564; margin: 14px 0 18px; }
+.review-health { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; border-top: 1px solid #dce2d3; border-bottom: 1px solid #dce2d3; padding: 23px 0; margin: 24px 0; }
+.review-health strong { font-size: 28px; font-weight: 500; display: block; color: #3e5932; }
+.review-health span { display: block; color: #5a6651; line-height: 1.5; font-size: 12px; margin-top: 5px; }
+.review-health > p { grid-column: 1/-1; font-size: 12px; color: #616e55; line-height: 1.6; margin: 0; }
+.review-written-recall { text-align: left; padding: 15px; background: #f5f6ef; border: 1px solid #e1e5d9; border-radius: 14px; margin-top: 15px; }
+.review-written-recall summary { font-size: 13px; font-weight: 600; cursor: pointer; color: #43553a; }
+.review-written-recall .korean-input { margin-top: 12px; }
+.review-written-recall small { display: block; font-size: 11px; line-height: 1.6; color: #65705b; margin-top: 8px; }
+.review-your-answer { overflow-wrap: anywhere; background: #f2f5eb; border-radius: 12px; padding: 13px; }
+.review-modal .review-question { animation: section-settle 200ms ease-out; }
+.course-list,.journey-word-packs,.learning-roadmap,.conversation-guide { overflow-wrap: anywhere; }
+.conversation-card .chat-bubble { box-shadow: 0 2px 6px #25351f05; }
+.conversation-card .conversation-log { scrollbar-width: thin; scrollbar-color: #bbc8aa transparent; }
+.conversation-form textarea { transition: border-color 180ms ease, box-shadow 180ms ease; }
+.conversation-form textarea:focus { border-color: #83996a; box-shadow: 0 0 0 3px #849b691a; }
+.button:focus-visible,.conversation-situations button:focus-visible,summary:focus-visible { outline: 2px solid #61794c; outline-offset: 4px; }
+@keyframes section-settle { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .word-pack-grid article { transition: transform 180ms ease, border-color 180ms ease; }
+  .word-pack-grid article:hover { transform: translateY(-2px); border-color: #9caf86; }
+}
+@media (max-width:600px) { .learning-collection { padding: 20px; } .collection-heading { align-items: start; } .collection-heading h3 { font-size: 21px; } .collection-heading > strong { font-size: 28px; } .collection-pathways > div { grid-template-columns: 1.5fr 1fr 36px; gap: 10px; } .review-health { gap: 14px; } }
+@media (prefers-reduced-motion:reduce) { .section-view,.review-modal .review-question { animation: none; } .conversation-form textarea { transition: none; } .conversation-log { scroll-behavior: auto; } }

@@ -27,6 +27,8 @@ import { readOptionalProgress } from "./ui/progress-response";
 import { LearningOnboarding } from "./ui/learning-onboarding";
 import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
+import { reviewOverview } from "./ui/review-session";
+import { LearningCollection } from "./ui/learning-collection";
 import { SpeakDeck } from "./ui/speak-deck";
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
 import { PracticePage } from "./ui/practice-page";
@@ -563,6 +565,7 @@ export default function Home() {
             <ReviewView
               progress={progress}
               onPractice={() => { setReviewFocus("practice"); setReviewOpen(true); }}
+              onMissed={() => { setReviewFocus("missed"); setReviewOpen(true); }}
               onReview={() => setReviewOpen(true)}
               onLesson={() => {
                 navigateTo("today");
@@ -1045,11 +1048,12 @@ function LearnView({
     <div className="content-page">
       <div className="page-intro">
         <p>
-          Your starting level and interests guide the recommended next lesson. Change them in My Account whenever you need to.
+          Your starting level and interests guide the recommended next lesson. Change them in Settings whenever you need to.
           Every step stays free.
         </p>
       </div>
       <div className="learning-pathways">
+        <LearningCollection completed={progress.completedLessonIds} />
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         {[...learningPathways].sort((left, right) => pathwayOrder.indexOf(left.id) - pathwayOrder.indexOf(right.id)).map((pathway) => {
@@ -1067,6 +1071,7 @@ function LearnView({
                   {String(pathwayStats.completed).padStart(2, "0")}<small> / {String(pathwayStats.total).padStart(2, "0")}</small>
                 </span>
               </div>
+              <progress className="pathway-completion-bar" max={pathwayStats.total} value={pathwayStats.completed} aria-label={`${pathway.title} lessons completed`} />
               <div className="course-list">
                 {pathwayLessons.map((lesson, index) => {
                   const complete = progress.completedLessonIds.includes(lesson.id);
@@ -1361,14 +1366,17 @@ function ReviewView({
   progress,
   onReview,
   onPractice,
+  onMissed,
   onLesson,
 }: {
   progress: SavedProgress;
   onReview: () => void;
   onPractice: () => void;
+  onMissed: () => void;
   onLesson: () => void;
 }) {
   const due = dueReviewItems(progress);
+  const overview = reviewOverview(progress.reviewItems);
   const nextDue = [...progress.reviewItems].sort((left, right) =>
     left.dueAt.localeCompare(right.dueAt),
   )[0];
@@ -1410,6 +1418,12 @@ function ReviewView({
           </p>
         </div>
       </div>
+      <section className="review-health" aria-label="Your review collection">
+        <div><strong>{overview.total}</strong><span>saved cards</span></div>
+        <div><strong>{overview.recovery}</strong><span>marked Again</span></div>
+        <div><strong>{overview.established}</strong><span>recalled 3+ times in a row</span></div>
+        <p>Missed cards come first, then the oldest review dates. Repeated recall is practice history, not a mastery score.</p>
+      </section>
       <div className="review-queue">
         <div>
           <span className="queue-count">
@@ -1453,8 +1467,9 @@ function ReviewView({
         </button>
       </div>
       {progress.reviewItems.length > 0 && <section className="recovery-practice"><div><span className="micro-label">KEEP YOUR WORDS CLOSE</span><h3>A little practice, whenever you like.</h3><p>Revisit up to 10 saved cards, even when nothing is due. Your ratings update their next review dates.</p></div><button className="button button-soft" onClick={onPractice}>Practice saved cards <ArrowRight size={17} /></button></section>}
+      {overview.recovery > 0 && <section className="recovery-practice"><div><span className="micro-label">A FOCUSED SECOND CHANCE</span><h3>Give the tricky ones another go.</h3><p>{overview.recovery} cards marked Again, ready to practice whenever you choose.</p></div><button type="button" className="button button-dark" onClick={onMissed}>Practice missed cards</button></section>}
       <div className="review-footnote">
-        You’ve recalled <strong>{progress.reviewsDone}</strong> items so far.
+        You’ve marked cards remembered <strong>{progress.reviewsDone}</strong> times so far.
         Getting one wrong is part of learning.
       </div>
     </div>

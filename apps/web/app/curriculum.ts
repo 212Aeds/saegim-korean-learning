@@ -2,6 +2,7 @@ import { consonantAnswers, consonantNameQuestion } from "./ui/hangul-answers";
 import { moreLessons } from "./more-lessons";
 import { foundationLessons } from "./foundation-lessons";
 import { journeyLessons } from "./journey-content";
+import { consolidationLessons } from "./consolidation-lessons";
 import { newLessons } from "./new-lessons";
 
 export type MultipleChoiceQuestion = {
@@ -381,6 +382,7 @@ export const lessons: Lesson[] = [
   ...moreLessons,
   ...newLessons, ...journeyLessons,
   ...foundationLessons,
+  ...consolidationLessons,
 ];
 
 export function shuffle<T>(items: T[]): T[] {
