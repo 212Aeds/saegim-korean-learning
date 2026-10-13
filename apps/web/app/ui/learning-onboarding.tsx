@@ -4,6 +4,7 @@ import { useState } from "react";
 import { defaultLearningProfile } from "../learning-profile";
 import { LearningProfileFields } from "./learning-profile-fields";
 import { SoriMascot } from "./sori-mascot";
+import { ProfilePreview, AvatarChoices } from "./profile-preview";
 import type { LearnerAccount } from "./account-modal";
 export function LearningOnboarding({
   account,
@@ -69,6 +70,8 @@ export function LearningOnboarding({
           }}
         >
           <LearningProfileFields profile={profile} onChange={setProfile} />
+          <AvatarChoices profile={profile} onChange={setProfile} />
+          <ProfilePreview name={account.displayName} profile={profile} />
           <button
             className="button button-dark"
             disabled={busy || !profile.reasons.length}

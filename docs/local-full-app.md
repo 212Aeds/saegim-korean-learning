@@ -65,3 +65,12 @@ an invalid syllable-building exercise. Qwen3 14B remains the default tutor.
 The local adapter supports GPT-OSS low reasoning effort and CPU-only execution
 for future evaluation via `LOCAL_TUTOR_MODEL` and `LOCAL_TUTOR_CPU_ONLY=true`.
 Hosted OpenAI API models and ElevenLabs are not enabled in this configuration.
+## Learning and playback polish
+
+Saving a different proficiency level flushes current progress, shows the startup screen, and reloads the account and recommendations. Completed lessons and review ratings are preserved.
+
+Listening pace and voice controls are available for local speech in lessons, review, and speaking. Conversation has its own session pace (starts at 0.90x or a slower saved setting), optional spoken chat replies, Stop audio, and cancellation of pending text replies. A new scenario starts a fresh conversation without locking the scenario buttons after the first exchange.
+
+Both TTS presets are warmed before Flask starts accepting requests. Current card/example audio is prepared ahead and generated audio is cached in bounded browser memory (24 clips, 8 MB) as well as the speech server. Requests for the same phrase and voice share preparation; canceled playback cannot start stale audio. Generated audio can still take time for a new sentence. No microphone recordings are cached.
+
+Verification: 57 app tests, six Flask tests, production web build, browser checks for card face visibility, local speech controls, Qwen chat submission, Chris playback, and level-specific refresh.

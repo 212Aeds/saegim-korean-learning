@@ -1,16 +1,21 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-server";
-import { playKorean, stopKoreanPlayback } from "./speech";
+import { playElevenLabsKorean, preferredSpeechRate, selectedElevenLabsVoice, saveSpeechRate, saveElevenLabsVoice, prefetchLocalKorean, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
+import { ListeningControls } from "./listening-controls";
 import { compareSpeech } from "./speech-check";
 import { transcriptRomanization } from "./transcript-romanization";
 import { KoreanInput } from "./korean-keyboard";
 import { SoriMascot } from "./sori-mascot";
 
 type Capture = { recorder: MediaRecorder; stream: MediaStream; context: AudioContext; frame: number; timer: number };
-export function ServerSpeechPractice({ korean, expectedRomanization, onResult }: {
+export function ServerSpeechPractice({ korean, expectedRomanization, onResult, selectedVoice, onVoiceChange, onPaceChange }: {
   korean: string; expectedRomanization?: string; onResult?: (text: string, matches: boolean) => void;
+  selectedVoice?: ElevenLabsVoice; onVoiceChange?: (voice: ElevenLabsVoice) => void; onPaceChange?: (pace: number) => void;
 }) {
+  const [voice,setVoice]=useState<ElevenLabsVoice>("jessica"), [pace,setPace]=useState(1);
+  useEffect(()=>{setVoice(selectedVoice ?? selectedElevenLabsVoice());setPace(preferredSpeechRate());},[selectedVoice]);
+  useEffect(()=>{void prefetchLocalKorean(korean,voice);},[korean,voice]);
   const [ready,setReady]=useState(false);
   const [state,setState]=useState<"ready"|"starting"|"listening"|"checking"|"playing">("ready");
   const [notice,setNotice]=useState("Connecting to your local speech server…");
@@ -85,8 +90,10 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult }:
     <h3>Listen, then try saying it</h3>
     <p role="status">{notice}</p>
     {match!==null&&<SoriMascot className="speech-feedback-mascot" thumbsUp={match} />}
+    <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />
     <div className="speech-practice-actions">
-      <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={async()=>{setState("playing");try{const result=await playKorean(korean,{waitForEnd:true});if(!result.played)setNotice("Korean audio is unavailable. You can still type your answer.");}finally{setState("ready");}}}>Listen to Korean</button>
+      <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={async()=>{setState("playing");setNotice("Preparing Korean audio…");try{const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});setNotice(result.played?"Your turn. Try saying the phrase.":"Korean audio is unavailable. You can still type your answer.");}finally{setState("ready");}}}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
+      {state==="playing"&&<button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setState("ready");}}>Stop audio</button>}
       <button type="button" className="button button-dark" disabled={!ready||(state!=="ready"&&state!=="listening")} onClick={state==="listening"?stop:()=>void start()}>{state==="listening"?"Stop recording":state==="checking"?"Checking…":"Speak Korean"}</button>
     </div>
     {state==="listening"&&<meter min={0} max={100} value={level} aria-label="Microphone input level" />}

@@ -9,6 +9,7 @@ import type { LearningPreferences } from "../progress";
 import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
 import { LearningProfileFields } from "./learning-profile-fields";
 import { avatars, accountAvatar } from "../account-personalization";
+import { ProfilePreview } from "./profile-preview";
 
 export type LearnerAccount = {
   id: string;
@@ -30,6 +31,7 @@ export function AccountModal({
   preferences,
   onPreferencesChange,
   onAccountUpdated,
+  completedLessonIds = [],
 }: {
   apiUrl?: string;
   account: LearnerAccount | null;
@@ -42,7 +44,8 @@ export function AccountModal({
   onDelete: () => Promise<void>;
   preferences?: LearningPreferences;
   onPreferencesChange?: (preferences: LearningPreferences) => void;
-  onAccountUpdated?: (account: LearnerAccount) => void;
+  onAccountUpdated?: (account: LearnerAccount) => void | Promise<void>;
+  completedLessonIds?: string[];
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
   useDialogFocus(dialogRef, onClose);
@@ -106,7 +109,7 @@ export function AccountModal({
   async function saveProfileName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!account || !onAccountUpdated) return;
-    if (freePublishing) { onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
+    if (freePublishing) { await onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
     if (!apiUrl) return;
     setBusy(true);
     setMessage("");
@@ -122,7 +125,7 @@ export function AccountModal({
         throw new Error("message" in body ? body.message : "Your name could not be saved.");
       }
       setProfileName(body.displayName);
-      onAccountUpdated(body);
+      await onAccountUpdated(body);
       setMessage("Your profile is saved. Your next lesson is tailored to your level and interests.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Your name could not be saved.");
@@ -216,6 +219,7 @@ export function AccountModal({
               </span>
             </div>
             {!settingsOnly && onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>⚙ Open Settings</button>}
+            <ProfilePreview name={settingsOnly ? profileName : account.displayName} profile={learningProfile} completed={completedLessonIds} />
             {settingsOnly && <form className="account-profile-form" onSubmit={(event) => void saveProfileName(event)}>
               <label htmlFor="profile-name">Name to use around Saegim</label>
               <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Sparkle } from "./icons";
 import { TutorConversation } from "./tutor-conversation";
 import { SoriMascot } from "./sori-mascot";
@@ -23,6 +23,8 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
   const [state, setState] = useState<TutorState>("idle");
   const [notice, setNotice] = useState("");
   const [answer, setAnswer] = useState<{ question: string; content: TutorAnswer } | null>(null);
+  const request = useRef<AbortController | null>(null);
+  useEffect(()=>()=>request.current?.abort(),[]);
 
   async function ask(event?: FormEvent<HTMLFormElement>, suggestedQuestion = question) {
     event?.preventDefault();
@@ -37,6 +39,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
     setAnswer(null);
     setNotice("");
     setState("thinking");
+    const controller = new AbortController(); request.current = controller;
     try {
       const response = await fetch(`${apiUrl}/v1/tutor/answer`, {
         method: "POST",
@@ -49,7 +52,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
           lessonContext: `This is a Korean-learning question. Learner's self-reported starting level: ${learningProfile.level}. Goals: ${learningProfile.reasons.join(", ")}. Tailor difficulty to this level, treating it as self-assessment rather than a tested ability. Explain Korean grammar, vocabulary, writing, pronunciation, or usage with a short example and practice prompt. Keep examples accurate; distinguish pronunciation guides from exact sounds.`,
           consent: true,
         }),
-        signal: AbortSignal.timeout(process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" ? 125_000 : 65_000),
+        signal: AbortSignal.any([controller.signal,AbortSignal.timeout(process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" ? 125_000 : 65_000)]),
       });
       if (!response.ok) {
         if (response.status === 429) {
@@ -67,8 +70,11 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
       setAnswer({ question: clean, content: { explanation: value.explanation, hint: value.hint, nextExercise: value.nextExercise } });
       setState("idle");
     } catch (error) {
+      if (controller.signal.aborted) { setState("idle"); setNotice("Reply stopped. Your question is still here."); return; }
       setState("error");
       setNotice(error instanceof Error ? error.message : "Saegim’s tutor could not answer right now.");
+    } finally {
+      if (request.current === controller) request.current = null;
     }
   }
 
@@ -90,6 +96,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
               <SoriMascot className="tutor-thinking-mascot" />
               <div><strong>Saegim is thinking</strong><span>Finding a clear explanation and a useful example…</span></div>
               <i aria-hidden="true" />
+              <button type="button" className="button button-quiet" onClick={()=>request.current?.abort()}>Cancel reply</button>
             </div>
           ) : (
             <>

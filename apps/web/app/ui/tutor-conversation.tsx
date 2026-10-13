@@ -43,6 +43,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
   const [pendingMessage, setPendingMessage] = useState("");
+  const [pace,setPace] = useState(0.9);
+  const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
   const [canSendTurn, setCanSendTurn] = useState(false);
   const [scenario, setScenario] = useState<(typeof conversationSituations)[number]["id"]>("everyday");
@@ -70,6 +72,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   useEffect(() => {
     mounted.current = true;
     setVoice(selectedElevenLabsVoice());
+    setPace(Math.min(0.9,preferredSpeechRate()));
     return () => {
       mounted.current = false;
       call.current?.abort();
@@ -86,7 +89,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function listen(text: string, partner = voice) {
     setPlaying(true);
     try {
-      const result = await playElevenLabsKorean(text, partner, preferredSpeechRate(), {
+      const result = await playElevenLabsKorean(text, partner, pace, {
         naturalOnly: true,
         waitForEnd: true,
       });
@@ -166,14 +169,16 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function send(event: FormEvent) {
     event.preventDefault();
     const text = draft.trim().replace(/\s+/gu, " ").slice(0, 600);
-    if (!text || request.current || calling) return;
+    if (!text || request.current || calling || playing) return;
     setNotice("");
     try {
-      await replyTo(text);
+      const reply = await replyTo(text);
       setDraft((current) => (current === draft ? "" : current));
+      if (speakReplies && mounted.current) await listen(reply.korean);
     } catch (error) {
       if (mounted.current)
         setNotice(
+          error instanceof DOMException && error.name === "AbortError" ? "Reply stopped. Your message is still here." :
           error instanceof Error
             ? error.message
             : "Could not send your message.",
@@ -261,7 +266,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         setDraft("");
         if (controller.signal.aborted) break;
         setPhase(`${voice === "chris" ? "Chris" : "Jessica"} is speaking…`);
-        const playback = await playElevenLabsKorean(reply.korean, voice, preferredSpeechRate(), {
+        const playback = await playElevenLabsKorean(reply.korean, voice, pace, {
           naturalOnly: true,
           waitForEnd: true,
         });
@@ -351,13 +356,18 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           ))}
         </div>
       </div>
+      <div className="listening-controls">
+        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>Start gently; adjust whenever you need.</small></label>
+        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
+        {playing && <button type="button" className="button button-quiet" onClick={()=>{stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
+      </div>
       <section className="conversation-guide" aria-label="Conversation practice for your level">
         <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>
         <p className="conversation-goal"><strong>Try this today</strong>{guide.goal}</p>
         <div className="conversation-situations" role="group" aria-label="Choose a practice situation">
-          {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || turns.length > 0} onClick={() => { setScenario(item.id); setDraft(item.prompt); }}>{item.title}</button>)}
+          {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || playing} onClick={() => { history.current=[];setTurns([]);setNotice("");setScenario(item.id);setDraft(item.prompt); }}>{item.title}</button>)}
         </div>
-        {turns.length > 0 && <small>Start a new conversation to choose another situation, or tell your partner where you want to go next.</small>}
+        {turns.length > 0 && <small>Choosing a situation starts a fresh conversation. You can also describe any topic in your message.</small>}
         <div className="conversation-session-meter"><span><strong>{koreanTurns}</strong> / {guide.turns} Korean replies in this visit</span><progress max={guide.turns} value={Math.min(koreanTurns, guide.turns)} aria-label="Korean replies practiced in this conversation" /></div>
         {koreanTurns >= guide.turns && <p className="conversation-checkpoint" role="status">A little conversation, completed. Keep going or take a break. This counts replies, not fluency or pronunciation.</p>}
       </section>
@@ -548,10 +558,12 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         <div className="flashcard-tools">
           <button
             className="button button-dark"
-            disabled={calling || thinking || !draft.trim()}
+            type="submit"
+            disabled={calling || thinking || playing || !draft.trim()}
           >
             Send message
           </button>
+          {thinking && !calling && <button type="button" className="button button-quiet" onClick={()=>{request.current?.abort();setNotice("Reply stopped. Your message is still here.");}}>Cancel reply</button>}
           {turns.length > 0 && (
             <button
               type="button"

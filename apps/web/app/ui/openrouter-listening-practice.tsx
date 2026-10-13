@@ -16,7 +16,7 @@ import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElev
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function OpenRouterListeningPractice(props: Parameters<typeof PaidListeningPractice>[0]) {
-  if (localSpeechUrl) return <ServerSpeechPractice korean={props.korean} expectedRomanization={props.expectedRomanization} onResult={props.onResult} />;
+  if (localSpeechUrl) return <ServerSpeechPractice {...props} />;
   return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DevicePractice {...props} />;
 }
 function DevicePractice({korean,onResult}: Parameters<typeof PaidListeningPractice>[0]) {

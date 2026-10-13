@@ -11,8 +11,26 @@ test('local speech is preferred with paid services disabled and failure never ca
   global.fetch=async(url)=>{urls.push(url);return {ok:true,headers:new Headers({'content-type':'audio/wav'}),blob:async()=>new Blob(['sample'])};};
   assert.equal((await playKorean('ㄱ',{naturalOnly:true})).source,'local');
   global.fetch=async(url)=>{urls.push(url);throw Error('offline');};
-  assert.equal((await playKorean('ㄱ',{naturalOnly:true})).played,false);
+  assert.equal((await playKorean('ㄷ',{naturalOnly:true})).played,false);
   assert.deepEqual(urls,['http://127.0.0.1:5055/v1/speech/synthesize','http://127.0.0.1:5055/v1/speech/synthesize']);
+ }finally{stopKoreanPlayback();global.fetch=oldFetch;global.Audio=oldAudio;global.window=oldWindow;}
+});
+
+test('local preparation is shared with playback and stopping never plays stale audio',async()=>{
+ const {prefetchLocalKorean,playElevenLabsKorean}=require('../apps/web/app/ui/speech.ts');
+ const oldFetch=global.fetch,oldAudio=global.Audio,oldWindow=global.window;
+ let release,requests=0,plays=0;
+ global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null},speechSynthesis:{cancel(){}}};
+ global.Audio=class{async play(){plays++;}pause(){}};
+ global.fetch=async()=>{requests++;await new Promise(resolve=>{release=resolve;});return {ok:true,headers:new Headers({'content-type':'audio/wav'}),blob:async()=>new Blob(['prepared'])};};
+ try{
+  const prepared=prefetchLocalKorean('새로운 연습 문장','chris');
+  const cancelled=playElevenLabsKorean('새로운 연습 문장','chris',0.85,{naturalOnly:true});
+  stopKoreanPlayback();release();await prepared;await cancelled;
+  assert.equal(plays,0);
+  assert.equal((await playElevenLabsKorean('새로운 연습 문장','chris',0.85,{naturalOnly:true})).played,true);
+  assert.equal(requests,1);
+  assert.equal(plays,1);
  }finally{stopKoreanPlayback();global.fetch=oldFetch;global.Audio=oldAudio;global.window=oldWindow;}
 });
 test('faster saved pace is accepted by progress storage and used with the selected local partner',async()=>{

@@ -44,7 +44,7 @@ import { WordReference } from "./ui/word-reference";
 import { LearningRoadmap } from "./ui/learning-roadmap";
 import { accountAvatar, weeklyProgress } from "./account-personalization";
 import { recommendedLessons, learningRoute, placementKnowledge, defaultLearningProfile, type LearningProfile } from "./learning-profile";
-import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean } from "./ui/speech";
+import { listKoreanVoices, saveElevenLabsVoice, saveSpeechRate, speakKorean, stopKoreanPlayback } from "./ui/speech";
 import { lessons, type Lesson, type TextQuestion } from "./curriculum";
 import {
   isLessonUnlocked,
@@ -375,6 +375,22 @@ export default function Home() {
     setAccount(null);
   }
 
+  async function updateAccount(updated: LearnerAccount) {
+    const levelChanged = updated.learningProfile?.level !== account?.learningProfile?.level;
+    const nextProgress = {...progress,dailyGoalMinutes:updated.learningProfile?.dailyMinutes ?? progress.dailyGoalMinutes};
+    setAccount(updated); setProgress(nextProgress);
+    if (!levelChanged) return;
+    stopKoreanPlayback();
+    window.localStorage.setItem(freePublishing ? deviceProgressKey : "sori-progress", JSON.stringify(nextProgress));
+    if (freePublishing) window.localStorage.setItem(deviceProfileKey, JSON.stringify(updated));
+    else if (publicApiUrl) {
+      const response = await fetch(`${publicApiUrl}/v1/progress/me`, {method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(nextProgress)});
+      if (!response.ok) throw new Error("Your level was saved, but progress could not sync. Please try again before refreshing.");
+    }
+    setLessonOpen(false);setReviewOpen(false);setAccountOpen(false);setSettingsOpen(false);setReady(false);
+    window.setTimeout(()=>window.location.reload(),150);
+  }
+
   if (!ready) {
     return (
       <main className="landing-loading" aria-live="polite">
@@ -559,7 +575,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="section-view" key={tab}>
+          <div className="section-view" key={`${tab}-${account.learningProfile?.level}`}>
           {tab === "today" && (
             <TodayView
               onMissedReview={() => { setReviewFocus("missed"); setReviewOpen(true); }}
@@ -678,6 +694,8 @@ export default function Home() {
       )}
       {reviewOpen && (
         <ReviewDeck
+          preferences={progress.learningPreferences}
+          onPreferencesChange={learningPreferences=>setProgress(current=>({...current,learningPreferences}))}
           maxCards={reviewFocus === "practice" ? 10 : undefined}
           items={reviewFocus === "missed" ? progress.reviewItems.filter((item) => item.lastResult === "again") : reviewFocus === "practice" ? progress.reviewItems : dueReviewItems(progress)}
           onRate={(id, remembered) =>
@@ -689,11 +707,12 @@ export default function Home() {
       {(accountOpen || settingsOpen) && (
         <AccountModal
           settingsOnly={settingsOpen}
+          completedLessonIds={progress.completedLessonIds}
           onOpenSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}}
           apiUrl={publicApiUrl}
           account={{...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
           preferences={progress.learningPreferences}
-          onAccountUpdated={updated => {setAccount(updated);if(updated.learningProfile?.dailyMinutes)setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile!.dailyMinutes!}));}}
+          onAccountUpdated={updateAccount}
           onPreferencesChange={(learningPreferences) =>
             setProgress((current) => ({ ...current, learningPreferences }))
           }

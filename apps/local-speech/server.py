@@ -122,7 +122,7 @@ def create_app(models=None, origins=None):
                        voices={"chris":"M1", "jessica":"F1"}, paidFallback=False)
 
     def run_model(fn):
-        if not lock.acquire(blocking=False):
+        if not lock.acquire(timeout=10):
             return jsonify(error="Speech server is busy. Try again shortly."), 429
         try:
             return fn()
@@ -158,8 +158,9 @@ if __name__ == "__main__":
     from waitress import serve
     torch.set_num_threads(4)
     models = Models()
-    print("Preparing local Korean voice. First startup downloads model files…", flush=True)
-    models.synthesize("안녕하세요.")
+    print("Preparing both local Korean voices from installed model files…", flush=True)
+    for voice in ("jessica", "chris"):
+        models.synthesize("안녕하세요.", voice)
     if os.getenv("WHISPER_ENGINE", "openai") == "openai":
         import whisper
         models.whisper = whisper.load_model(os.getenv("WHISPER_MODEL", "medium"), device=os.getenv("WHISPER_DEVICE", "cpu"))

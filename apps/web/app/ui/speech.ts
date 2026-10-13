@@ -211,6 +211,39 @@ let activeUrl: string | undefined;
 let pendingAudio: AbortController | undefined;
 let playbackVersion = 0;
 let settlePlayback: ((ended: boolean) => void) | undefined;
+const localAudioCache = new Map<string, Blob>();
+const localAudioPreparing = new Map<string, Promise<Blob>>();
+function normalizedSpeech(text: string) {
+  return naturalSpeechText(text).normalize("NFC").trim().replace(/\s+/gu, " ");
+}
+async function localAudio(text: string, voice: ElevenLabsVoice): Promise<Blob> {
+  const clean = normalizedSpeech(text), key = `${voice}|${clean}`;
+  const cached = localAudioCache.get(key);
+  if (cached) return cached;
+  const preparing = localAudioPreparing.get(key);
+  if (preparing) return preparing;
+  const task = (async () => {
+    const response = await fetch(`${localSpeechUrl}/v1/speech/synthesize`, {
+      method: "POST", credentials: "omit", cache: "no-store", signal: AbortSignal.timeout(180_000),
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify({text: clean, voice}),
+    });
+    if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Local audio unavailable");
+    const blob = await response.blob();
+    if (!blob.size || blob.size > 5 * 1024 * 1024) throw new Error("Invalid audio");
+    localAudioCache.set(key, blob);
+    while (localAudioCache.size > 24 || [...localAudioCache.values()].reduce((size, value) => size + value.size, 0) > 8 * 1024 * 1024) {
+      localAudioCache.delete(localAudioCache.keys().next().value!);
+    }
+    return blob;
+  })();
+  localAudioPreparing.set(key, task);
+  try { return await task; } finally { localAudioPreparing.delete(key); }
+}
+// Prepare only explicitly configured local audio; never warm a paid provider.
+export async function prefetchLocalKorean(text: string, voice = selectedElevenLabsVoice()) {
+  if (!localSpeechUrl || typeof window === "undefined") return;
+  try { await localAudio(text, voice); } catch { /* The Listen button can retry. */ }
+}
 
 export async function playElevenLabsKorean(
   text: string,
@@ -232,7 +265,7 @@ export async function playElevenLabsKorean(
   const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
   try {
     if (!localSpeechUrl && !apiUrl) throw new Error();
-    const response = await fetch(`${localSpeechUrl ?? apiUrl}/v1/speech/synthesize`, {
+    const response = localSpeechUrl ? null : await fetch(`${apiUrl}/v1/speech/synthesize`, {
       method: "POST",
       credentials: localSpeechUrl ? "omit" : "include",
       cache: "no-store",
@@ -247,11 +280,11 @@ export async function playElevenLabsKorean(
       }),
     });
     if (
-      !response.ok ||
-      !response.headers.get("content-type")?.toLowerCase().startsWith("audio/")
+      response && (!response.ok ||
+      !response.headers.get("content-type")?.toLowerCase().startsWith("audio/"))
     )
       throw new Error();
-    const blob = await response.blob();
+    const blob = localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
     if (
       version !== playbackVersion ||
       controller.signal.aborted ||

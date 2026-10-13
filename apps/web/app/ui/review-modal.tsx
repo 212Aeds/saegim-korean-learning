@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, X } from "./icons";
-import type { ReviewItem } from "../progress";
+import type { ReviewItem, LearningPreferences } from "../progress";
 import { reviewSession } from "./review-session";
 import { useDialogFocus } from "./use-dialog-focus";
 import { playCorrectAnswerSound } from "./feedback-sound";
 import { FeedbackToggle } from "./feedback-toggle";
 import { FlipCard } from "./flip-card";
-import { speakKorean } from "./speech";
+import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from "./speech";
+import { ListeningControls } from "./listening-controls";
 import { WordReference } from "./word-reference";
 import { KoreanInput } from "./korean-keyboard";
 
@@ -17,11 +18,15 @@ export function ReviewModal({
   maxCards,
   onRate,
   onClose,
+  preferences,
+  onPreferencesChange,
 }: {
   items: ReviewItem[];
   maxCards?: number;
   onRate: (id: string, remembered: boolean) => void;
   onClose: () => void;
+  preferences: LearningPreferences;
+  onPreferencesChange: (preferences: LearningPreferences) => void;
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
   useDialogFocus(dialogRef, onClose);
@@ -32,6 +37,19 @@ export function ReviewModal({
   const [missedCards, setMissedCards] = useState<ReviewItem[]>([]);
   const [recall, setRecall] = useState("");
   const card = sessionItems[index];
+  const [audioBusy,setAudioBusy]=useState(false);
+  const playback=useRef(0);
+  useEffect(()=>{
+    setAudioBusy(false);
+    if(card) void prefetchLocalKorean(card.front,preferences.speechVoice);
+    return ()=>{playback.current++;stopKoreanPlayback();};
+  },[card?.id,preferences.speechVoice]);
+  async function listen() {
+    if(!card || audioBusy)return;
+    const attempt=++playback.current;setAudioBusy(true);
+    await playElevenLabsKorean(card.front,preferences.speechVoice,preferences.speechPace,{naturalOnly:true,waitForEnd:true});
+    if(attempt===playback.current)setAudioBusy(false);
+  }
 
   function finishCard(remembered: boolean) {
     if (!card) return;
@@ -82,9 +100,11 @@ export function ReviewModal({
           {revealed && recall && <p className="review-your-answer"><strong>Your recall:</strong> {recall}</p>}
           <div className="flashcard-tools">
             <FeedbackToggle />
-            <button className="button button-quiet" onClick={() => speakKorean(card.front)}>Listen to Korean</button>
+            <button className="button button-quiet" disabled={audioBusy} onClick={() => void listen()}>{audioBusy?"Playing Korean…":"Listen to Korean"}</button>
+            {audioBusy && <button className="button button-quiet" onClick={()=>{playback.current++;stopKoreanPlayback();setAudioBusy(false);}}>Stop audio</button>}
             <button className="button button-soft" aria-pressed={revealed} onClick={() => setRevealed(!revealed)}>{revealed ? "Back to question" : "Reveal card"} <ArrowRight size={16} /></button>
           </div>
+          <ListeningControls voice={preferences.speechVoice} pace={preferences.speechPace} disabled={audioBusy} onVoiceChange={speechVoice=>onPreferencesChange({...preferences,speechVoice})} onPaceChange={speechPace=>onPreferencesChange({...preferences,speechPace})} />
           {revealed && <><WordReference word={card.front} /><p className="recall-rating-hint">How did your recall feel? Your rating plans the next review.</p>
             <div className="answer-actions">
               <button className="button button-quiet" onClick={() => finishCard(false)}>{index === sessionItems.length - 1 ? "Again · finish" : "Again · keep in review"}</button>
