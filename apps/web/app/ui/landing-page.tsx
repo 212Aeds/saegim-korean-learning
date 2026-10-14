@@ -35,7 +35,7 @@ export function LandingPage({
         </a>
         <div className="landing-nav-actions">
           <a className="public-nav-link" href="#your-path">Explore</a>
-          <a className="public-nav-link" href="/about/">About</a>
+          <a className="public-nav-link" href="/learn/">Guides</a>
           <span className="free-pill"><span /> Always free</span>
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
@@ -105,7 +105,7 @@ export function LandingPage({
         ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. About & feedback links to our public issue tracker; please keep personal information out of reports."],
       ].map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
       <footer className="landing-footer">
-        <span><a href="/privacy/">Privacy</a> · <a href="/about/">About & feedback</a></span>
+        <span><a href="/learn/">Learning guides</a> · <a href="/privacy/">Privacy</a> · <a href="/about/">About & feedback</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
         <span>한국어, 한 걸음씩 · Korean, one step at a time.</span>
       </footer>
