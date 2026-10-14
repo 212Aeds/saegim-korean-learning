@@ -3,8 +3,8 @@ function auditCatalog(manifest,publicDir){
  let totalBytes=0;
  for(const [key,url] of Object.entries(manifest)){
   if(!/^(chris|jessica)\|.+$/u.test(key)||typeof url!=='string'||!/^\/audio\/lessons\/[a-f0-9]{64}\.wav$/.test(url))throw Error('Invalid audio catalog entry');
-  const hash=crypto.createHash('sha256').update('supertonic3-v1|'+key).digest('hex');
-  if(url!==`/audio/lessons/${hash}.wav`)throw Error('Audio catalog key does not match its file');
+  const hashes=['supertonic3-v1|','supertonic3-v2|'].map(version=>crypto.createHash('sha256').update(version+key).digest('hex'));
+  if(!hashes.some(hash=>url===`/audio/lessons/${hash}.wav`))throw Error('Audio catalog key does not match its file');
   const bytes=fs.readFileSync(path.join(publicDir,url));
   if(bytes.length<44||bytes.length>5*1024*1024||bytes.toString('ascii',0,4)!=='RIFF'||bytes.toString('ascii',8,12)!=='WAVE')throw Error('Invalid audio file');
   totalBytes+=bytes.length;

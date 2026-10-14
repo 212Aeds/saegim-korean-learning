@@ -16,6 +16,26 @@ for output in (sys.stdout, sys.stderr):
         output.reconfigure(encoding="utf-8")
 
 
+def finish_recording(samples, sample_rate):
+    """Balance exported clips without deleting any generated samples."""
+    import numpy as np
+    result=np.asarray(samples,dtype=np.float32).flatten().copy()
+    if not len(result) or not np.all(np.isfinite(result)):
+        raise ValueError("Invalid generated audio.")
+    peak=float(np.max(np.abs(result)))
+    if peak>0.0001:
+        active=result[np.abs(result)>peak*0.02]
+        rms=float(np.sqrt(np.mean(active**2)))
+        gain=min(2.0,0.12/max(rms,0.0001),0.8912/peak)
+        result*=gain
+    fade=min(int(sample_rate*0.005),len(result)//2)
+    if fade:
+        ramp=np.linspace(0,1,fade,dtype=np.float32)
+        result[:fade]*=ramp
+        result[-fade:]*=ramp[::-1]
+    return result
+
+
 class Models:
     def __init__(self):
         self.whisper = None
@@ -73,12 +93,12 @@ class Models:
             vad_parameters={"min_silence_duration_ms": 600})
         return " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.8).strip()
 
-    def synthesize(self, text, voice="jessica"):
+    def synthesize(self, text, voice="jessica", quality="standard"):
         import numpy as np
         import soundfile
         from supertonic import TTS
         preset = "M1" if voice == "chris" else "F1"
-        cache_key = sha256((preset + "|" + text).encode()).digest()
+        cache_key = sha256((preset + "|" + quality + "|" + text).encode()).digest()
         if cache_key in self.audio_cache:
             self.audio_cache.move_to_end(cache_key)
             return self.audio_cache[cache_key]
@@ -88,11 +108,12 @@ class Models:
                            intra_op_num_threads=4, inter_op_num_threads=1)
         style = self.tts.get_voice_style(voice_name=preset)
         sentence = text if text.endswith((".", "!", "?", "。", "！", "？")) else text + "."
-        wav, _ = self.tts.synthesize(sentence, lang="ko", voice_style=style, total_steps=8,
+        wav, _ = self.tts.synthesize(sentence, lang="ko", voice_style=style, total_steps=16 if quality == "recording" else 8,
                                    speed=0.9, silence_duration=0.25)
         # Preserve all generated samples and leave breathing room at both edges.
         # Both presets use the same envelope; never crop Jessica's final syllable.
-        samples = np.pad(wav.flatten(), (int(self.tts.sample_rate * 0.12), int(self.tts.sample_rate * 0.3)))
+        body = finish_recording(wav, self.tts.sample_rate) if quality == "recording" else wav.flatten()
+        samples = np.pad(body, (int(self.tts.sample_rate * 0.12), int(self.tts.sample_rate * 0.3)))
         output = io.BytesIO()
         soundfile.write(output, samples, self.tts.sample_rate, format="WAV", subtype="PCM_16")
         audio = output.getvalue()
@@ -174,7 +195,10 @@ def create_app(models=None, origins=None):
         voice = body.get("voice", "jessica")
         if voice not in ("chris", "jessica"):
             return jsonify(error="Choose chris or jessica."), 400
-        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip(), voice)), mimetype="audio/wav"), "synthesize")
+        quality = body.get("quality", "standard")
+        if quality not in ("standard", "recording"):
+            return jsonify(error="Choose standard or recording quality."), 400
+        return run_model(lambda: send_file(io.BytesIO(models.synthesize(text.strip(), voice, quality) if quality == "recording" else models.synthesize(text.strip(), voice)), mimetype="audio/wav"), "synthesize")
 
     return app
 

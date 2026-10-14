@@ -32,6 +32,19 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(models.whisper_device, 'cpu')
             self.assertEqual(load.call_args.kwargs['device'], 'cpu')
 
+    def test_recording_finish_balances_level_without_clipping_or_cropping(self):
+        import numpy as np
+        from server import finish_recording
+        for amplitude in (0.04, 0.3, 1.2):
+            source=np.sin(np.linspace(0,100,24000)).astype(np.float32)*amplitude
+            finished=finish_recording(source,24000)
+            self.assertEqual(len(finished),len(source))
+            self.assertLessEqual(np.max(np.abs(finished)),0.8913)
+            self.assertEqual(finished[0],0)
+            self.assertEqual(finished[-1],0)
+            self.assertTrue(np.all(np.isfinite(finished)))
+        self.assertTrue(np.all(finish_recording(np.zeros(1000),24000)==0))
+
     def test_both_voices_keep_all_audio_and_use_gentle_baseline(self):
         import numpy as np
         import soundfile
@@ -59,6 +72,35 @@ class ServerTests(unittest.TestCase):
         for text, options in engine.calls:
             self.assertEqual(text, '안녕하세요.')
             self.assertEqual(options['speed'], 0.9)
+    def test_recording_quality_uses_more_steps_and_separate_cache(self):
+        import numpy as np
+        class Engine:
+            sample_rate=24000
+            def __init__(self): self.calls=[]
+            def get_voice_style(self,voice_name): return voice_name
+            def synthesize(self,text,**options):
+                self.calls.append(options)
+                return np.sin(np.linspace(0,50,2400)).reshape(1,-1).astype(np.float32)*0.1,None
+        models=Models();models.tts=Engine()
+        with patch.dict('sys.modules',{'supertonic':types.SimpleNamespace(TTS=object)}):
+            regular=models.synthesize('감사합니다','chris')
+            recording=models.synthesize('감사합니다','chris','recording')
+            self.assertEqual(models.synthesize('감사합니다','chris','recording'),recording)
+        self.assertEqual([call['total_steps'] for call in models.tts.calls],[8,16])
+        self.assertNotEqual(regular,recording)
+        with __import__('wave').open(io.BytesIO(recording)) as wav:
+            self.assertEqual(wav.getnframes(),2400+2880+7200)
+
+    def test_recording_route_rejects_unknown_quality(self):
+        self.assertEqual(self.client.post('/v1/speech/synthesize',json={'text':'안녕하세요','quality':'unknown'}).status_code,400)
+        class Recording(FakeModels):
+            calls=[]
+            def synthesize(self,text,voice='jessica',quality='standard'):
+                self.calls.append(quality);return b'RIFFtest'
+        models=Recording();client=create_app(models,[]).test_client()
+        self.assertEqual(client.post('/v1/speech/synthesize',json={'text':'안녕하세요','quality':'recording'}).status_code,200)
+        self.assertEqual(models.calls,['recording'])
+
     def setUp(self):
         self.client = create_app(FakeModels(), ["http://localhost:3016"]).test_client()
     def test_transcription(self):

@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import {playKorean,stopKoreanPlayback} from "./speech";
 import { SoriMascot } from "./sori-mascot";
+import { FounderStory } from "./founder-story";
 import { lessons } from "../curriculum";
 
 export function LandingPage({
@@ -96,6 +97,7 @@ export function LandingPage({
           ["03", "RECALL · REVISIT", "Keep a little more", "Turn your lessons into review cards. Give tricky answers another try."],
         ].map(([number, sample, title, text]) => <article key={number}><span className="public-step-number">{number}</span><div className="public-path-sample" aria-hidden="true">{sample}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
+      <FounderStory />
       <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
       <section className="public-faq" aria-labelledby="public-faq-title"><div><span className="micro-label">BEFORE YOU BEGIN</span><h2 id="public-faq-title">A few helpful answers.</h2></div><div>{[
         ["Do I need to know Hangul?", "No. Choose “brand new” and start with letters and syllable blocks. If you already know some Korean, choose a suitable starting level."],

@@ -101,3 +101,11 @@ For Windows installations in a deeply nested checkout, use a short directory jun
 On this RTX 5080 laptop, three identical generated Korean clips took 8.1–8.6 seconds on CPU and 0.27–0.41 seconds after GPU warmup, with matching transcripts. The first GPU recognition took 1.4 seconds. These are sample measurements, not a guarantee for every speaker. Recognition and synthesis have separate locks so preparing a voice clip does not block transcription.
 
 Conversation speech now ends after 0.9–1.5 seconds of silence depending on level. Canonical 16 kHz conversation WAVs skip browser decoding. Phrase helpers and replies prepare local audio ahead of playback; conversation pace defaults to 1.10× and remains adjustable. Qwen retains a consistent batch size of 512 and stays loaded for two hours; an initial model load still takes longer than warm replies. No paid provider fallback is enabled.
+
+## Website recording quality
+
+The synthesis endpoint accepts `quality: "recording"` for preparing reusable website audio. This uses 16 generation steps rather than the standard live setting of 8, then balances active-sample RMS toward 0.12 with a maximum 2× gain and a -1 dBFS peak ceiling. A 5 ms edge fade avoids hard waveform boundaries. Every generated sample is retained, with the existing 120 ms lead and 300 ms tail padding.
+
+This is signal-level finishing, not a guarantee of native pronunciation or human perceptual quality. It does not replace the model or clone new voices. Standard conversation synthesis remains at 8 steps and keeps its original envelope.
+
+`npm run audio:prepare -- --catalog` rebuilds existing phrases with recording quality. Versioned audio filenames prevent old browser caches from hiding the new exports. The catalog audit accepts the original and recording versions during regeneration. Regenerate fully and remove superseded managed audio files before packaging a release. Do not delete any file still referenced by the active catalog.
