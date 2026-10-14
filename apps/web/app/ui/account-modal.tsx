@@ -9,6 +9,7 @@ import type { LearningPreferences } from "../progress";
 import { defaultLearningProfile, type LearningProfile } from "../learning-profile";
 import { LearningProfileFields } from "./learning-profile-fields";
 import { avatars, accountAvatar } from "../account-personalization";
+import {requestAccount} from "./account-request";
 import { ProfilePreview } from "./profile-preview";
 
 export type LearnerAccount = {
@@ -53,10 +54,12 @@ export function AccountModal({
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible,setPasswordVisible]=useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [profileName, setProfileName] = useState(account?.displayName ?? "");
   const [learningProfile, setLearningProfile] = useState(account?.learningProfile ?? defaultLearningProfile);
+  useEffect(()=>{setPasswordVisible(false);setMessage("");setPassword("");},[mode]);
   const profileChanged = JSON.stringify(learningProfile) !== JSON.stringify(account?.learningProfile ?? defaultLearningProfile);
   useEffect(() => setProfileName(account?.displayName ?? ""), [account?.displayName]);
 
@@ -66,31 +69,11 @@ export function AccountModal({
     setBusy(true);
     setMessage("");
     try {
-      const response = await fetch(
-        `${apiUrl}/v1/auth/${mode === "create" ? "register" : "login"}`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, displayName, ...(mode === "create" ? { learningProfile } : {}) }),
-        },
-      );
-      const body = (await response.json()) as
-        LearnerAccount | { message?: string };
-      if (!response.ok || !("id" in body)) {
-        setMessage(
-          "message" in body
-            ? (body.message ?? "We couldn’t sign you in. Please try again.")
-            : "We couldn’t sign you in. Please try again.",
-        );
-        return;
-      }
+      const body=await requestAccount(apiUrl,mode,{email,password,displayName,...(mode === "create"?{learningProfile}:{})});
       await onAuthenticated(body);
       onClose();
-    } catch {
-      setMessage(
-        "The account service is unavailable. Please try again once it reconnects.",
-      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "We couldn’t sign you in. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -323,10 +306,9 @@ export function AccountModal({
           </div>
         ) : (
           <div className="account-content">
-            <h2 id="account-title">Keep your Korean growing.</h2>
+            <h2 id="account-title">{mode === "login" ? "Welcome back to Saegim." : "Keep your Korean growing."}</h2>
             <p>
-              Create a free account to carry lessons and review cards between
-              devices.
+              {mode === "login" ? "Sign in to pick up your saved lessons and review cards." : "Create a free account to carry lessons and review cards between devices."}
             </p>
             <div
               className="account-tabs"
@@ -385,7 +367,7 @@ export function AccountModal({
                     autoComplete={
                       mode === "create" ? "new-password" : "current-password"
                     }
-                    type="password"
+                    type={passwordVisible?"text":"password"}
                     minLength={12}
                     maxLength={128}
                     required
@@ -393,6 +375,7 @@ export function AccountModal({
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="12 characters or more"
                   />
+                  <button type="button" className="account-password-toggle" aria-pressed={passwordVisible} onClick={()=>setPasswordVisible(value=>!value)}>{passwordVisible?"Hide password":"Show password"}</button>
                   {mode === "create" && (
                     <small>Use at least 12 characters.</small>
                   )}

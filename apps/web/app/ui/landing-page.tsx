@@ -31,7 +31,7 @@ export function LandingPage({
       <a className="skip-learning-link" href="#your-path">Skip to learning path</a>
       <header className="landing-nav">
         <a className="landing-brand" href="#home" aria-label="Saegim home">
-          <span className="landing-mark" aria-hidden="true">한</span>
+          <SoriMascot className="site-mascot-logo" />
           <span>saegim<span>.</span></span>
         </a>
         <div className="landing-nav-actions">

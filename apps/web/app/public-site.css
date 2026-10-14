@@ -108,3 +108,8 @@ button.landing-mini-card:disabled {cursor:wait;}
 .founder-story-compact h2 {font-size:28px;}
 @media(max-width:760px){.founder-story{grid-template-columns:1fr;padding:28px 23px;gap:15px;}.founder-story-art{min-height:210px;max-width:240px;width:100%;justify-self:center;}.story-mascot{width:120px;height:120px;}.story-bubble{width:110px;height:83px;top:0;}.story-bubble-two{top:50px;}.founder-story-copy>p{font-size:14px;}}
 @media(prefers-reduced-motion:no-preference){.story-mascot{animation:story-sway 6s ease-in-out infinite;}@keyframes story-sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}}
+
+.site-mascot-logo {width:44px;height:44px;flex:none;vertical-align:middle;}
+.account-password-toggle {justify-self:start;padding:6px 0;background:none;border:0;color:var(--forest);font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.account-password-toggle:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
+@media(prefers-reduced-motion:no-preference){.account-tabs button{transition:background-color 180ms ease,color 180ms ease;}.account-form{animation:section-settle 220ms ease-out;}.site-mascot-logo{transition:transform 220ms ease;}.landing-brand:hover .site-mascot-logo{transform:rotate(-5deg);}}

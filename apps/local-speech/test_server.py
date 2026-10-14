@@ -11,6 +11,20 @@ class FakeModels:
         return b"RIFFtest"
 
 class ServerTests(unittest.TestCase):
+    def test_recognition_warmup_uses_silence_and_current_device(self):
+        from unittest.mock import Mock
+        import numpy as np
+        models = Models()
+        models.whisper = Mock()
+        for device in ("cuda", "cpu"):
+            models.whisper_device = device
+            models.warm_recognition()
+            args, kwargs = models.whisper.transcribe.call_args
+            self.assertEqual(args[0].shape, (16000,))
+            self.assertTrue(np.all(args[0] == 0))
+            self.assertEqual(kwargs["fp16"], device == "cuda")
+            self.assertEqual(kwargs["language"], "ko")
+
     def test_gpu_half_preserves_float_normalization_and_cpu_fallback(self):
         from unittest.mock import Mock
         class Norm:

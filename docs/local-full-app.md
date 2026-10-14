@@ -28,6 +28,18 @@ npm run dev:local:web
 Alternatively, `npm run dev:local` starts all four services together. Stop the
 already-running servers before using that command to avoid duplicate ports.
 
+On Windows, double-click `START-SAEGIM.cmd` in the repository to run this command.
+Keep its terminal open while using the local app. A failed model process no longer
+terminates the website or account API; inspect that process's output and restart
+it separately. Sign-in still needs the API and the existing `DATABASE_URL`.
+
+The Windows speech environment uses official Python 3.10 and a pinned Numba 0.61.2
+wheel compatible with Whisper. On this machine, the previous standalone Python
+runtime and Numba 0.68 extension were blocked by Windows Application Control.
+Replacing those dependencies restored imports without changing security policy.
+Both voices and recognition inference warm up before the speech ready message,
+so the first learner recording does not initialize GPU kernels itself.
+
 Wait for speech's ready message. Ollama must have `qwen3:14b` downloaded.
 This workspace has a portable Ollama installation in `../work/ollama` and the
 model in your user Ollama model cache. On another machine, install Ollama and

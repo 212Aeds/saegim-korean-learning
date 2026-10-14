@@ -63,6 +63,13 @@ class Models:
             device = "cpu"
         self.whisper_device = device
 
+    def warm_recognition(self):
+        """Initialize inference kernels before accepting the first recording."""
+        import numpy as np
+        self.whisper.transcribe(np.zeros(16000, dtype=np.float32), language="ko",
+                                fp16=self.whisper_device == "cuda", temperature=0,
+                                condition_on_previous_text=False)
+
     def transcribe(self, audio):
         import numpy as np
         # Browser converts to PCM WAV; this avoids external/native media decoders.
@@ -213,6 +220,7 @@ if __name__ == "__main__":
         models.synthesize("안녕하세요.", voice)
     if os.getenv("WHISPER_ENGINE", "openai") == "openai":
         models.prepare_whisper()
+        models.warm_recognition()
         print("Whisper ready on " + models.whisper_device, flush=True)
     print("Local Korean speech ready at http://127.0.0.1:5055", flush=True)
     serve(create_app(models), host="127.0.0.1", port=5055, threads=4)
