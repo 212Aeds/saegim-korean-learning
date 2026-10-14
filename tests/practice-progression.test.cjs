@@ -61,3 +61,27 @@ test('conversation Enter sends while Shift+Enter and Korean IME composition stay
  assert.equal(shouldSendConversationKey('Enter',false,true),false);
  assert.equal(shouldSendConversationKey('Enter',false,false,229),false);
 });
+
+test('focused recovery uses actual Again cards and stays inside eligible content',()=>{
+ const {recoveryPractice}=require('../apps/web/app/practice-bank.ts');
+ const pool=practicePool(initialProgress,{level:'new',reasons:['travel']},'mixed');
+ const progress={...initialProgress,reviewItems:[{front:'ㄱ',lastResult:'again'},{front:'가방',lastResult:'again'},{front:'ㅏ',lastResult:'remembered'}]};
+ const result=recoveryPractice(pool,progress);
+ assert.ok(result.length>0);assert.ok(result.every(card=>card.reference==='ㄱ'&&!card.listening));
+ assert.deepEqual(recoveryPractice(pool,initialProgress),[]);
+});
+test('listening rounds add distinct eligible dictation without exposing Korean targets',()=>{
+ const {listeningPractice}=require('../apps/web/app/practice-bank.ts');
+ for(const level of ['new','basic','advanced']){
+  const pool=practicePool(initialProgress,{level,reasons:['travel']},'mixed'),round=listeningPractice(pool);
+  assert.ok(round.length>0);assert.equal(new Set(round.map(c=>c.question.id)).size,round.length);
+  assert.ok(round.every(c=>c.listening&&c.question.korean==='?'&&pool.some(p=>p.reference===c.reference)));
+  for(const card of round.filter(c=>c.question.id.startsWith('ear-'))){assert.equal(card.question.answer,card.reference);assert.equal(card.question.type,'text');}
+  if(level==='new')assert.ok(round.every(c=>c.mode==='letters'||c.mode==='reading'));
+ }
+});
+test('practice breakdown reports first tries by actual skill and ignores duplicate misses',()=>{
+ const {practiceBreakdown}=require('../apps/web/app/practice-bank.ts');
+ const cards=[{mode:'letters',question:{id:'a'}},{mode:'letters',question:{id:'b'}},{mode:'words',question:{id:'c'}}];
+ assert.deepEqual(practiceBreakdown(cards,['b','b','unknown']),[{mode:'letters',total:2,firstTry:1},{mode:'words',total:1,firstTry:1}]);
+});

@@ -220,3 +220,11 @@
 @media (prefers-reduced-motion: reduce) { .conversation-form textarea { transition: none; } }
 
 .practice-question .answer-tip { font-size: 14px; line-height: 1.6; text-align: center; }
+
+.practice-smart-rounds {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:24px 0;}
+.practice-breakdown {margin:24px 0;text-align:left;}
+.practice-breakdown p {display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line,#e3e9e1);}
+.practice-breakdown span {color:var(--muted,#647168);}
+@media(max-width:600px){.practice-smart-rounds{grid-template-columns:1fr;}.practice-breakdown p{flex-direction:column;gap:4px;}}
+
+.practice-summary-mascot{width:72px;height:72px;}

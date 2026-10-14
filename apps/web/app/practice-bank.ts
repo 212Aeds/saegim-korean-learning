@@ -221,3 +221,27 @@ export function practiceSession(pool: PracticeCard[], count: number) {
           : card.question,
     }));
 }
+
+// Reuse eligible material: recovery never introduces letters outside the learner's route.
+export function recoveryPractice(pool: PracticeCard[], progress: SavedProgress): PracticeCard[] {
+  const struggled = new Set(progress.reviewItems.filter(item => item.lastResult === "again").map(item => item.front.normalize("NFC").trim()));
+  return pool.filter(card => struggled.has(card.reference.normalize("NFC").trim()) && !card.listening);
+}
+export function listeningPractice(pool: PracticeCard[]): PracticeCard[] {
+  const existing = pool.filter(card => card.listening);
+  const seen = new Set(existing.map(card => card.reference));
+  const extra: PracticeCard[] = [];
+  for (const card of pool) {
+    if (seen.has(card.reference) || !/^[가-힣]+(?:[ .,!?。？！]*[가-힣]+)*[ .,!?。？！]*$/u.test(card.reference)) continue;
+    seen.add(card.reference);
+    extra.push({...card, listening:true, question:{id:`ear-${card.question.id}`,type:"text",korean:"?",prompt:"Listen, then write the Korean you hear.",answer:card.reference,accepted:[],placeholder:"Write in Hangul",tip:`You heard: ${card.reference}. ${card.question.tip}`}});
+  }
+  return [...existing,...extra];
+}
+export function practiceBreakdown(cards: PracticeCard[], missedIds: string[]) {
+  const missed = new Set(missedIds);
+  return (["letters","reading","words","sentences"] as const).flatMap(mode => {
+    const group = cards.filter(card => card.mode === mode);
+    return group.length ? [{mode,total:group.length,firstTry:group.filter(card => !missed.has(card.question.id)).length}] : [];
+  });
+}

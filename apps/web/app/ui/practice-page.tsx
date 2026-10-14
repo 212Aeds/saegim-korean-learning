@@ -4,13 +4,14 @@ import { localSpeechUrl } from "./local-speech-server";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LearningProfile } from "../learning-profile";
 import type { SavedProgress, LearningPreferences } from "../progress";
-import { practicePool, practiceSession, type PracticeMode, type PracticeCard } from "../practice-bank";
+import { practicePool, practiceSession, recoveryPractice, listeningPractice, practiceBreakdown, type PracticeMode, type PracticeCard } from "../practice-bank";
 import { isCorrectTextAnswer, normalizeAnswer } from "../curriculum";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
-import { playElevenLabsKorean, stopKoreanPlayback } from "./speech";
+import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from "./speech";
 import { playCorrectAnswerSound } from "./feedback-sound";
 import { FeedbackToggle } from "./feedback-toggle";
+import { SoriMascot } from "./sori-mascot";
 const modes: Record<PracticeMode, { title: string; description: string }> = {
   letters: { title: "Letter shapes & sounds", description: "Recall names and write familiar letters." },
   reading: { title: "Build & read blocks", description: "Combine letters from your current learning steps." },
@@ -20,7 +21,8 @@ const modes: Record<PracticeMode, { title: string; description: string }> = {
 };
 export function PracticePage({ progress, profile, preferences, onSessionComplete }: { progress: SavedProgress; profile: LearningProfile; preferences: LearningPreferences; onSessionComplete: () => void }) {
   const pool = useMemo(() => practicePool(progress, profile, "mixed"), [progress, profile]);
-  const [mode, setMode] = useState<PracticeMode>(profile.level === "new" ? "letters" : (profile.level === "intermediate" || profile.level === "advanced") ? "sentences" : "words");
+  const [mode, setMode] = useState<PracticeMode>(profile.level === "new" || profile.level === "hangul" ? "letters" : (profile.level === "intermediate" || profile.level === "advanced") ? "sentences" : "words");
+  const [focus,setFocus]=useState<"standard"|"recovery"|"listening">("standard");
   const [count, setCount] = useState(10);
   const [session, setSession] = useState<PracticeCard[]>([]);
   const [index, setIndex] = useState(0);
@@ -38,7 +40,10 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
   const correct = card ? card.question.type === "text" ? isCorrectTextAnswer(card.question, answer) : answer === card.question.answer : false;
   useEffect(() => { if (checked && correct) actionButton.current?.focus(); }, [checked, correct]);
   const hideTarget = card && (card.listening || card.question.id.startsWith("drill-choice-") || card.question.id.startsWith("drill-shape-") || (card.question.type === "text" && /[ㄱ-ㅎㅏ-ㅣ가-힣]/u.test(card.question.answer) && normalizeAnswer(card.question.answer) === normalizeAnswer(card.question.korean)));
-  const available = mode === "mixed" ? pool : pool.filter((item) => item.mode === mode);
+  const recovery = recoveryPractice(pool,progress);
+  const listening = listeningPractice(pool);
+  const available = focus === "recovery" ? recovery : focus === "listening" ? listening : mode === "mixed" ? pool : pool.filter((item) => item.mode === mode);
+  useEffect(()=>{if(card?.listening) void prefetchLocalKorean(card.reference,preferences.speechVoice);},[card?.question.id,preferences.speechVoice]);
   function start(cards = available) {
     playback.current++; stopKoreanPlayback(); setAudioBusy(false); setAudioNotice("");
     setSession(practiceSession(cards, count)); setIndex(0); setAnswer(""); setChecked(false); setFirstTry(0); setMissed([]); completed.current = false;
@@ -66,11 +71,11 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
   if (session.length && !card) return <section className="practice-session-card lesson-step-motion">
     <span className="micro-label">PRACTICE COMPLETE</span><h2>A little steadier than before.</h2>
     <div className="review-summary"><strong>{session.length}<span>questions practiced</span></strong><strong>{firstTry}<span>right on the first try</span></strong><strong>{missed.length}<span>needed another try</span></strong></div>
-    <p>This counts as a learning day. Practice does not mark lessons complete or change your review dates.</p>
+    <SoriMascot className="practice-summary-mascot" thumbsUp /><div className="practice-breakdown">{practiceBreakdown(session,missed).map(item=><p key={item.mode}><strong>{modes[item.mode].title}</strong><span>{item.firstTry} / {item.total} on the first try</span></p>)}</div><p>{missed.length ? "Your next useful step: revisit the questions that needed another try." : "Every answer landed on the first try. Try a listening round or continue your learning path."}</p><p>This counts as a learning day. Practice does not mark lessons complete or change your review dates.</p>
     <div className="flashcard-tools">{missed.length > 0 && <button className="button button-soft" onClick={() => start(session.filter((item) => missed.includes(item.question.id)))}>Repeat the tricky ones</button>}<button className="button button-dark" onClick={() => start()}>Another fresh round</button><button className="button button-quiet" onClick={() => setSession([])}>Choose a different focus</button></div>
   </section>;
   if (card) return <section className="practice-session-card" aria-labelledby="practice-title">
-    <div className="practice-session-top"><span className="micro-label">{modes[mode].title} · {index + 1} / {session.length}</span><button className="button button-quiet" onClick={() => { playback.current++; stopKoreanPlayback(); setSession([]); }}>Leave practice</button></div>
+    <div className="practice-session-top"><span className="micro-label">{focus === "listening" ? "Train your ear" : focus === "recovery" ? "Your tricky material" : modes[mode].title} · {index + 1} / {session.length}</span><button className="button button-quiet" onClick={() => { playback.current++; stopKoreanPlayback(); setSession([]); }}>Leave practice</button></div>
     <div className="review-session-progress" role="progressbar" aria-label="Practice questions completed" aria-valuemin={0} aria-valuemax={session.length} aria-valuenow={index}><i style={{transform:`scaleX(${index/session.length})`}} /></div>
     <div key={card.question.id} className="practice-question lesson-step-motion">
       <span className="practice-target" lang="ko">{card.listening ? "♫" : hideTarget ? "?" : card.question.korean}</span><h2 id="practice-title">{card.question.prompt}</h2>
@@ -82,8 +87,8 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
     </div>
   </section>;
   return <div className="practice-page"><section className="practice-intro"><span className="micro-label">SMALL ROUNDS. AS MUCH PRACTICE AS YOU WANT.</span><h2>Make familiar Korean feel easier.</h2><p>Fresh questions from completed lessons and your next step. New learners practice letters before vocabulary; changing your level refreshes the available material.</p></section>
-    <div className="practice-focus-grid">{Object.entries(modes).map(([id, item]) => {const size=id === "mixed" ? pool.length : pool.filter(card=>card.mode===id).length;return <button key={id} className={`practice-focus ${mode===id ? "is-selected" : ""}`} aria-pressed={mode===id} disabled={!size} onClick={()=>setMode(id as PracticeMode)}><strong>{item.title}</strong><span>{item.description}</span><small>{size ? `${size} questions available` : "Opens as you learn the foundations"}</small></button>;})}</div>
-    <div className="practice-start"><FeedbackToggle /><label>Round size<select value={count} onChange={event=>setCount(Number(event.target.value))}><option value={5}>Up to 5 questions</option><option value={10}>Up to 10 questions</option><option value={20}>Up to 20 questions</option></select></label><button className="button button-dark" disabled={!available.length} onClick={()=>start()}>Start a fresh round</button></div>
+    <section className="practice-smart-rounds" aria-label="Focused practice rounds"><button className={`practice-focus ${focus === "recovery" ? "is-selected" : ""}`} aria-pressed={focus === "recovery"} disabled={!recovery.length} onClick={()=>setFocus("recovery")}><strong>Practice tricky cards</strong><span>Revisit material you marked Again in Review.</span><small>{recovery.length ? `${recovery.length} eligible questions` : "No tricky cards yet. Mark Again in Review when you need more practice."}</small></button><button className={`practice-focus ${focus === "listening" ? "is-selected" : ""}`} aria-pressed={focus === "listening"} disabled={!listening.length} onClick={()=>setFocus("listening")}><strong>Train your ear</strong><span>Listen first, then choose a letter or write what you hear.</span><small>{listening.length} listening questions at your level</small></button></section><div className="practice-focus-grid">{Object.entries(modes).map(([id, item]) => {const size=id === "mixed" ? pool.length : pool.filter(card=>card.mode===id).length;return <button key={id} className={`practice-focus ${focus === "standard" && mode===id ? "is-selected" : ""}`} aria-pressed={focus === "standard" && mode===id} disabled={!size} onClick={()=>{setMode(id as PracticeMode);setFocus("standard");}}><strong>{item.title}</strong><span>{item.description}</span><small>{size ? `${size} questions available` : "Opens as you learn the foundations"}</small></button>;})}</div>
+    <div className="practice-start"><FeedbackToggle /><label>Round size<select value={count} onChange={event=>setCount(Number(event.target.value))}><option value={5}>Up to 5 questions</option><option value={10}>Up to 10 questions</option><option value={20}>Up to 20 questions</option></select></label><button className="button button-dark" disabled={!available.length} onClick={()=>start()}>{focus === "recovery" ? "Start tricky-card practice" : focus === "listening" ? "Start listening round" : "Start a fresh round"}</button></div>
     <p className="practice-footnote">Repeat whenever you want. Lessons and scheduled review keep their own progress.</p>
   </div>;
 }
