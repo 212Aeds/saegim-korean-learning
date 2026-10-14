@@ -31,6 +31,7 @@ import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { reviewOverview } from "./ui/review-session";
 import { LearningCollection } from "./ui/learning-collection";
 import { LevelFocus } from "./ui/level-focus";
+import { FeedbackReport } from "./ui/feedback-report";
 import { SpeakDeck } from "./ui/speak-deck";
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
 import { PracticePage } from "./ui/practice-page";
@@ -660,6 +661,7 @@ export default function Home() {
             </div>
           )}
 
+          <FeedbackReport area={tab} publishing={freePublishing}/>
           <footer className="page-footer">
             <span>Made for curious minds, with care.</span>
             <span>

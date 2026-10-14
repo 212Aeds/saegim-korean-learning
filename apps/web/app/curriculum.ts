@@ -4,6 +4,7 @@ import { foundationLessons } from "./foundation-lessons";
 import { journeyLessons } from "./journey-content";
 import { consolidationLessons } from "./consolidation-lessons";
 import { newLessons } from "./new-lessons";
+import { wordRecallLessons } from "./word-recall-lessons";
 
 export type MultipleChoiceQuestion = {
   id: string;
@@ -383,6 +384,7 @@ export const lessons: Lesson[] = [
   ...newLessons, ...journeyLessons,
   ...foundationLessons,
   ...consolidationLessons,
+  ...wordRecallLessons,
 ];
 
 export function shuffle<T>(items: T[]): T[] {

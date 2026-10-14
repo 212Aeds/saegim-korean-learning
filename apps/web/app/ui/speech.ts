@@ -121,7 +121,7 @@ async function waitForKoreanVoices(
     const finish = () => {
       if (settled) return;
       settled = true;
-      window.clearTimeout(timer);
+      if (timer !== undefined) window.clearTimeout(timer);
       speech.removeEventListener("voiceschanged", finish);
       resolve(listKoreanVoices());
     };
@@ -131,7 +131,7 @@ async function waitForKoreanVoices(
   });
 }
 
-function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}) {
+function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}, finished?: (success: boolean) => void) {
   if (
     typeof window === "undefined" ||
     !("speechSynthesis" in window) ||
@@ -163,17 +163,38 @@ function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}) {
   utterance.rate = Math.min(1.4, Math.max(0.65, playbackOptions.rate ?? 1));
   utterance.pitch = 1;
   utterance.voice = voice;
+  utterance.onend = () => finished?.(true);
+  utterance.onerror = () => finished?.(false);
   window.speechSynthesis.cancel();
   if (queuedStart !== undefined) window.clearTimeout(queuedStart);
   queuedStart = window.setTimeout(() => {
     try {
       window.speechSynthesis.speak(utterance);
     } catch {
+      finished?.(false);
       // Some browsers expose the API but cannot start a local speech engine.
     }
     queuedStart = undefined;
   }, 40);
   return true;
+}
+
+function playDeviceUntilEnd(text: string, options: KoreanSpeechOptions): Promise<boolean> {
+  return new Promise(resolve => {
+    let timer: number | undefined;
+    let settled = false;
+    const finish = (success: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+      if (settlePlayback === finish) settlePlayback = undefined;
+      resolve(success);
+    };
+    if (options.waitForEnd) settlePlayback = finish;
+    const started = playDeviceKorean(text, options, finish);
+    if (!started || !options.waitForEnd) finish(started);
+    else timer = window.setTimeout(() => { window.speechSynthesis.cancel(); finish(false); }, 120_000);
+  });
 }
 
 export function speakKorean(text: string, options: KoreanSpeechOptions = {}) {
@@ -262,13 +283,14 @@ export async function playElevenLabsKorean(
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
   stopKoreanPlayback();
+  const version = playbackVersion;
   const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
   if (!paidFeaturesEnabled && !localSpeechUrl && !recorded) {
     await waitForKoreanVoices();
-    const played=playDeviceKorean(naturalSpeechText(text), {...fallbackOptions,rate});
+    if (version !== playbackVersion) return {played:false,source:"unavailable"};
+    const played=await playDeviceUntilEnd(naturalSpeechText(text), {...fallbackOptions,rate});
     return {played,source:played ? "device" : "unavailable"};
   }
-  const version = playbackVersion;
   const controller = new AbortController();
   pendingAudio = controller;
   const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
@@ -355,7 +377,7 @@ export async function playElevenLabsKorean(
     await waitForKoreanVoices();
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };
-    const played = playDeviceKorean(text, {
+    const played = await playDeviceUntilEnd(text, {
       ...fallbackOptions,
       voiceName: "Yuna",
       rate,
@@ -469,7 +491,7 @@ export async function playKorean(
   stopKoreanPlayback();
   if (!paidFeaturesEnabled) {
     await waitForKoreanVoices();
-    const played=playDeviceKorean(naturalSpeechText(text), options);
+    const played=await playDeviceUntilEnd(naturalSpeechText(text), options);
     return {played,source:played ? "device" : "unavailable"};
   }
   const version = playbackVersion;

@@ -1,5 +1,23 @@
 # Full app with local AI and speech
 
+## Website testing preparation
+
+The course now includes 116 lessons: 14 new word-recall lessons add 84 English
+meaning-retrieval prompts after their source word lessons. They reuse existing
+chapter vocabulary and dictionary senses; they do not introduce unreferenced
+new definitions. Basic routes insert recall between words and exchanges.
+
+The public listening practice now has Jessica/Chris selection, a pace slider,
+prefetch, Stop, cleanup when changing cards, and writing feedback. Device speech
+waits for its utterance end when requested and Stop resolves an active wait.
+There are 162 recorded clips, including 24 additions for clothes/calendar words.
+
+Every learning section has a collapsible report form. Reports contain only the
+entered text, current section, and public/local build label. Learners can inspect
+and download a report locally or open a public GitHub issue draft; the app never
+submits it automatically. See [beta user testing](beta-user-testing.md) for the
+first volunteer round and release checks. External user testing has not yet run.
+
 The full account app is restored on http://localhost:3016, using the existing
 database and saved account progress. The separate static device-only package
 remains available; its browser progress is not imported automatically.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { DeviceListeningPractice } from "./device-listening-practice";
 import { paidFeaturesEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
 import { ServerSpeechPractice } from "./server-speech-practice";
@@ -17,14 +18,8 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function OpenRouterListeningPractice(props: Parameters<typeof PaidListeningPractice>[0]) {
   if (localSpeechUrl) return <ServerSpeechPractice {...props} />;
-  return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DevicePractice {...props} />;
+  return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DeviceListeningPractice {...props} />;
 }
-function DevicePractice({korean,onResult}: Parameters<typeof PaidListeningPractice>[0]) {
-  const [written,setWritten]=useState("");
-  const [notice,setNotice]=useState("");
-  return <section className="speech-practice"><span className="micro-label">LISTEN & WRITE</span><p>Listen with a local Korean voice, say it aloud yourself, then type the target phrase. No recording is uploaded.</p><button type="button" className="button button-soft" onClick={async()=>{const result=await playElevenLabsKorean(korean);if(!result.played)setNotice("No local Korean voice is available. You can still practice by writing.");}}>Listen on this device</button><form onSubmit={event=>{event.preventDefault();const matches=compareSpeech(korean,written,true).matches;setNotice(matches?"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");onResult?.(written,matches);}}><KoreanInput value={written} onChange={setWritten} label="Write the Korean target" maxLength={500} openOnFocus={false} /><button className="button button-dark" disabled={!written.trim()}>Check written response</button></form><WordReference word={korean} />{notice && <p role="status">{notice}</p>}</section>;
-}
-
 function savedSpeechRate() {
   if (typeof window === "undefined") return 1;
   const rate = Number(window.localStorage.getItem("sori-speech-rate"));

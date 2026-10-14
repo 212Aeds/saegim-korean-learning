@@ -37,6 +37,7 @@ export function learningRoute(profile = defaultLearningProfile) {
     visiting.delete(id); visited.add(id); route.push(lesson);
   }
   const withPractice = (ids: string[]) => ids.flatMap((id) => [id,
+    ...(id.endsWith("-words") && byId.has(id.replace(/-words$/, "-word-recall")) ? [id.replace(/-words$/, "-word-recall")] : []),
     ...(id === "hangul-round-vowels" ? ["checkpoint-vowels"] : id === "hangul-lips-consonants" ? ["checkpoint-consonants"] : id.endsWith("-dialogue") ? [id.replace(/-dialogue$/, "-consolidation")] : []),
   ]);
   [...withPractice(foundations), ...withPractice(interests), ...lessons.map((lesson) => lesson.id)].forEach(visit);

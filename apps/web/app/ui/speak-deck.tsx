@@ -237,6 +237,8 @@ export function SpeakDeck({
         <OpenRouterListeningPractice
           key={card.id}
           korean={card.korean}
+          selectedVoice={preferences.speechVoice}
+          selectedPace={preferences.speechPace}
           english={card.meaning}
           onVoiceChange={(speechVoice: ElevenLabsVoice) =>
             onPreferencesChange({ ...preferences, speechVoice })
