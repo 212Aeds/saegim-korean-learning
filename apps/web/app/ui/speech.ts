@@ -1,3 +1,4 @@
+import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
 import { paidFeaturesEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
 import { naturalSpeechText, consonantName } from "./hangul-answers";
@@ -223,7 +224,8 @@ async function localAudio(text: string, voice: ElevenLabsVoice): Promise<Blob> {
   const preparing = localAudioPreparing.get(key);
   if (preparing) return preparing;
   const task = (async () => {
-    const response = await fetch(`${localSpeechUrl}/v1/speech/synthesize`, {
+    const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
+    const response = recorded ? await fetch(recorded,{cache:"force-cache",signal:AbortSignal.timeout(20_000)}) : await fetch(`${localSpeechUrl}/v1/speech/synthesize`, {
       method: "POST", credentials: "omit", cache: "no-store", signal: AbortSignal.timeout(180_000),
       headers: { "Content-Type": "application/json" }, body: JSON.stringify({text: clean, voice}),
     });
@@ -242,7 +244,7 @@ async function localAudio(text: string, voice: ElevenLabsVoice): Promise<Blob> {
 // Prepare only explicitly configured local audio; never warm a paid provider.
 let preparationVersion = 0;
 export async function prefetchLocalKorean(text: string, voice = selectedElevenLabsVoice()) {
-  if (!localSpeechUrl || typeof window === "undefined") return;
+  if ((!localSpeechUrl && !(recordedAudioEnabled && recordedAudioUrl(text,voice))) || typeof window === "undefined") return;
   const version = ++preparationVersion;
   // Rapid navigation keeps only the latest background preparation.
   // An explicit Listen request still shares its in-flight clip immediately.
@@ -260,7 +262,8 @@ export async function playElevenLabsKorean(
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
   stopKoreanPlayback();
-  if (!paidFeaturesEnabled && !localSpeechUrl) {
+  const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
+  if (!paidFeaturesEnabled && !localSpeechUrl && !recorded) {
     await waitForKoreanVoices();
     const played=playDeviceKorean(naturalSpeechText(text), {...fallbackOptions,rate});
     return {played,source:played ? "device" : "unavailable"};
@@ -270,8 +273,8 @@ export async function playElevenLabsKorean(
   pendingAudio = controller;
   const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
   try {
-    if (!localSpeechUrl && !apiUrl) throw new Error();
-    const response = localSpeechUrl ? null : await fetch(`${apiUrl}/v1/speech/synthesize`, {
+    if (!localSpeechUrl && !apiUrl && !recorded) throw new Error();
+    const response = localSpeechUrl || recorded ? null : await fetch(`${apiUrl}/v1/speech/synthesize`, {
       method: "POST",
       credentials: localSpeechUrl ? "omit" : "include",
       cache: "no-store",
@@ -290,7 +293,7 @@ export async function playElevenLabsKorean(
       !response.headers.get("content-type")?.toLowerCase().startsWith("audio/"))
     )
       throw new Error();
-    const blob = localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
+    const blob = localSpeechUrl || recorded ? await localAudio(text, voice) : await response!.blob();
     if (
       version !== playbackVersion ||
       controller.signal.aborted ||
@@ -338,7 +341,7 @@ export async function playElevenLabsKorean(
     }
     if (fallbackOptions.waitForEnd && !(await ended))
       return { played: false, source: "unavailable" };
-    return { played: true, source: localSpeechUrl ? "local" : "elevenlabs" };
+    return { played: true, source: recorded ? "catalog" : localSpeechUrl ? "local" : "elevenlabs" };
   } catch {
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };
@@ -462,7 +465,7 @@ export async function playKorean(
 ): Promise<KoreanPlayback> {
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
-  if (localSpeechUrl) return playElevenLabsKorean(text, selectedElevenLabsVoice(), options.rate ?? preferredSpeechRate(), options);
+  if (localSpeechUrl || (recordedAudioEnabled && recordedAudioUrl(text,selectedElevenLabsVoice()))) return playElevenLabsKorean(text, selectedElevenLabsVoice(), options.rate ?? preferredSpeechRate(), options);
   stopKoreanPlayback();
   if (!paidFeaturesEnabled) {
     await waitForKoreanVoices();

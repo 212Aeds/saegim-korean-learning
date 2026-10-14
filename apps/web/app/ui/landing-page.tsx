@@ -7,6 +7,8 @@ import {
   SpeakerHigh,
   Sparkle,
 } from "./icons";
+import { useEffect, useState } from "react";
+import {playKorean,stopKoreanPlayback} from "./speech";
 import { SoriMascot } from "./sori-mascot";
 import { lessons } from "../curriculum";
 
@@ -19,6 +21,10 @@ export function LandingPage({
   onSignIn: () => void;
   freeMode?: boolean;
 }) {
+  const [samplePlaying,setSamplePlaying]=useState(false);
+  const [sampleNotice,setSampleNotice]=useState("");
+  useEffect(()=>()=>stopKoreanPlayback(),[]);
+  async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
   return (
     <div className="landing-page">
       <header className="landing-nav">
@@ -53,10 +59,11 @@ export function LandingPage({
           <span className="landing-sun" />
           <span className="landing-syllable" lang="ko">한</span>
           <span className="landing-art-note">one small beginning</span>
-          <span className="landing-mini-card">
+          <button type="button" className="landing-mini-card" disabled={samplePlaying} aria-label={samplePlaying ? "Playing hello in Korean" : "Hear hello in Korean"} onClick={()=>void hearHello()}>
             <span className="landing-mini-icon"><SpeakerHigh size={15} /></span>
-            <span><strong>안녕하세요</strong><small>annyeonghaseyo · hello</small></span>
-          </span>
+            <span><strong>안녕하세요</strong><small>{samplePlaying ? "Playing…" : "annyeonghaseyo · tap to listen"}</small></span>
+          </button>
+          {sampleNotice && <p className="landing-sample-notice" role="status">{sampleNotice}</p>}
           <div className="landing-mascot-card">
             <SoriMascot className="landing-mascot" />
             <span><strong>Meet Saegim</strong><small>Your Korean learning companion</small></span>
@@ -93,7 +100,7 @@ export function LandingPage({
         ["Do I need to know Hangul?", "No. Choose “brand new” and start with letters and syllable blocks. If you already know some Korean, choose a suitable starting level."],
         ["Is it free?", "Yes. The lessons, review cards, word collection, and practice in this version are available without a subscription."],
         ["Where is my progress saved?", freeMode ? "In this browser on this device. It does not sync between devices. Clearing site data or using private browsing can remove progress. Download your learning data from Account before clearing it; automatic backup import is not available yet." : "Your signed-in account keeps your progress together. You can download your learning data from Account."],
-        ["Can I listen to Korean?", "Listening uses an installed local Korean voice when your browser supports one. If none is available, you can keep learning with writing and reading practice."],
+        ["Can I listen to Korean?", "Hangul letter names and selected phrases include recorded Chris and Jessica audio. Other items use the available speech service or a supported Korean device voice. Reading and writing practice remain available when audio is unavailable."],
         ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. About & feedback links to our public issue tracker; please keep personal information out of reports."],
       ].map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
       <footer className="landing-footer">
