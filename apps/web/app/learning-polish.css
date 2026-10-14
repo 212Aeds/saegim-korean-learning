@@ -37,3 +37,33 @@
 }
 @media (max-width:600px) { .learning-collection { padding: 20px; } .collection-heading { align-items: start; } .collection-heading h3 { font-size: 21px; } .collection-heading > strong { font-size: 28px; } .collection-pathways > div { grid-template-columns: 1.5fr 1fr 36px; gap: 10px; } .review-health { gap: 14px; } }
 @media (prefers-reduced-motion:reduce) { .section-view,.review-modal .review-question { animation: none; } .conversation-form textarea { transition: none; } .conversation-log { scroll-behavior: auto; } }
+
+/* Animate around a fixed shared center; never replace the centering translation. */
+@media (prefers-reduced-motion:no-preference) {
+  .hangul-art .hangul-stamp { animation: centered-stamp-breathe 5s ease-in-out infinite; }
+  .hangul-art .orbit-one { animation: centered-orbit-one 28s linear infinite; }
+  .hangul-art .orbit-two { animation: centered-orbit-two 36s linear infinite; }
+  .practice-focus,.milestone-row button,.daily-task-list button { transition: translate 180ms ease,box-shadow 180ms ease,border-color 180ms ease,background-color 180ms ease; }
+  .button { transition: translate 160ms ease,box-shadow 160ms ease,background-color 160ms ease; }
+  .button:active:not(:disabled),.practice-focus:active:not(:disabled) { translate:0 1px; }
+  .daily-practice,.weekly-plan,.learning-roadmap { animation: section-settle 350ms ease-out both; }
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .button:hover:not(:disabled),.practice-focus:hover:not(:disabled),.daily-task-list button:hover { translate:0 -2px; box-shadow:0 5px 14px #30462e0d; }
+  .milestone-row button:hover { translate:0 -2px; }
+}
+@keyframes centered-stamp-breathe {
+  0%,100% { transform:translate(-50%,-50%) rotate(-3deg) scale(1); }
+  50% { transform:translate(-50%,-50%) rotate(3deg) scale(1.025); }
+}
+@keyframes centered-orbit-one {
+  from { transform:translate(-50%,-50%) rotate(-28deg); }
+  to { transform:translate(-50%,-50%) rotate(332deg); }
+}
+@keyframes centered-orbit-two {
+  from { transform:translate(-50%,-50%) rotate(58deg); }
+  to { transform:translate(-50%,-50%) rotate(-302deg); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .hangul-art .hangul-stamp,.hangul-art .art-orbit,.daily-practice,.weekly-plan,.learning-roadmap { animation:none; }
+}
