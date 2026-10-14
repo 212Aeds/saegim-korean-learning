@@ -23,7 +23,7 @@ import { SoriMascot } from "./sori-mascot";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from "./speech";
-import { prepareQuestions } from "./lesson-questions";
+import { prepareQuestions, lessonIntroduction, lessonTopicIntroduction } from "./lesson-questions";
 import { playCorrectAnswerSound } from "./feedback-sound";
 
 const allWords: KoreanWord[] = [
@@ -58,9 +58,11 @@ export function LessonModal({
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
   useDialogFocus(dialogRef, onClose);
+  const introduction = lessonIntroduction(lesson);
+  const [seenTopics,setSeenTopics]=useState<string[]>([]);
   const [sets] = useState(() => prepareQuestions(lesson));
   const [phase, setPhase] = useState<"briefing" | "practice" | "quiz">(
-    lesson.briefing ? "briefing" : "practice",
+    "briefing",
   );
   const questions = phase === "practice" ? sets.practice : sets.quiz;
   const [step, setStep] = useState(0);
@@ -75,6 +77,8 @@ export function LessonModal({
   const [practiceCorrect, setPracticeCorrect] = useState(0);
   const [quizCorrect, setQuizCorrect] = useState(0);
   const question = questions[step];
+  const topic = phase === "practice" ? lessonTopicIntroduction(question,lesson) : null;
+  const showTopic = topic && !seenTopics.includes(topic.id);
   const currentWord = question
     ? allWords.find((word) => word.korean === question.korean)
     : undefined;
@@ -119,7 +123,7 @@ export function LessonModal({
     setAudioNotice(""); setAudioBusy(false);
     return () => { playbackAttempt.current += 1; stopKoreanPlayback(); };
   }, [phase, step, preferences.speechVoice]);
-  useEffect(() => { const text = phase === "briefing" ? lesson.briefing?.example : question?.korean; if (text) void prefetchLocalKorean(text, preferences.speechVoice); }, [phase, question?.korean, lesson.briefing?.example, preferences.speechVoice]);
+  useEffect(() => { const text = phase === "briefing" ? introduction.example : question?.korean; if (text) void prefetchLocalKorean(text, preferences.speechVoice); }, [phase, question?.korean, introduction.example, preferences.speechVoice]);
   async function listen(text: string, rate = preferences.speechPace) {
     const attempt = ++playbackAttempt.current;
     setAudioBusy(true); setAudioNotice("");
@@ -181,29 +185,37 @@ export function LessonModal({
         {audioBusy && <button className="button button-quiet" onClick={()=>{playbackAttempt.current++;stopKoreanPlayback();setAudioBusy(false);}}>Stop audio</button>}
         <div className="lesson-progress"><i style={{ transform: `scaleX(${Math.min(1, progress)})` }} /></div>
 
-        {phase === "briefing" && lesson.briefing ? (
+        {phase === "briefing" && introduction ? (
           <div className="lesson-briefing lesson-step-motion">
             <span className="question-count">BEFORE YOU PRACTICE</span>
-            <p className="briefing-focus">{lesson.briefing.focus}</p>
-            <h2 id="lesson-title">{lesson.briefing.explanation}</h2>
+            <p className="briefing-focus">{introduction.focus}</p>
+            <h2 id="lesson-title">{introduction.explanation}</h2>
             <div className="briefing-use">
               <span className="micro-label">WHEN TO USE IT</span>
-              <p>{lesson.briefing.useWhen}</p>
+              <p>{introduction.useWhen}</p>
             </div>
             <div className="briefing-example">
               <span className="micro-label">KOREAN EXAMPLE</span>
-              <strong lang="ko">{lesson.briefing.example}</strong>
-              <span>{lesson.briefing.translation}</span>
+              <strong lang="ko">{introduction.example}</strong>
+              <span>{introduction.translation}</span>
               <div className="lesson-audio-actions">
-                <button type="button" disabled={audioBusy} className="button button-quiet lesson-briefing-listen" onClick={() => { if (lesson.briefing) void listen(lesson.briefing.example); }}><SpeakerHigh size={16} /> {audioBusy ? "Playing Korean…" : `Hear Korean · ${preferences.speechPace.toFixed(2)}×`}</button>
+                <button type="button" disabled={audioBusy} className="button button-quiet lesson-briefing-listen" onClick={() => { if (introduction) void listen(introduction.example); }}><SpeakerHigh size={16} /> {audioBusy ? "Playing Korean…" : `Hear Korean · ${preferences.speechPace.toFixed(2)}×`}</button>
               </div>
             </div>
-            {lesson.briefing.watchFor && (
-              <p className="briefing-watch"><strong>Watch for:</strong> {lesson.briefing.watchFor}</p>
+            {introduction.watchFor && (
+              <p className="briefing-watch"><strong>Watch for:</strong> {introduction.watchFor}</p>
             )}
             <button className="button button-dark continue-button" onClick={() => { setPhase("practice"); setStep(0); }}>
               Start practice <ArrowRight size={17} />
             </button>
+          </div>
+        ) : showTopic ? (
+          <div className="lesson-briefing lesson-step-motion">
+            <span className="question-count">A NEW SKILL</span>
+            <h2 id="lesson-title">{topic.title}</h2><p>{topic.explanation}</p>
+            <div className="briefing-example"><strong lang="ko">{topic.example}</strong><span>{topic.translation}</span></div>
+            <WordReference word="가" readingSample />
+            <button className="button button-dark continue-button" onClick={()=>setSeenTopics(current=>[...current,topic.id])}>Try building a block <ArrowRight size={17} /></button>
           </div>
         ) : practiceDone ? (
           <div className="lesson-complete lesson-step-motion">

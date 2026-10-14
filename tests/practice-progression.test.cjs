@@ -85,3 +85,22 @@ test('practice breakdown reports first tries by actual skill and ignores duplica
  const cards=[{mode:'letters',question:{id:'a'}},{mode:'letters',question:{id:'b'}},{mode:'words',question:{id:'c'}}];
  assert.deepEqual(practiceBreakdown(cards,['b','b','unknown']),[{mode:'letters',total:2,firstTry:1},{mode:'words',total:1,firstTry:1}]);
 });
+
+test('lesson spacing retains every question and breaks heavy repeated concept runs',()=>{
+ const {spaceLessonQuestions,lessonConcept}=require('../apps/web/app/ui/lesson-questions.ts');
+ const lesson={words:['가','나','다']};
+ for(const keys of [['가','가','가','가','가','나','다'],['가','가','가','나','나','나','다','다','다']]){
+  const items=keys.map((korean,i)=>({id:String(i),korean,answer:korean}));
+  const spaced=spaceLessonQuestions(items,lesson),concepts=spaced.map(q=>lessonConcept(q,lesson));
+  assert.deepEqual(spaced.map(q=>q.id).sort(),items.map(q=>q.id).sort());
+  for(let i=2;i<concepts.length;i++)assert.ok(!(concepts[i]===concepts[i-1]&&concepts[i]===concepts[i-2]));
+ }
+ assert.equal(lessonConcept({korean:'ㄱ + ㅏ',answer:'가'},lesson),'가');
+});
+test('every lesson opens with an introduction and building has its own concept transition',()=>{
+ const {lessonIntroduction,lessonTopicIntroduction}=require('../apps/web/app/ui/lesson-questions.ts');
+ for(const lesson of lessons){const intro=lessonIntroduction(lesson);assert.ok(intro.focus&&intro.explanation&&intro.example&&intro.translation,lesson.id);if(lesson.briefing)assert.equal(intro,lesson.briefing);}
+ const lesson=lessons.find(l=>l.id==='hangul-read-a-eo');
+ assert.ok(lessonTopicIntroduction(lesson.questions.find(q=>q.prompt.includes('Build')),lesson));
+ assert.equal(lessonTopicIntroduction(lesson.questions[0],lesson),null);
+});

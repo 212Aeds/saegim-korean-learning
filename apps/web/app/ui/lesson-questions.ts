@@ -101,6 +101,52 @@ export function generatedQuestions(lesson: Lesson): LessonQuestion[] {
   return [...syllableQuestions, ...wordQuestions];
 }
 
+export function lessonConcept(question: LessonQuestion, lesson: Lesson) {
+  const korean = question.korean.normalize("NFC").replace(/\s+/gu, "");
+  if (korean.includes("+")) {
+    const answer = lesson.words.find(word => word === question.answer);
+    if (answer) return answer;
+  }
+  return korean;
+}
+// Keep all exercises, using stable tie ordering while spacing repeated concepts.
+export function spaceLessonQuestions(items: LessonQuestion[], lesson: Lesson) {
+  const remaining = [...items], result: LessonQuestion[] = [];
+  while (remaining.length) {
+    const counts = new Map<string,number>();
+    for (const question of remaining) {const key=lessonConcept(question,lesson);counts.set(key,(counts.get(key)??0)+1);}
+    const recent = result.slice(-2).map(question => lessonConcept(question, lesson));
+    const ranked = [...counts.keys()].sort((a,b)=>(counts.get(b)??0)-(counts.get(a)??0));
+    const allowed = ranked.filter(key=>!(recent.length === 2 && recent.every(previous=>previous===key)));
+    const choices = allowed.length ? allowed : ranked;
+    // For balanced groups prefer another item; for a dominant group allow a pair
+    // now rather than leaving a long unbroken tail at the end of the lesson.
+    const first=choices[0];
+    const other=choices.find(key=>key!==recent.at(-1));
+    const selected=other && (counts.get(other)??0)===(counts.get(first)??0) ? other : first;
+    const index=remaining.findIndex(question=>lessonConcept(question,lesson)===selected);
+    result.push(remaining.splice(index < 0 ? 0 : index, 1)[0]);
+  }
+  return result;
+}
+export function lessonIntroduction(lesson: Lesson) {
+  return lesson.briefing ?? {
+    focus: lesson.title,
+    explanation: lesson.detail,
+    useWhen: "Study the examples first, then practice recalling them in different ways.",
+    example: lesson.words[0] ?? lesson.questions[0]?.korean ?? "",
+    translation: lesson.questions[0]?.tip ?? "Read each example carefully before you begin.",
+  };
+}
+export function lessonTopicIntroduction(question: LessonQuestion | undefined, lesson: Lesson) {
+  if (lesson.category === "Hangul" && question && /build|combine|formed/iu.test(question.prompt)) return {
+    id:"build-syllables",title:"Now build a syllable block",
+    explanation:"A Hangul syllable is written as one block. Combine the starting consonant and vowel shown in the question, rather than writing separate letters.",
+    example:"ㄱ + ㅏ → 가",translation:"A consonant and a vowel combine into one syllable block.",
+  };
+  return null;
+}
+
 export function prepareQuestions(lesson: Lesson) {
   const supplemental = lesson.authoredOnly ? [] : generatedQuestions(lesson);
   const all = [...lesson.questions, ...supplemental];
@@ -123,9 +169,9 @@ export function prepareQuestions(lesson: Lesson) {
         : question,
     );
   return {
-    practice: prepare(lesson.authoredOnly ? lesson.questions : lesson.generatedPracticeOnly
+    practice: prepare(spaceLessonQuestions(lesson.authoredOnly ? lesson.questions : lesson.generatedPracticeOnly
       ? [...lesson.questions, ...shuffle(supplemental)]
-      : shuffle(all)),
+      : shuffle(all), lesson)),
     quiz: prepare(shuffle(onePerItem)),
   };
 }
