@@ -2,7 +2,7 @@
 import { learningRoute, placementKnowledge, type LearningProfile } from "../learning-profile";
 import { isLessonUnlocked } from "../learning-pathways";
 import type { Lesson } from "../curriculum";
-const levelLabels = { new: "Start with Hangul, then build useful sentences", hangul: "Start with useful words, then build sentences", basic: "Check foundations, then connect everyday conversations", intermediate: "Start with conversations, then stretch your Korean", advanced: "Connect ideas, opinions, and longer exchanges" };
+const levelLabels = { new: "Start with Hangul, then build useful sentences", hangul: "Start with useful words, then build sentences", basic: "Build useful words, then learn sentence patterns", intermediate: "Start with conversations, then stretch your Korean", advanced: "Connect ideas, opinions, and longer exchanges" };
 export function LearningRoadmap({ profile, completed, onLesson }: { profile: LearningProfile; completed: string[]; onLesson: (lesson: Lesson) => void }) {
   const route = learningRoute(profile);
   const next = route.filter((lesson) => !completed.includes(lesson.id) && !placementKnowledge(profile).includes(lesson.id)).slice(0, 3);

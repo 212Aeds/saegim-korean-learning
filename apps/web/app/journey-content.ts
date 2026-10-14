@@ -300,8 +300,8 @@ export const journeyLessons: Lesson[] = journeyTopics.flatMap((topic) => {
           "Read each word, connect it with a meaning, then recall its Korean spelling. The examples show one contextual sense; words can have other dictionary meanings.",
         useWhen:
           "Use these words when you encounter this topic in everyday Korean.",
-        example: topic.items[0][2],
-        translation: topic.items[0][3],
+        example: topic.items[0][0],
+        translation: topic.items[0][1],
       },
       questions: vocabularyQuestions,
     },

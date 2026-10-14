@@ -110,6 +110,12 @@ button.landing-mini-card:disabled {cursor:wait;}
 @media(prefers-reduced-motion:no-preference){.story-mascot{animation:story-sway 6s ease-in-out infinite;}@keyframes story-sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}}
 
 .site-mascot-logo {width:44px;height:44px;flex:none;vertical-align:middle;}
+.level-focus {border-left:3px solid var(--forest);background:#eef1e5;border-radius:0 16px 16px 0;padding:20px 24px;margin:0 0 28px;}
+.level-focus h3 {font-family:Georgia,serif;font-size:24px;line-height:1.3;margin:10px 0;color:var(--forest-deep);}
+.level-focus p {font-size:14px;line-height:1.75;margin:0 0 12px;max-width:680px;}
+.level-focus small {font-size:11px;line-height:1.6;color:var(--muted);}
+.speak-flashcard>.word-reference {margin:16px 24px;}
+@media(prefers-reduced-motion:no-preference){.level-focus{animation:section-settle 260ms ease-out both;}}
 .account-password-toggle {justify-self:start;padding:6px 0;background:none;border:0;color:var(--forest);font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
 .account-password-toggle:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
 @media(prefers-reduced-motion:no-preference){.account-tabs button{transition:background-color 180ms ease,color 180ms ease;}.account-form{animation:section-settle 220ms ease-out;}.site-mascot-logo{transition:transform 220ms ease;}.landing-brand:hover .site-mascot-logo{transform:rotate(-5deg);}}

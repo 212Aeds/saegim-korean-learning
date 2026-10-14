@@ -24,7 +24,7 @@ export function LearningProfileFields({
         >
           <option value="new">I’m brand new to Korean</option>
           <option value="hangul">I can read Hangul</option>
-          <option value="basic">I know some words and simple sentences</option>
+          <option value="basic">I know basic words; I’m building sentences</option>
           <option value="intermediate">I can have basic conversations</option><option value="advanced">I can discuss opinions and connect ideas</option>
         </select>
       </label>

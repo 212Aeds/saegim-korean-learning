@@ -10,13 +10,13 @@ export function placementKnowledge(profile = defaultLearningProfile) {
   if (profile.level === "hangul") return hangul;
   const basic = ["hello-there", "introductions", "sentence-order", "sentence-particles", "polite-present", "count-to-ten"];
   if(profile.level === "advanced") return [...hangul,...lessons.filter(lesson=>lesson.pathwayId === "grammar" || lesson.level === "foundation" || lesson.level === "intermediate").map(lesson=>lesson.id)];
-  return profile.level === "basic" ? [...hangul, ...basic] : [...hangul, ...basic, "at-the-cafe", "ask-a-question", "polite-past", "plans-and-intentions", "connect-with-go"];
+  return profile.level === "basic" ? [...hangul, "hello-there"] : [...hangul, ...basic, "at-the-cafe", "ask-a-question", "polite-past", "plans-and-intentions", "connect-with-go"];
 }
 export function learningRoute(profile = defaultLearningProfile) {
   const foundations = profile.level === "new"
     ? ["hangul-first-sounds", ...coreLetterLessonIds, "hangul-more-sounds", "build-a-syllable", "hangul-syllable-blocks", "hangul-batchim", "first-readable-words", "hello-there", "introductions", "sentence-order"]
-    : profile.level === "hangul" ? ["hello-there", "family-and-friends", "at-the-cafe", "introductions", "sentence-order"]
-    : profile.level === "basic" ? ["at-the-cafe", "shopping-prices", "everyday-actions", "ask-a-question"]
+    : profile.level === "hangul" ? ["first-readable-words", "hello-there", "food-words", "home-words", "introductions", "sentence-order"]
+    : profile.level === "basic" ? ["food-words", "home-words", "transport-words", "introductions", "sentence-order", "sentence-particles", "polite-present", "at-the-cafe"]
     : profile.level === "advanced" ? ["opinions-dialogue", "work-dialogue", "study-dialogue", "mixed-conversation-lab"] : ["conversation-weekend", "conversation-cafe", "conversation-plans", "descriptive-comparisons", "stretch-sentence-lab"];
   const interests = profile.reasons.flatMap((reason) => reason === "food" ? ["food-words","food-dialogue","at-the-cafe"] : reason === "living" ? ["home-words","home-dialogue","calendar-words","calendar-dialogue","neighborhood-words","health-words","health-dialogue","transport-words"] : reason === "friends" ? ["messages-words","messages-dialogue","meetups-words","meetups-dialogue","hobbies-words","hobbies-dialogue","family-and-friends"] : reason === "exams" ? ["study-words","study-dialogue","time-and-routine"] : reason === "travel"
     ? ["stay-words", "stay-dialogue", "clothes-words", "clothes-dialogue", "transport-words", "transport-dialogue", "at-the-cafe", "ask-a-question", "shopping-prices", "places-around-you", "travel-find-places", "give-directions"]

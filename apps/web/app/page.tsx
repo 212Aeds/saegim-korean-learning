@@ -30,6 +30,7 @@ import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { reviewOverview } from "./ui/review-session";
 import { LearningCollection } from "./ui/learning-collection";
+import { LevelFocus } from "./ui/level-focus";
 import { SpeakDeck } from "./ui/speak-deck";
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
 import { PracticePage } from "./ui/practice-page";
@@ -1093,6 +1094,7 @@ function LearnView({
           Every step stays free.
         </p>
       </div>
+      <LevelFocus profile={learningProfile} />
       <div className="learning-pathways">
         <LearningCollection completed={progress.completedLessonIds} profile={learningProfile} onLesson={onLesson} />
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />

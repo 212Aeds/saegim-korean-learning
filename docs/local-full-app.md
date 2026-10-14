@@ -92,6 +92,32 @@ Verification: 57 app tests, six Flask tests, production web build, browser check
 Supertonic generation uses speed 0.9 while the displayed baseline stays 1.00x. Both M1 and F1 receive sentence-ending punctuation, a 120 ms lead-in, a 300 ms tail, and the same chunk pause. Generated samples are preserved in full. Both voices transcribed the complete test sentence, including its ending, in a local Whisper round trip; this is a sample check, not a guarantee for every sentence. New sample preparation took about 2.3 seconds, with cached replay preparation about 0.01 seconds.
 
 Tutor questions and answers form a thread above the bottom composer; two recent exchanges provide follow-up context. Conversation starter buttons send their prompt immediately. Responses are asked to be concise with accurate speech-level labels. Korean inputs, keyboard links, focus states, and selected partner buttons follow the app styling. Lessons use one Listen entry per exercise. Technical provider notices are removed from practice screens; privacy information remains on the Privacy page.
+## Vocabulary placement and speaking cards
+
+Basic placement now assumes Hangul and a greeting, rather than automatically
+waiving sentence order, particles, and polite-present lessons. Its opening route
+is food words, home words, transport words, then sentence foundations and cafe
+practice. Hangul readers start with readable words. Intermediate placement keeps
+its conversation entry point. Existing completed lessons and reviews are retained.
+
+The speaking deck includes word cards derived from all 14 existing topic word
+lessons and the first-readable-word lesson. Lower placements see covered letters,
+then words from their next three available vocabulary lessons and completed
+lessons. Full-sentence cards require actual prerequisite practice at lower levels;
+the shared phrase deck is reserved for conversation placements. Saved legacy
+phrase completion IDs are retained.
+
+Learn and Speak show the current level's focus. Vocabulary briefings introduce a
+single headword; exchanges introduce sentences. The four opening word lessons
+have recorded Chris and Jessica audio for every word: 36 new recordings, 138 total
+catalog clips. These assets work in the static publishing build without a model
+server. New word cards expose dictionary references alongside listening practice.
+
+Speaking navigation reuses the stateless FlipCard rather than remounting it by
+card ID. Browser testing reproduced retained previous cards with the keyed
+version; after removal, repeated navigation leaves one card and one visible face.
+The existing flip animation and hidden-face accessibility behavior remain.
+
 ## Course growth and longer progress
 
 The course now contains 102 lessons and 762 authored questions. Six new topics (clothes, home, staying, calendars, messages, and meetups) add 18 connected lessons and 36 vocabulary entries. Each chapter follows words, exchanges, and consolidation. The vocabulary reference index includes exact entries in the pinned cc-kedict corpus; meanings and examples are app adaptations under the existing attribution. New lessons with past tense or requests wait for those grammar lessons.

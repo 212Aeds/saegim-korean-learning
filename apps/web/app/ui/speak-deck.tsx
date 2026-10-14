@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "./icons";
 import { FeedbackToggle } from "./feedback-toggle";
 import { FlipCard } from "./flip-card";
+import { LevelFocus } from "./level-focus";
 import { playCorrectAnswerSound } from "./feedback-sound";
 import { speakingCardsForProfile, type SpeakingCard } from "../speak-cards";
 import type { LearningProfile } from "../learning-profile";
@@ -132,6 +133,7 @@ export function SpeakDeck({
     <div
       className={`speak-deck-page ${preferences.hangulSize === "large" ? "hangul-large" : ""}`}
     >
+      <LevelFocus profile={profile} />
       <div className="speak-deck-heading">
         <div>
           <span className="micro-label">A SMALL SPEAKING PRACTICE</span>
@@ -157,9 +159,9 @@ export function SpeakDeck({
         />
       </div>
       <label className="phrase-picker">
-        {profile.level === "new" && card.kind === "pronunciation"
+        {card.kind === "pronunciation"
           ? "Choose a familiar letter"
-          : "Choose a useful phrase"}
+          : card.kind === "word" ? "Choose a useful word" : "Choose a useful phrase"}
         <select
           value={card.id}
           disabled={completing}
@@ -186,7 +188,6 @@ export function SpeakDeck({
           <span className="speak-card-kind">{card.kind}</span>
         </div>
         <FlipCard
-          key={card.id}
           flipped={flipped}
           front={
             <div className="speak-card-body">
@@ -210,7 +211,7 @@ export function SpeakDeck({
               )}
               <strong className="speak-card-meaning">{card.meaning}</strong>
               <div className="speak-grammar-tip">
-                <span>GRAMMAR NOTE</span>
+                <span>{card.kind === "word" ? "WORD PRACTICE" : "GRAMMAR NOTE"}</span>
                 <p>{card.grammarTip}</p>
               </div>
               <div className="speak-focus-word">

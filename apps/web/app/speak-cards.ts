@@ -24,7 +24,7 @@ type Phrase = {
 export type SpeakingCard = {
   lessonId?: string;
   id: string;
-  kind: "phrase" | "pronunciation" | "grammar" | "recall";
+  kind: "word" | "phrase" | "pronunciation" | "grammar" | "recall";
   promptLabel: string;
   prompt: string;
   korean: string;
@@ -343,6 +343,16 @@ const letterCards: SpeakingCard[] = hangulLetters.map((entry) => ({
   grammarTip:
     "Listen to the Korean letter name or vowel sound, then repeat. English sound cues are approximate.",
 }));
+const wordCards: SpeakingCard[] = [...journeyTopics, {
+  id: "first-readable", title: "Your first readable words",
+  items: lessons.find(lesson => lesson.id === "first-readable-words")!.questions.map(question => [question.korean, question.answer]),
+}].flatMap(topic => topic.items.map(([word, meaning], index) => ({
+  id: `speak-word-${topic.id}-${index}`, lessonId: `${topic.id}-words`, kind: "word" as const,
+  promptLabel: topic.title, prompt: word, korean: word, romanization: transcriptRomanization(word), meaning,
+  focus: word, focusRomanization: transcriptRomanization(word), focusMeaning: meaning,
+  grammarTitle: "One word at a time",
+  grammarTip: "Connect this word with its meaning, listen, then say it from memory. Sentence practice comes after the vocabulary lesson.",
+})));
 const topicExampleCards: SpeakingCard[] = journeyTopics.filter(topic=>topic.pathwayId).flatMap(topic=>topic.items.map(([word,meaning,example,translation],index)=>({
   id:`speak-example-${topic.id}-${index}`,lessonId:`${topic.id}-dialogue`,kind:"phrase" as const,
   promptLabel:topic.title,prompt:example,korean:example,romanization:transcriptRomanization(example),meaning:translation,
@@ -392,12 +402,15 @@ export function speakingCardsForProfile(
   const route = new Map(
     learningRoute(profile).map((lesson, index) => [lesson.id, index]),
   );
+  const conversational = profile.level === "intermediate" || profile.level === "advanced";
   const extras = conversationCards
           .filter((card) => {
             const lesson = lessons.find(
               (item) => item.id === card.lessonId,
             )!;
-            return isLessonUnlocked(
+            const prerequisites = lesson.prerequisiteLessonIds ?? [];
+            const practiced = completed.includes(lesson.id) || (prerequisites.length > 0 && prerequisites.every(id => completed.includes(id)));
+            return (conversational || practiced) && isLessonUnlocked(
               lesson,
               completed,
               placementKnowledge(profile),
@@ -408,11 +421,19 @@ export function speakingCardsForProfile(
               (route.get(left.lessonId!) ?? 999) -
               (route.get(right.lessonId!) ?? 999),
           );
-  const deck = extras.length ? [...extras, ...speakingCards] : speakingCards;
+  const wordLessonIds = new Set([
+    ...completed,
+    "first-readable-words",
+    ...recommendedLessons(completed, profile).filter(lesson => lesson.category === "Vocabulary").slice(0, 3).map(lesson => lesson.id),
+  ]);
+  const words = wordCards.filter(card => wordLessonIds.has(card.lessonId!))
+    .sort((left, right) => (route.get(left.lessonId!) ?? 999) - (route.get(right.lessonId!) ?? 999));
+  // A vocabulary placement must not inherit the shared full-sentence deck.
+  const deck = conversational ? [...extras, ...speakingCards, ...words] : [...words, ...extras];
   return [...new Map(deck.map((card) => [card.korean, card])).values()];
 }
 const speakingCardIds = new Set(
-  [...speakingCards, ...letterCards, ...conversationCards].map(
+  [...speakingCards, ...letterCards, ...wordCards, ...conversationCards].map(
     (card) => card.id,
   ),
 );

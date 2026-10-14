@@ -1,7 +1,7 @@
 import { recommendedLessons, type LearningProfile } from "../learning-profile";
 import { accountAvatar, avatars } from "../account-personalization";
 
-const levelNames = {new:"A fresh beginning",hangul:"From letters to words",basic:"Building useful sentences",intermediate:"Everyday conversations",advanced:"Ideas and natural exchanges"};
+const levelNames = {new:"A fresh beginning",hangul:"From letters to words",basic:"Useful words, one at a time",intermediate:"Everyday conversations",advanced:"Ideas and natural exchanges"};
 const reasonNames = {family:"family",travel:"travel",culture:"music and shows","work-study":"work and study",friends:"friendships",food:"food",living:"life in Korea",exams:"study goals"};
 export function ProfilePreview({name,profile,completed=[]}: {name:string;profile:LearningProfile;completed?:string[]}) {
   const next = recommendedLessons(completed,profile)[0];
