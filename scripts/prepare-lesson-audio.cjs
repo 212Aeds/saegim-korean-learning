@@ -8,7 +8,14 @@ const {lessons}=require('../apps/web/app/curriculum.ts');
 const manifestPath=path.join(root,'apps/web/app/audio-manifest.json');
 const output=path.join(root,'apps/web/public/audio/lessons');fs.mkdirSync(output,{recursive:true});
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-const words=process.argv.includes('--all') ? lessons.flatMap(l=>[...l.words,...l.questions.map(q=>q.korean),...(l.briefing?[l.briefing.example]:[])]) : [...hangulLetters.map(l=>l.korean),'안녕하세요','감사합니다','다시 말해 주세요.','이거 얼마예요?'];
+const args=process.argv.slice(2),selected=[];
+for(let i=0;i<args.length;i++){
+ if(args[i]==='--lesson'&&args[i+1]){const id=args[++i],lesson=lessons.find(l=>l.id===id);if(!lesson)throw Error(`Unknown lesson: ${id}`);selected.push(lesson);}
+ else if(args[i]!=='--all')throw Error('Use --all or --lesson <lesson-id>.');
+}
+if(selected.length&&args.includes('--all'))throw Error('Choose --all or selected lessons.');
+const source=args.includes('--all')?lessons:selected;
+const words=source.length ? source.flatMap(l=>[...l.words,...l.questions.map(q=>q.korean),...(l.briefing?[l.briefing.example]:[])]) : [...hangulLetters.map(l=>l.korean),'안녕하세요','감사합니다','다시 말해 주세요.','이거 얼마예요?'];
 const texts=[...new Set(words.map(t=>naturalSpeechText(t).normalize('NFC').trim().replace(/\s+/gu,' ')).filter(t=>t&&t.length<=300))];
 async function main(){
  let made=0,skipped=0;

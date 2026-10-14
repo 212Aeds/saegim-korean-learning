@@ -27,7 +27,8 @@
     "dev:local:api": "node scripts/local-full.cjs api",
     "tutor:local": "node scripts/start-local-tutor.cjs",
     "dev:local": "concurrently -k -n tutor,speech,api,web \"npm:tutor:local\" \"npm:speech:local\" \"npm:dev:local:api\" \"npm:dev:local:web\"",
-    "audio:prepare": "node scripts/prepare-lesson-audio.cjs"
+    "audio:prepare": "node scripts/prepare-lesson-audio.cjs",
+    "audio:check": "node scripts/check-lesson-audio.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

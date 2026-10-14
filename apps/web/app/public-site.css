@@ -35,3 +35,8 @@ button.landing-mini-card {text-align:left;cursor:pointer;font:inherit;}
 button.landing-mini-card:focus-visible {outline:3px solid var(--forest);outline-offset:5px;}
 button.landing-mini-card:disabled {cursor:wait;}
 .landing-sample-notice {position:absolute;bottom:-38px;left:0;max-width:260px;font-size:12px;color:var(--muted);}
+
+.skip-learning-link {position:fixed;top:12px;left:12px;z-index:1000;padding:12px 18px;border-radius:10px;background:var(--forest);color:white;transform:translateY(-180%);}
+.skip-learning-link:focus {transform:none;outline:3px solid var(--coral);outline-offset:3px;}
+.public-faq summary:focus-visible {outline:2px solid var(--forest);outline-offset:5px;border-radius:4px;}
+@media(prefers-reduced-motion:no-preference){.public-faq details[open] p{animation:section-settle 180ms ease-out;}}

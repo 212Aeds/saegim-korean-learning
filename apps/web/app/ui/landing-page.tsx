@@ -27,6 +27,7 @@ export function LandingPage({
   async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
   return (
     <div className="landing-page">
+      <a className="skip-learning-link" href="#your-path">Skip to learning path</a>
       <header className="landing-nav">
         <a className="landing-brand" href="#home" aria-label="Saegim home">
           <span className="landing-mark" aria-hidden="true">한</span>

@@ -18,3 +18,16 @@ test('recorded playback needs no speech server or paid provider and retains pace
  const {playElevenLabsKorean,stopKoreanPlayback}=require('../apps/web/app/ui/speech.ts');
  try{assert.equal((await playElevenLabsKorean('ㄱ','chris',1.2)).source,'catalog');assert.equal(audio.playbackRate,1.2);assert.equal(calls.length,1);}finally{stopKoreanPlayback();global.fetch=oldFetch;global.window=oldWindow;global.Audio=oldAudio;}
 });
+
+test('release audio audit verifies assets and rejects unsafe, mismatched, or missing files',()=>{
+ const {auditCatalog}=require('../scripts/check-lesson-audio.cjs');
+ const manifest=require('../apps/web/app/audio-manifest.json'),root=require('node:path').join(__dirname,'../apps/web/public');
+ const report=auditCatalog(manifest,root);assert.ok(report.clips>=100&&report.totalBytes>0);
+ assert.throws(()=>auditCatalog({'chris|hello':'/../../secret.wav'},root),/Invalid audio catalog/);
+ const [key,url]=Object.entries(manifest)[0];
+ assert.throws(()=>auditCatalog({['jessica|wrong-key']:url},root),/does not match/);
+ assert.throws(()=>auditCatalog({[key]:url},require('node:path').join(__dirname,'not-a-real-public-folder')),error=>error.code==='ENOENT');
+});
+test('starter words and greetings resolve to recorded audio in both voices',()=>{
+ for(const phrase of ['가방','나무','바다','우유','죄송합니다'])for(const voice of ['chris','jessica'])assert.ok(recordedAudioUrl(phrase,voice),`${voice}: ${phrase}`);
+});

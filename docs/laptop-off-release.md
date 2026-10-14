@@ -29,4 +29,10 @@ Sources:
 - https://huggingface.co/docs/hub/spaces-overview
 - https://webllm.mlc.ai/docs/user/get_started.html
 
-Validation: 73 app tests pass; static free and signed-in production builds pass. Browser verified the hello preview enters Playing and returns to its enabled state; static serving returned the saved WAV successfully.
+Validation: 75 app tests pass; static free and signed-in production builds pass. Browser verified the hello preview enters Playing and returns to its enabled state; static serving returned the saved WAV successfully.
+
+## Additional release checks
+
+The saved catalog now has 100 clips, including the first readable words and greeting lesson. Prepare just one lesson with `npm run audio:prepare -- --lesson first-readable-words`; repeat `--lesson <id>` to select several. Unknown IDs fail before any synthesis request. `npm run audio:check` verifies file naming, catalog integrity, WAV headers, file presence and clip size. The free build runs this audit automatically. The site also includes a keyboard skip link to the learning path and updated About/Privacy audio descriptions.
+
+The public build was packaged as `outputs/saegim-public-site.zip` beside the repository (5.6 MB compressed). Archive integrity and absence of .env files were checked. Browser verified keyboard focus visibility and the skip link destination. The ZIP includes a short launch note and does not include account sync or live AI hosting.

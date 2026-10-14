@@ -86,5 +86,17 @@
   "chris|다시 말해 주세요.": "/audio/lessons/1c3d3d7a7dd6672114189a410bc48d1365203d40646042b47889df3f9ae8c5e3.wav",
   "jessica|다시 말해 주세요.": "/audio/lessons/f67abf1731a2c358f586c1419e688273fa633156194b864767e7905c94232e04.wav",
   "chris|이거 얼마예요?": "/audio/lessons/3b54bba5c3c905323b81f7e014ba4d2a731399b149fc1daac0ccbf47c01d0fd6.wav",
-  "jessica|이거 얼마예요?": "/audio/lessons/1f42a7551dd3727bf8551af25f058903985b91e3bab10a2f6febf717fb7b7fe5.wav"
+  "jessica|이거 얼마예요?": "/audio/lessons/1f42a7551dd3727bf8551af25f058903985b91e3bab10a2f6febf717fb7b7fe5.wav",
+  "chris|가방": "/audio/lessons/ead4e9e8e79e9c5f1d531e30a05273e6644aa5d06694723d3e0514ddbc0e4039.wav",
+  "jessica|가방": "/audio/lessons/fdd22845427105bf068d12952f9f41fc725c479de131674403717d843f175675.wav",
+  "chris|나무": "/audio/lessons/93956dedb9f9a86a77c672588305fa83900fcb1cd373d31c2e716ad6e3d39cc5.wav",
+  "jessica|나무": "/audio/lessons/949ca7d893ed01f17b56ce2d446e3eb8686ac05f3c9c622d42c28924bdd497a2.wav",
+  "chris|바다": "/audio/lessons/1f19997630217bd4b216ef785017f59eb3b007c7f28bf621532788ebbaa45246.wav",
+  "jessica|바다": "/audio/lessons/baf73e692efb46b106e351c786ce1d23b7ac7b1d3af98b00f6fe4197de50acae.wav",
+  "chris|우유": "/audio/lessons/183636e190800a9d40c10b5180187afe3bf2f962ddfc74b78f58deb3bd9acc6a.wav",
+  "jessica|우유": "/audio/lessons/79cb52a9d7bc05e9bf31b02e8451bbd7c8298e3281452208dfd7cec4d63c5291.wav",
+  "chris|죄송합니다": "/audio/lessons/da96e998a69dece209da329fc26d4f4658097b791c33a62ec5c8ff40add5a34a.wav",
+  "jessica|죄송합니다": "/audio/lessons/39cdd3196e4ffd26f1fb4c5dc505ecd8c783ac450b947053d07e1194a6a735a5.wav",
+  "chris|안녕하세요! 저는 학생이에요.": "/audio/lessons/93267fbe9cb6a20fa0585c7f9bc4ef6b2dd2bdb7f85bc3b6bdc1ec6c5587e8b7.wav",
+  "jessica|안녕하세요! 저는 학생이에요.": "/audio/lessons/23967b4d9163743fb16bb6a7220d18ea49b9559684781f10bbaae4aa73dbfe36.wav"
 }
