@@ -1,4 +1,4 @@
-# Account API only. AI compute is NOT provisioned by this Blueprint.
+# Website and account API. AI compute is NOT provisioned by this Blueprint.
 services:
   - type: web
     name: saegim-api
@@ -9,7 +9,7 @@ services:
     buildCommand: npm ci --include=dev --workspace @sori/api --include-workspace-root=false && npm run build:api
     startCommand: node scripts/hosted-api-preflight.cjs && npm --workspace @sori/api run start:prod
     healthCheckPath: /v1/health
-    autoDeployTrigger: off
+    autoDeployTrigger: "off"
     envVars:
       - key: NODE_VERSION
         value: "24.21.0"
@@ -27,3 +27,26 @@ services:
         value: "0"
       - key: OPENROUTER_AUDIO_ENABLED
         value: "false"
+  - type: web
+    name: saegim-website
+    runtime: static
+    branch: fix/windows-local-setup
+    buildCommand: npm ci --include=dev && npm run build:free
+    staticPublishPath: apps/web/.next-public
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_VERSION
+        value: "24.21.0"
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), geolocation=(), payment=(), microphone=(self)
