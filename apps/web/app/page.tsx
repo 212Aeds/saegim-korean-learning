@@ -1086,6 +1086,7 @@ function LearnView({
   onLesson: (lesson?: Lesson) => void;
 }) {
   const routeOrder = new Map(learningRoute(learningProfile).map((lesson, index) => [lesson.id, index]));
+  const [readyOnly, setReadyOnly] = useState(false);
   const pathwayOrder = learningProfile.level === "new" ? ["hangul", "everyday", "grammar", "daily-life", "connections", "stretch"] : (learningProfile.level === "intermediate" || learningProfile.level === "advanced") ? ["stretch", "grammar", "everyday", "daily-life", "connections", "hangul"] : ["everyday", "grammar", "daily-life", "connections", "hangul", "stretch"];
   const recommendation = nextAvailableLesson(progress.completedLessonIds, learningProfile);
   return (
@@ -1096,19 +1097,20 @@ function LearnView({
           Every step stays free.
         </p>
       </div>
-      <LevelFocus profile={learningProfile} />
       <div className="learning-pathways">
-        <LearningCollection completed={progress.completedLessonIds} profile={learningProfile} onLesson={onLesson} />
-        <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
+        <LevelFocus profile={learningProfile} />
+        <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
+        <details className="learning-progress-details"><summary>My progress & topic chapters<span>See what you’ve learned</span></summary><LearningCollection completed={progress.completedLessonIds} profile={learningProfile} onLesson={onLesson} /></details>
+        <label className="course-view-control">Browse lessons<select value={readyOnly ? "ready" : "all"} onChange={event=>setReadyOnly(event.target.value === "ready")}><option value="all">All lessons, including upcoming steps</option><option value="ready">Ready to start or revisit</option></select></label>
         {[...learningPathways].sort((left, right) => pathwayOrder.indexOf(left.id) - pathwayOrder.indexOf(right.id)).map((pathway) => {
-          const pathwayLessons = lessonsForPathway(pathway.id).sort((left, right) => (routeOrder.get(left.id) ?? 0) - (routeOrder.get(right.id) ?? 0));
+          const pathwayLessons = lessonsForPathway(pathway.id).filter(lesson=>!readyOnly || isLessonUnlocked(lesson,progress.completedLessonIds,placementKnowledge(learningProfile))).sort((left, right) => (routeOrder.get(left.id) ?? 0) - (routeOrder.get(right.id) ?? 0));
           const pathwayStats = pathwayProgress(pathway.id, progress.completedLessonIds);
           return (
             <section className="learning-pathway" key={pathway.id} aria-labelledby={`pathway-${pathway.id}`}>
               <div className="learning-pathway-heading">
                 <div>
-                  <span className="micro-label">{pathway.level.toUpperCase()} PATHWAY</span>
+                  <span className="micro-label">{pathway.id === "hangul" ? "LETTERS & READING" : pathway.id === "grammar" ? "SENTENCE FOUNDATIONS" : pathway.id === "stretch" ? "CONNECTED PRACTICE" : "WORDS TO CONVERSATION"}</span>
                   <h2 id={`pathway-${pathway.id}`}>{pathway.title}</h2>
                   <p>{pathway.description}</p>
                 </div>
@@ -1118,8 +1120,9 @@ function LearnView({
               </div>
               <progress className="pathway-completion-bar" max={pathwayStats.total} value={pathwayStats.completed} aria-label={`${pathway.title} lessons completed`} />
               <details className="pathway-courses" open={pathwayForLesson(recommendation)===pathway.id}>
-              <summary>Explore {pathwayStats.total} lessons <span>{pathwayStats.completed} completed</span></summary>
+              <summary>{readyOnly ? `${pathwayLessons.length} ready to start or revisit` : `Explore ${pathwayStats.total} lessons`} <span>{pathwayStats.completed} completed</span></summary>
               <div className="course-list">
+                {!pathwayLessons.length && <p className="course-empty">Earlier steps open these lessons. Switch to all lessons to see their prerequisites.</p>}
                 {pathwayLessons.map((lesson, index) => {
                   const complete = progress.completedLessonIds.includes(lesson.id);
                   const unlocked = isLessonUnlocked(lesson, progress.completedLessonIds, placementKnowledge(learningProfile));

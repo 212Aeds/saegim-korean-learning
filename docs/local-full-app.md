@@ -2,6 +2,14 @@
 
 ## Website testing preparation
 
+Learn now puts the next recommended lesson before the roadmap and collapses the
+progress collection behind “My progress & topic chapters”. A lesson-view control
+can show only unlocked lessons and completed lessons available to revisit. Mixed
+paths say “Words to conversation” instead of labeling beginner vocabulary as
+intermediate. Word flashcards omit the duplicate focus-word block, with tighter
+spacing. Phone navigation fits the available tabs in one row without horizontal
+scrolling; existing keyboard focus and reduced-motion behavior remain.
+
 The course now includes 116 lessons: 14 new word-recall lessons add 84 English
 meaning-retrieval prompts after their source word lessons. They reuse existing
 chapter vocabulary and dictionary senses; they do not introduce unreferenced

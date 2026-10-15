@@ -179,7 +179,7 @@ export function SpeakDeck({
         </select>
       </label>
 
-      <article className={`speak-flashcard ${flipped ? "is-flipped" : ""}`}>
+      <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : ""} ${flipped ? "is-flipped" : ""}`}>
         <div className="speak-card-top">
           <span>
             {String(index + 1).padStart(2, "0")} <i />{" "}
@@ -214,13 +214,13 @@ export function SpeakDeck({
                 <span>{card.kind === "word" ? "WORD PRACTICE" : "GRAMMAR NOTE"}</span>
                 <p>{card.grammarTip}</p>
               </div>
-              <div className="speak-focus-word">
+              {card.kind !== "word" && <div className="speak-focus-word">
                 <span>WORD TO NOTICE</span>
                 <strong lang="ko">{card.focus}</strong>
                 <small>
                   {card.focusRomanization} · {card.focusMeaning}
                 </small>
-              </div>
+              </div>}
             </div>
           }
         />

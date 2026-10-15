@@ -1,4 +1,26 @@
 /* Quiet, purposeful motion and a consistent learning hierarchy. */
+.learning-progress-details {border:1px solid var(--line);border-radius:18px;margin:0 0 26px;background:var(--paper-strong);}
+.learning-progress-details>summary {padding:20px 22px;cursor:pointer;font-size:15px;font-weight:650;line-height:1.5;}
+.learning-progress-details>summary>span {display:block;margin:6px 0 0 18px;font-size:12px;font-weight:400;color:var(--muted);}
+.learning-progress-details>.learning-collection {border:0;border-radius:0 0 18px 18px;}
+.learning-progress-details>summary:focus-visible,.course-view-control select:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
+.course-view-control {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 24px;font-size:14px;font-weight:600;}
+.course-view-control select {max-width:100%;min-height:44px;padding:10px 14px;background:var(--paper-strong);color:var(--ink);border:1px solid var(--line);border-radius:10px;font:inherit;font-size:12px;}
+.course-empty {font-size:13px;line-height:1.7;padding:16px;color:var(--muted);}
+.speak-flashcard.is-word-card .speak-card-body {min-height:240px;padding:22px 10px;}
+.speak-flashcard.is-word-card .speak-card-body h3 {margin:16px 0 10px;}
+.speak-flashcard.is-word-card .speak-grammar-tip {margin-top:16px;}
+@media(max-width:760px){
+  .mobile-nav {display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);overflow-x:visible;gap:1px;}
+  .mobile-nav button {min-width:0;min-height:52px;padding:5px 2px;font-size:9px;}
+  .mobile-nav button span {white-space:nowrap;}
+  .course-view-control {align-items:stretch;flex-direction:column;}
+  .course-view-control select {width:100%;}
+  .learning-progress-details .collection-heading {align-items:flex-start;gap:14px;}
+  .learning-progress-details .collection-heading h3 {font-size:22px;}
+  .learning-progress-details .collection-pathways>div {grid-template-columns:minmax(0,1fr) minmax(60px,.7fr) 34px;gap:10px;}
+}
+@media(prefers-reduced-motion:no-preference){.learning-progress-details[open]>.learning-collection{animation:section-settle 220ms ease-out;}}
 .section-view { animation: section-settle 260ms cubic-bezier(.2,.7,.3,1) both; }
 .learning-collection { padding: 26px; background: #f4f5ee; border: 1px solid #dce2d2; border-radius: 22px; }
 .collection-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
