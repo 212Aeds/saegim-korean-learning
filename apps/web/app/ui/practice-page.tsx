@@ -5,7 +5,8 @@ import { localSpeechUrl } from "./local-speech-server";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LearningProfile } from "../learning-profile";
 import type { SavedProgress, LearningPreferences } from "../progress";
-import { practicePool, practiceSession, recoveryPractice, listeningPractice, practiceBreakdown, type PracticeMode, type PracticeCard } from "../practice-bank";
+import { practicePool, practiceSession, practiceMistakes, recoveryPractice, listeningPractice, practiceBreakdown, type PracticeMode, type PracticeCard } from "../practice-bank";
+import { PracticeMistakes } from "./practice-mistakes";
 import { isCorrectTextAnswer, normalizeAnswer } from "../curriculum";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -62,18 +63,27 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
     playback.current++; stopKoreanPlayback(); setAudioBusy(false); setAudioNotice("");
     if (index + 1 === session.length && !completed.current) { completed.current = true; onSessionComplete(); }
   }
-  async function listen() {
-    if (!card || audioBusy) return;
+  function stopAudio() { playback.current++; stopKoreanPlayback(); setAudioBusy(false); }
+  async function listen(text = card?.reference) {
+    if (!text || audioBusy) return;
     const attempt = ++playback.current; setAudioBusy(true); setAudioNotice("");
-    const result = await playElevenLabsKorean(card.reference, preferences.speechVoice, preferences.speechPace, {naturalOnly:true});
-    if (attempt !== playback.current) return;
-    setAudioBusy(false); if (!result.played) setAudioNotice("The selected voice is unavailable. Keep practicing or try Listen again.");
+    try {
+      const result = await playElevenLabsKorean(text, preferences.speechVoice, preferences.speechPace, {naturalOnly:true,waitForEnd:true});
+      if (attempt === playback.current && !result.played) setAudioNotice("The selected voice is unavailable. Keep practicing or try Listen again.");
+    } catch { if (attempt === playback.current) setAudioNotice("Audio could not start. Please try again."); }
+    finally { if (attempt === playback.current) setAudioBusy(false); }
   }
   if (session.length && !card) return <section className="practice-session-card lesson-step-motion">
     <span className="micro-label">PRACTICE COMPLETE</span><h2>A little steadier than before.</h2>
     <div className="review-summary"><strong>{session.length}<span>questions practiced</span></strong><strong>{firstTry}<span>right on the first try</span></strong><strong>{missed.length}<span>needed another try</span></strong></div>
     <SoriMascot className="practice-summary-mascot" thumbsUp /><div className="practice-breakdown">{practiceBreakdown(session,missed).map(item=><p key={item.mode}><strong>{modes[item.mode].title}</strong><span>{item.firstTry} / {item.total} on the first try</span></p>)}</div><p>{missed.length ? "Your next useful step: revisit the questions that needed another try." : "Every answer landed on the first try. Try a listening round or continue your learning path."}</p><p>This counts as a learning day. Practice does not mark lessons complete or change your review dates.</p>
-    <div className="flashcard-tools">{missed.length > 0 && <button className="button button-soft" onClick={() => start(session.filter((item) => missed.includes(item.question.id)))}>Repeat the tricky ones</button>}<button className="button button-dark" onClick={() => start()}>Another fresh round</button><button className="button button-quiet" onClick={() => setSession([])}>Choose a different focus</button></div>
+    <PracticeMistakes cards={practiceMistakes(session,missed)} audioBusy={audioBusy} onListen={text=>void listen(text)}/>
+    {audioBusy && <button className="button button-quiet" onClick={stopAudio}>Stop audio</button>}{audioNotice && <p role="status">{audioNotice}</p>}
+    <div className="flashcard-tools">
+      {missed.length > 0 && <button className="button button-soft" onClick={() => start(practiceMistakes(session,missed))}>Repeat the tricky ones</button>}
+      <button className="button button-dark" onClick={() => start()}>Another fresh round</button>
+      <button className="button button-quiet" onClick={() => {stopAudio();setSession([]);}}>Choose a different focus</button>
+    </div>
   </section>;
   if (card) return <section className="practice-session-card" aria-labelledby="practice-title">
     <div className="practice-session-top"><span className="micro-label">{focus === "listening" ? "Train your ear" : focus === "recovery" ? "Your tricky material" : modes[mode].title} · {index + 1} / {session.length}</span><button className="button button-quiet" onClick={() => { playback.current++; stopKoreanPlayback(); setSession([]); }}>Leave practice</button></div>
@@ -82,7 +92,7 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
       <span className="practice-target" lang="ko">{card.listening ? "♫" : hideTarget ? "?" : card.question.korean}</span><h2 id="practice-title">{card.question.prompt}</h2>
       {card.question.type === "choice" ? <div className="choice-list" role="group" aria-label="Answer choices">{card.question.choices.map((choice) => <button className={`choice ${answer === choice ? "chosen" : ""}`} aria-pressed={answer === choice} key={choice} disabled={checked && correct} onClick={() => {setAnswer(choice);setChecked(false);}}>{choice}</button>)}</div> : <label className="text-answer-field"><span>Your answer</span>{/[ㄱ-ㅎㅏ-ㅣ가-힣]/u.test(card.question.answer) ? <KoreanInput disabled={checked && correct} value={answer} onChange={(value)=>{setAnswer(value);setChecked(false);}} label={card.question.prompt} placeholder={card.question.placeholder} /> : <input disabled={checked && correct} value={answer} autoComplete="off" autoCapitalize="none" placeholder={card.question.placeholder} aria-label={card.question.prompt} onChange={(event)=>{setAnswer(event.target.value);setChecked(false);}} onKeyDown={(event)=>{if(event.key === "Enter" && !event.nativeEvent.isComposing) checked && correct ? next() : check();}} />}</label>}
       {checked && <p className={`answer-tip ${correct ? "correct" : "try-again"}`} role="status">{correct ? "That’s it. " : "Try again. "}{card.question.tip}</p>}
-      <div className="flashcard-tools"><button ref={actionButton} className="button button-dark" disabled={!answer.trim()} onClick={checked && correct ? next : check}>{checked && correct ? index+1 === session.length ? "Finish this round" : "Next question" : "Check answer"}</button>{card.reference !== "?" && !card.question.id.startsWith("drill-shape-") && <button className="button button-quiet" disabled={audioBusy} onClick={()=>void listen()}>{audioBusy ? "Loading voice…" : `Listen with ${!paidFeaturesEnabled && !localSpeechUrl && !(recordedAudioEnabled && recordedAudioUrl(card.reference,preferences.speechVoice)) ? "device voice" : preferences.speechVoice === "chris" ? "Chris" : "Jessica"}`}</button>}</div>
+      <div className="flashcard-tools"><button ref={actionButton} className="button button-dark" disabled={!answer.trim()} onClick={checked && correct ? next : check}>{checked && correct ? index+1 === session.length ? "Finish this round" : "Next question" : "Check answer"}</button>{card.reference !== "?" && !card.question.id.startsWith("drill-shape-") && <button className="button button-quiet" disabled={audioBusy} onClick={()=>void listen()}>{audioBusy ? "Listening…" : `Listen with ${!paidFeaturesEnabled && !localSpeechUrl && !(recordedAudioEnabled && recordedAudioUrl(card.reference,preferences.speechVoice)) ? "device voice" : preferences.speechVoice === "chris" ? "Chris" : "Jessica"}`}</button>}{audioBusy && <button className="button button-quiet" onClick={stopAudio}>Stop audio</button>}</div>
       {audioNotice && <p role="status">{audioNotice}</p>}
       {(!hideTarget || checked) && <WordReference word={card.reference} readingSample={card.readingSample} />}
     </div>

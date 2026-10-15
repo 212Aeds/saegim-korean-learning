@@ -200,7 +200,7 @@ export function practicePool(
 }
 export function practiceSession(pool: PracticeCard[], count: number) {
   const groups = new Map<string, PracticeCard[]>();
-  for (const card of shuffle(pool)) {
+  for (const card of shuffle([...new Map(pool.map(card=>[card.question.id,card])).values()])) {
     const key = `${card.mode}-${card.listening ? "listening" : card.question.type}`;
     groups.set(key, [...(groups.get(key) ?? []), card]);
   }
@@ -211,15 +211,27 @@ export function practiceSession(pool: PracticeCard[], count: number) {
       const card = bucket.pop();
       if (card) balanced.push(card);
     }
-  return balanced
-    .slice(0, Math.max(1, Math.min(20, count)))
-    .map((card) => ({
+  const remaining = [...balanced];
+  const spaced: PracticeCard[] = [];
+  const concept = (card: PracticeCard) => card.reference.normalize("NFC").trim().replace(/\s+/gu," ");
+  while (remaining.length && spaced.length < Math.max(1, Math.min(20, count))) {
+    const recent = spaced.slice(-2).map(concept);
+    let index = remaining.findIndex(card=>!recent.includes(concept(card)));
+    if (index < 0) index = remaining.findIndex(card=>concept(card)!==recent.at(-1));
+    spaced.push(remaining.splice(index < 0 ? 0 : index,1)[0]);
+  }
+  return spaced.map((card) => ({
       ...card,
       question:
         card.question.type === "choice"
           ? { ...card.question, choices: shuffle(card.question.choices) }
           : card.question,
     }));
+}
+
+export function practiceMistakes(cards: PracticeCard[], missedIds: string[]): PracticeCard[] {
+  const missed = new Set(missedIds);
+  return [...new Map(cards.filter(card=>missed.has(card.question.id)).map(card=>[card.question.id,card])).values()];
 }
 
 // Reuse eligible material: recovery never introduces letters outside the learner's route.
