@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { ListeningControls } from "./listening-controls";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
-import { compareSpeech } from "./speech-check";
+import { matchesPracticeAnswer } from "./speech-check";
 import { playElevenLabsKorean, prefetchLocalKorean, preferredSpeechRate, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 
-export function DeviceListeningPractice({korean, selectedVoice, selectedPace, onVoiceChange, onPaceChange, onResult}: {
-  korean: string; selectedVoice?: ElevenLabsVoice; selectedPace?: number;
+export function DeviceListeningPractice({korean, expectedRomanization, selectedVoice, selectedPace, onVoiceChange, onPaceChange, onResult}: {
+  korean: string; expectedRomanization?: string; selectedVoice?: ElevenLabsVoice; selectedPace?: number;
   onVoiceChange?: (voice: ElevenLabsVoice) => void; onPaceChange?: (rate: number) => void;
   onResult?: (transcript: string, matches: boolean) => void;
 }) {
@@ -44,8 +44,8 @@ export function DeviceListeningPractice({korean, selectedVoice, selectedPace, on
       onPaceChange={value=>{stop();setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />
     <div className="speech-actions"><button type="button" className="button button-soft" disabled={busy} onClick={()=>void listen()}>{busy ? "Listening…" : "Listen to Korean"}</button>
       <button type="button" className="button button-quiet" disabled={!busy} onClick={stop}>Stop audio</button></div>
-    <form onSubmit={event=>{event.preventDefault();const matches=compareSpeech(korean,written,true).matches;setNotice(matches?"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");onResult?.(written,matches);}}>
-      <KoreanInput value={written} onChange={setWritten} label="Write the Korean target" maxLength={500} openOnFocus={false}/>
+    <form onSubmit={event=>{event.preventDefault();const matches=matchesPracticeAnswer(korean,written,expectedRomanization);setNotice(matches?"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");onResult?.(written,matches);}}>
+      <KoreanInput value={written} onChange={setWritten} label={expectedRomanization ? "Write Korean or romanization" : "Write the Korean target"} maxLength={500} openOnFocus={false}/>
       <button className="button button-dark" disabled={!written.trim()}>Check written response</button>
     </form><WordReference word={korean}/>{notice && <p role="status">{notice}</p>}
   </section>;

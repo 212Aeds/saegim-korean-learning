@@ -237,6 +237,7 @@ export function SpeakDeck({
         <OpenRouterListeningPractice
           key={card.id}
           korean={card.korean}
+          expectedRomanization={card.romanization}
           selectedVoice={preferences.speechVoice}
           selectedPace={preferences.speechPace}
           english={card.meaning}

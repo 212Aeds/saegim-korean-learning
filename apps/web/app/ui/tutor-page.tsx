@@ -32,7 +32,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
   async function ask(event?: FormEvent<HTMLFormElement>, suggestedQuestion = question) {
     event?.preventDefault();
     const clean = suggestedQuestion.trim().replace(/\s+/gu, " ").slice(0, 600);
-    if (!clean || state === "thinking") return;
+    if (!clean || request.current || state === "thinking") return;
     if (!apiUrl) {
       setState("error");
       setNotice("Saegim’s tutor service is not connected right now. Try again later.");
@@ -67,7 +67,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
         throw new Error("Saegim’s tutor could not answer right now. Your question is still here; please try again.");
       }
       const value = await response.json() as Partial<TutorAnswer>;
-      if (typeof value.explanation !== "string" || typeof value.hint !== "string" || typeof value.nextExercise !== "string") {
+      if (!value || typeof value !== "object" || typeof value.explanation !== "string" || typeof value.hint !== "string" || typeof value.nextExercise !== "string" || ![value.explanation,value.hint,value.nextExercise].every(item=>item.trim().length > 0 && item.length <= 6000)) {
         throw new Error("Saegim’s tutor returned an incomplete answer. Please try again.");
       }
       setAnswers(current=>[...current.slice(-5),{question:clean,content:{explanation:value.explanation!,hint:value.hint!,nextExercise:value.nextExercise!}}]);
@@ -76,7 +76,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
     } catch (error) {
       if (controller.signal.aborted) { setState("idle"); setNotice("Reply stopped. Your question is still here."); return; }
       setState("error");
-      setNotice(error instanceof Error ? error.message : "Saegim’s tutor could not answer right now.");
+      setNotice(error instanceof TypeError ? "Couldn’t connect to your tutor. Your question is still here; please try again." : error instanceof DOMException && error.name === "TimeoutError" ? "Your tutor took too long. Your question is still here; please try again." : error instanceof Error ? error.message : "Saegim’s tutor could not answer right now.");
     } finally {
       if (request.current === controller) request.current = null;
       setPendingQuestion("");

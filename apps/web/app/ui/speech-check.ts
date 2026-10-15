@@ -42,3 +42,9 @@ export function silenceDecision(elapsedMs: number, lastSpeechMs: number, speechD
   if (!speechDetected) return elapsedMs >= 8000 ? "empty" : "continue";
   return elapsedMs - lastSpeechMs >= 1800 ? "transcribe" : "continue";
 }
+
+export function matchesPracticeAnswer(korean: string, answer: string, romanization?: string): boolean {
+  if (compareSpeech(korean, answer, true).matches) return true;
+  const normalized = (value: string) => value.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  return Boolean(romanization && /^[a-z\s\p{P}]+$/iu.test(answer.trim()) && normalized(answer) === normalized(romanization));
+}

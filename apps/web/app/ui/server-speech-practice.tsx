@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-server";
 import { playElevenLabsKorean, preferredSpeechRate, selectedElevenLabsVoice, saveSpeechRate, saveElevenLabsVoice, prefetchLocalKorean, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 import { ListeningControls } from "./listening-controls";
-import { compareSpeech } from "./speech-check";
+import { matchesPracticeAnswer } from "./speech-check";
 import { SpeechFeedback } from "./speech-feedback";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -43,8 +43,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   },[]);
   function check(text: string) {
     const answer=text.trim(); if(!answer)return;
-    const romanized=expectedRomanization?.toLowerCase().replace(/[^a-z]/g,"");
-    const correct=compareSpeech(korean,answer,true).matches || Boolean(romanized && answer.toLowerCase().replace(/[^a-z]/g,"")===romanized);
+    const correct=matchesPracticeAnswer(korean,answer,expectedRomanization);
     setHeard(answer);setMatch(correct);onResult?.(answer,correct);
     setNotice(correct?"Nice work! That matches the target wording.":"Try again. Compare what was heard with the target; recognition can make mistakes.");
   }
@@ -58,7 +57,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     try {
       const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});
       if(attempt===version.current)setNotice(result.played?"Your turn. Try saying the phrase.":"Korean audio is unavailable. You can still type your answer.");
-    } finally { if(attempt===version.current)setState("ready"); }
+    } catch { if(attempt===version.current)setNotice("Audio could not start. Please try again or type your answer."); } finally { if(attempt===version.current)setState("ready"); }
   }
   async function start() {
     if(!ready||state!=="ready")return;
@@ -68,6 +67,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
       if(attempt!==version.current){stream.getTracks().forEach(track=>track.stop());return;}
       context=new AudioContext();await context.resume();
+      if(attempt!==version.current){stream.getTracks().forEach(track=>track.stop());void context.close();return;}
       const source=context.createMediaStreamSource(stream),analyser=context.createAnalyser();
       analyser.fftSize=1024;source.connect(analyser);
       const preferred=["audio/webm;codecs=opus","audio/webm","audio/mp4"].find(type=>MediaRecorder.isTypeSupported(type));

@@ -12,6 +12,8 @@ import {
 import {
   playElevenLabsKorean,
   selectedElevenLabsVoice,
+  preferredSpeechRate,
+  saveSpeechRate,
   saveElevenLabsVoice,
   stopKoreanPlayback,
   prefetchLocalKorean,
@@ -43,7 +45,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
   const [pendingMessage, setPendingMessage] = useState("");
-  const [pace,setPace] = useState(1.1);
+  const [pace,setPace] = useState(1);
   const [phraseAdded,setPhraseAdded]=useState(false);
   const composer=useRef<HTMLFormElement|null>(null);
   const [speakReplies,setSpeakReplies] = useState(false);
@@ -75,7 +77,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   useEffect(() => {
     mounted.current = true;
     setVoice(selectedElevenLabsVoice());
-    setPace(1.1);
+    setPace(preferredSpeechRate());
     return () => {
       mounted.current = false;
       listeningAttempt.current++;
@@ -101,6 +103,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current)
         setNotice("Voice playback is unavailable. You can continue by typing.");
+    } catch {
+      if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
       if (mounted.current && attempt===listeningAttempt.current) setPlaying(false);
     }
@@ -135,13 +139,14 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       if (!response.ok)
         throw new Error(
           response.status === 429
-            ? "Your conversation limit has been reached. Try again later."
+            ? "Your conversation partner is busy. Your message is still here; try again shortly."
             : response.status === 401
               ? "Sign in again to continue."
               : "Your partner could not reply. Please try again.",
         );
       const reply = (await response.json()) as Reply;
       if (
+        !reply || typeof reply !== "object" ||
         ![reply.korean, reply.english, reply.feedback].every(
           (value) =>
             typeof value === "string" &&
@@ -365,7 +370,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         </div>
       </div>
       <div className="listening-controls">
-        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>setPace(Number(event.target.value))} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
+        <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
         <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
