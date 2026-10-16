@@ -1,6 +1,11 @@
 # Cloudflare hosted beta setup
 
-Status: adapters and deployment builds exist locally. **No Render or Cloudflare service was created and no real Cloudflare inference was run.** No connected hosting account or Cloudflare token is available yet. Mocked provider tests do not prove account eligibility, latency, capacity or Korean response quality in production.
+Status (16 October 2026): the website and API are deployed on Render, with Neon connected and real Cloudflare inference verified. Public website: https://saegim-website.onrender.com. API: https://saegim-api.onrender.com. Cloudflare billing shows Workers Free active and no payment method. The API uses Render Free. Credential replacement remains an owner handoff because a dashboard observation included the initial AI token; replace it in Render and revoke the initial token before promoting the beta.
+
+Deployment checks passed through the website /api proxy: database health; temporary account registration; secure HttpOnly cookie; session reload; logout and login; Qwen tutor answer and beginner conversation; Whisper transcription of the packaged Chris greeting as 안녕하세요. Temporary test accounts were deleted. The local suite passed 98 tests. These checks establish connectivity, not comprehensive Korean teaching quality, capacity or uptime.
+
+Render resources: Blueprint saegim-beta (exs-db8tf2ff3r2c73fc1k70), API srv-db8tf5ss728c73b15tk0, website srv-db8tf5ss728c73b15tkg. Both deploy branch fix/windows-local-setup at 23333e0. Dashboard overrides enable Cloudflare server variables, build the website with `npm ci --include=dev && NEXT_PUBLIC_API_URL=/api npm run build:hosted`, publish `apps/web/.next-hosted-public`, and rewrite `/api/*` to `https://saegim-api.onrender.com/*`. WEB_ORIGINS is the exact website HTTPS origin. The committed Blueprint still contains conservative initial defaults; review dashboard overrides before manually syncing it. Save-only environment edits require a new deployment to activate; restarting alone did not activate the saved provider values.
+
 
 ## Architecture
 
