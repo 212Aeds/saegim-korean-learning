@@ -1,3 +1,5 @@
+import { hostedAiEnabled } from "../release";
+const hostedApiUrl = process.env.NEXT_PUBLIC_API_URL;
 // Explicit build-time opt-in; public static exports keep this unset.
 export const localSpeechUrl = process.env.NEXT_PUBLIC_LOCAL_SPEECH_URL?.replace(/\/$/, "");
 export function isMono16kWav(buffer:ArrayBuffer) {
@@ -10,15 +12,15 @@ export function isMono16kWav(buffer:ArrayBuffer) {
     && view.getUint16(34,true)===16 && view.getUint32(40,true)===buffer.byteLength-44;
 }
 export async function localSpeechAvailable(): Promise<boolean> {
-  if (!localSpeechUrl) return false;
+  if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) return false;
   try {
-    const response = await fetch(`${localSpeechUrl}/health`, {signal: AbortSignal.timeout(3000), cache:"no-store"});
+    const response = await fetch(localSpeechUrl ? `${localSpeechUrl}/health` : `${hostedApiUrl}/v1/speech/status`, {credentials:localSpeechUrl ? "omit" : "include",signal: AbortSignal.timeout(10000), cache:"no-store"});
     const body = await response.json();
-    return response.ok && body.status === "ok" && body.paidFallback === false;
+    return response.ok && (localSpeechUrl ? body.status === "ok" && body.paidFallback === false : body.transcription === true);
   } catch { return false; }
 }
 export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal): Promise<string> {
-  if (!localSpeechUrl) throw Error("Local speech is not configured.");
+  if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) throw Error("Speech is not configured.");
   const raw=await blob.arrayBuffer();
   let wav: Blob;
   if(isMono16kWav(raw)) wav=new Blob([raw],{type:"audio/wav"});
@@ -41,8 +43,8 @@ export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal):
   } finally { await context.close(); }
   }
   const form = new FormData(); form.append("audio", wav, "recording.wav");
-  const response = await fetch(`${localSpeechUrl}/v1/speech/transcribe`, {
-    method:"POST", body:form, signal:signal ? AbortSignal.any([signal,AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000), cache:"no-store",
+  const response = await fetch(`${localSpeechUrl || hostedApiUrl}/v1/speech/transcribe`, {
+    method:"POST", credentials:localSpeechUrl ? "omit" : "include", headers:localSpeechUrl ? {} : {"Content-Type":"audio/wav","X-Saegim-Speech-Consent":"true"}, body:localSpeechUrl ? form : wav, signal:signal ? AbortSignal.any([signal,AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000), cache:"no-store",
   });
   const body = await response.json();
   if (!response.ok || typeof body.transcript !== "string") throw Error(body.error || "Local transcription failed.");

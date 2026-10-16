@@ -33,3 +33,7 @@ Sources checked 15 October 2026:
 - https://render.com/docs/blueprint-spec
 - https://render.com/docs/node-version
 - https://huggingface.co/docs/hub/spaces-overview
+
+## Optional Cloudflare AI integration
+
+The API now has opt-in Cloudflare Qwen/Whisper adapters. See `cloudflare-hosting.md` for server secrets, Workers Free confirmation, quotas, the same-origin rewrite, and the explicit `build:hosted` website build. The default Blueprint still keeps AI disabled. No Cloudflare service is connected or live yet.

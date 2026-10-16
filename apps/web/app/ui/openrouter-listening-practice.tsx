@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { DeviceListeningPractice } from "./device-listening-practice";
-import { paidFeaturesEnabled } from "../release";
+import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
 import { ServerSpeechPractice } from "./server-speech-practice";
 import { Microphone, SpeakerHigh, Stop } from "./icons";
@@ -17,7 +17,7 @@ import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElev
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function OpenRouterListeningPractice(props: Parameters<typeof PaidListeningPractice>[0]) {
-  if (localSpeechUrl) return <ServerSpeechPractice {...props} />;
+  if (localSpeechUrl || hostedAiEnabled) return <ServerSpeechPractice {...props} />;
   return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DeviceListeningPractice {...props} />;
 }
 function savedSpeechRate() {

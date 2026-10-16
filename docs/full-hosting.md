@@ -11,7 +11,11 @@ Updated 15 October 2026. No hosting account or GPU allocation is connected yet. 
 | Whisper transcription | Same sponsored compute, or an adapted ZeroGPU service | Neither compute nor a tested adapter is provisioned |
 | Chris/Jessica synthesis | Existing Supertonic service on a suitable host | Not publicly hosted; existing 162 recorded clips ship with the website |
 
-## Selected next steps
+## Current Cloudflare integration
+
+The Qwen and Whisper adapters and an explicit hosted web build have now been implemented. Follow `cloudflare-hosting.md` for the current no-wait beta route. No live provider calls or cloud deployment have been verified; provider accounts and secrets are still missing. The previous Hugging Face approach below remains an alternative, not the selected immediate integration.
+
+## Earlier hosting assessment
 
 1. Finish Render signup and connect the repository. Deploy the two resources in `render.yaml` only on the free options. The branch must first be pushed to GitHub. Keep paid flags disabled.
 2. Verify the website and API URLs, then connect account sessions using the same-origin proxy or same-site custom domains described in `hosted-api.md`. The static free build deliberately uses device-only progress until this is tested.

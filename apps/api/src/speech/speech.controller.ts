@@ -1,3 +1,5 @@
+import { usesCloudflareSpeech } from "../cloudflare-ai";
+import { ProviderUsageService } from "../provider-usage.service";
 import {
   BadRequestException, Body, Controller, Get, Header, HttpException,
   Injectable, NestMiddleware, Post, Req, ServiceUnavailableException, StreamableFile, UseGuards,
@@ -85,7 +87,7 @@ function validateWav(audio: Buffer) {
 @Controller("speech")
 @UseGuards(SessionAuthGuard)
 export class SpeechController {
-  constructor(private readonly provider: KoreanSpeechProvider, private readonly cache: SpeechAudioCacheService) {}
+  constructor(private readonly provider: KoreanSpeechProvider, private readonly cache: SpeechAudioCacheService, private readonly usage: ProviderUsageService) {}
 
   private available() {
     return this.provider.isAvailable() && process.env.PROVIDER_TERMS_REVIEWED === "true";
@@ -93,7 +95,7 @@ export class SpeechController {
 
   @Get("status")
   @Header("Cache-Control", "private, no-store")
-  status() { return { available: this.available(), transcription: this.available(), synthesis: this.available(), voices: ["jessica", "chris"] }; }
+  status() { return { available: this.available(), transcription: this.available(), synthesis: this.available() && !usesCloudflareSpeech(), voices: ["jessica", "chris"] }; }
 
   @Post("synthesize")
   @Header("Cache-Control", "private, no-store")
@@ -104,7 +106,7 @@ export class SpeechController {
     if (!text || text.length > 500 || !/[\uac00-\ud7a3]/u.test(text) || (voice !== "jessica" && voice !== "chris")) {
       throw new BadRequestException("Enter a short Korean phrase and choose Jessica or Chris.");
     }
-    if (!this.available() || !request.soriAccountId) throw new ServiceUnavailableException("Natural speech is unavailable. Device speech is still available.");
+    if (usesCloudflareSpeech() || !this.available() || !request.soriAccountId) throw new ServiceUnavailableException("Natural speech is unavailable. Device speech is still available.");
     try {
       const cached = await this.cache.get(text, voice);
       if (cached) return new StreamableFile(cached.audio, { type: cached.contentType, length: cached.audio.byteLength });
@@ -138,6 +140,10 @@ export class SpeechController {
       if (request.header("content-type") !== "audio/wav" || !audio) throw new BadRequestException("Use a PCM WAV recording.");
       validateWav(audio);
       if (!this.available() || !request.soriAccountId) throw new ServiceUnavailableException("Speech is unavailable. Type your response instead.");
+      if(usesCloudflareSpeech()) {
+        const decision=await this.usage.allowFreeInference(request.soriAccountId);
+        if(!decision.allowed) throw new HttpException("Speech practice has reached its free daily limit. Try writing instead.",429);
+      }
       try {
         const result = await Promise.race([
           this.provider.transcribe(audio, "audio/wav", "ko-KR"),

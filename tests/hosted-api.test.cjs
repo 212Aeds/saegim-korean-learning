@@ -5,3 +5,8 @@ test('hosted API refuses insecure database transport, unsafe origins and acciden
  assert.equal(checkHostedApi(safe),true);
  for(const update of [{DATABASE_URL:''},{DATABASE_URL:safe.DATABASE_URL.replace('?sslmode=require','')},{WEB_ORIGINS:'*'},{WEB_ORIGINS:'http://localhost:3016'},{WEB_ORIGINS:'https://learn.example.com/path'},{PAID_FEATURES_ENABLED:'true'},{TUTOR_PROVIDER:'local'},{PROVIDER_MONTHLY_SPEND_CAP_CENTS:'500'},{OPENROUTER_AUDIO_ENABLED:'true'}]) assert.throws(()=>checkHostedApi({...safe,...update}));
 });
+
+test('hosted API permits reviewed Cloudflare free configuration but rejects unconfirmed activation',()=>{
+ const cloud={...safe,TUTOR_PROVIDER:'cloudflare',SPEECH_PROVIDER:'cloudflare',CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'test',CLOUDFLARE_FREE_PLAN_CONFIRMED:'true',PROVIDER_TERMS_REVIEWED:'true'};
+ assert.equal(checkHostedApi(cloud),true);assert.throws(()=>checkHostedApi({...cloud,CLOUDFLARE_FREE_PLAN_CONFIRMED:'false'}));assert.throws(()=>checkHostedApi({...cloud,CLOUDFLARE_API_TOKEN:''}));
+});

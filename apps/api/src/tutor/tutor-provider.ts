@@ -1,3 +1,4 @@
+import { cloudflareAvailable, cloudflareRequest, usesCloudflareTutor } from "../cloudflare-ai";
 import { Injectable } from "@nestjs/common";
 import { conversationPolicy } from "./conversation-policy";
 import { lessonGrounding } from "./lesson-grounding";
@@ -17,7 +18,7 @@ export const usesLocalTutor = () => process.env.TUTOR_PROVIDER === "local";
 @Injectable()
 export class OpenRouterTutorProvider extends TutorProvider {
   isAvailable() {
-    return usesLocalTutor() || process.env.PAID_FEATURES_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    return usesCloudflareTutor() ? cloudflareAvailable() : usesLocalTutor() || process.env.PAID_FEATURES_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
   }
 
   async answer(input: { question: string; lessonContext: string; conversation?: ConversationRequest }): Promise<TutorAnswer> {
@@ -51,6 +52,16 @@ export class OpenRouterTutorProvider extends TutorProvider {
             { role: "user", content: JSON.stringify(input) },
           ],
       };
+      if (usesCloudflareTutor()) {
+        const result = await cloudflareRequest("tutor", {
+          messages: input.conversation ? [{role:"system",content:conversationPolicy(input.conversation) + " Return only JSON with explanation (Korean reply with one question), hint (English translation), and nextExercise (short English tip). Each field must be 1–450 plain-text characters. /no_think"},...input.conversation.messages] : payload.messages,
+          max_tokens:1500, temperature:0.2, stream:false,
+          response_format:{type:"json_schema",json_schema:payload.response_format.json_schema.schema},
+        }) as {response?:unknown;choices?:Array<{finish_reason?:string;message?:{content?:unknown}}>};
+        const content = result.response ?? ( result.choices?.[0]?.finish_reason === "stop" ? result.choices[0].message?.content : undefined);
+        if(!content) throw Error("Invalid provider response");
+        return tutorAnswerSchema.parse(typeof content === "string" ? JSON.parse(content) : content);
+      }
       const response = await fetch(local ? "http://127.0.0.1:11434/api/chat" : endpoint, {
         method: "POST", signal: controller.signal,
         headers: local ? {"Content-Type":"application/json"} : {

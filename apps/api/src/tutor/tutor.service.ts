@@ -1,3 +1,4 @@
+import { usesCloudflareTutor } from "../cloudflare-ai";
 import { HttpException, HttpStatus, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { ProviderUsageService, TUTOR_REQUEST_RESERVATION_MICRO_USD } from "../provider-usage.service";
 import { TutorProvider, usesLocalTutor } from "./tutor-provider";
@@ -9,7 +10,7 @@ export class TutorService {
 
   async answer(accountId: string, question: string, lessonContext: string, conversation?: ConversationRequest): Promise<TutorAnswer> {
     if (!this.provider.isAvailable()) throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
-    const reservation = usesLocalTutor() ? {allowed:true, reason:undefined} : await this.usage.allowAndRecord(accountId, "tutor", TUTOR_REQUEST_RESERVATION_MICRO_USD);
+    const reservation = usesCloudflareTutor() ? await this.usage.allowFreeInference(accountId) : usesLocalTutor() ? {allowed:true, reason:undefined} : await this.usage.allowAndRecord(accountId, "tutor", TUTOR_REQUEST_RESERVATION_MICRO_USD);
     if (!reservation.allowed) {
       if (reservation.reason === "spend-limit") {
         throw new HttpException("The Tutor reached its monthly project budget. It remains free for learners; please try again next month.", HttpStatus.TOO_MANY_REQUESTS);

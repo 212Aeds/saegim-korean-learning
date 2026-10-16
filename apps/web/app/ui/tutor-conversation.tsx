@@ -233,6 +233,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
             },
             {
               silenceMs: voiceTiming(profile.level).silenceMs,
+              maxSeconds: localSpeechUrl ? 30 : 15,
               onReady: (finish) => {
                 sendTurn.current = finish;
                 if (!controller.signal.aborted) setCanSendTurn(!!finish);

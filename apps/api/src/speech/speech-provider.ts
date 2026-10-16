@@ -1,3 +1,4 @@
+import { cloudflareAvailable, cloudflareRequest, usesCloudflareSpeech } from "../cloudflare-ai";
 import { Injectable } from "@nestjs/common";
 
 export abstract class KoreanSpeechProvider {
@@ -40,11 +41,16 @@ export class SpeechProviderError extends Error {
 @Injectable()
 export class OpenRouterKoreanSpeechProvider extends KoreanSpeechProvider {
   isAvailable() {
-    return process.env.PAID_FEATURES_ENABLED === "true" && process.env.OPENROUTER_AUDIO_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
+    return usesCloudflareSpeech() ? cloudflareAvailable() : process.env.PAID_FEATURES_ENABLED === "true" && process.env.OPENROUTER_AUDIO_ENABLED === "true" && Boolean(process.env.OPENROUTER_API_KEY?.trim());
   }
 
   async transcribe(audio: Uint8Array, contentType: string, locale: "ko-KR") {
     if (!this.isAvailable() || contentType !== "audio/wav" || audio.byteLength > 2 * 1024 * 1024) throw new Error("Speech unavailable");
+    if(usesCloudflareSpeech()) {
+      const value=await cloudflareRequest("whisper",{audio:Buffer.from(audio).toString("base64"),language:"ko",task:"transcribe",vad_filter:true,condition_on_previous_text:false}) as {text?:unknown};
+      if(typeof value.text!=="string" || value.text.length>2000)throw Error("Invalid transcription response");
+      return {transcript:value.text};
+    }
     const result = await this.request("/audio/transcriptions", {
       model: transcriptionModel,
       language: locale === "ko-KR" ? "ko" : "ko",
@@ -57,6 +63,7 @@ export class OpenRouterKoreanSpeechProvider extends KoreanSpeechProvider {
   }
 
   async synthesize(text: string, voice: "jessica" | "chris") {
+    if (usesCloudflareSpeech()) throw Error("Hosted voice synthesis is not configured");
     if (!this.isAvailable() || text.length > 500 || !/[\uac00-\ud7a3]/u.test(text)) throw new Error("Speech unavailable");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);

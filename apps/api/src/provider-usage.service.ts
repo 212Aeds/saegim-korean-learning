@@ -21,6 +21,19 @@ export const TUTOR_REQUEST_RESERVATION_MICRO_USD = 10_000;
 export class ProviderUsageService {
   constructor(private readonly database: DatabaseService) {}
 
+  // Shared tutor/transcription reservations are atomic in PostgreSQL and never reserve money.
+  async allowFreeInference(accountId: string): Promise<ProviderUsageDecision> {
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(accountId)) return {allowed:false,reason:"unavailable"};
+    const project=positiveLimit(process.env.FREE_AI_PROJECT_DAILY_LIMIT) ?? 200;
+    const account=positiveLimit(process.env.FREE_AI_ACCOUNT_DAILY_LIMIT) ?? 25;
+    try {
+      const result=await this.database.query<{reason:string|null}>("SELECT reserve_tutor_request($1::uuid,$2::integer,$3::integer,$2::integer,$3::integer,$4::bigint,$5::bigint,$6::bigint) AS reason",[accountId,project,account,project*TUTOR_TOKEN_RESERVATION,account*TUTOR_TOKEN_RESERVATION,TUTOR_TOKEN_RESERVATION]);
+      const reason=result.rows[0]?.reason;
+      if(reason===null)return {allowed:true};
+      return {allowed:false,reason:reason==="account-limit"?"account-limit":reason==="project-limit"?"project-limit":"unavailable"};
+    } catch { return {allowed:false,reason:"unavailable"}; }
+  }
+
   // Audio playback and transcription have no Sori-side usage quota. Tutor
   // requests reserve against the previously approved $5 monthly project cap.
   async allowAndRecord(

@@ -4,4 +4,6 @@ export const publicApiUrl = freePublishing ? undefined : process.env.NEXT_PUBLIC
 export const deviceProfileKey = "saegim-device-profile";
 export const deviceProgressKey = "saegim-device-progress";
 
-export const tutorEnabled = !freePublishing && (process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" || paidFeaturesEnabled);
+export const tutorEnabled = !freePublishing && (process.env.NEXT_PUBLIC_HOSTED_AI_ENABLED === "true" || process.env.NEXT_PUBLIC_LOCAL_TUTOR_ENABLED === "true" || paidFeaturesEnabled);
+
+export const hostedAiEnabled = !freePublishing && process.env.NEXT_PUBLIC_HOSTED_AI_ENABLED === "true";

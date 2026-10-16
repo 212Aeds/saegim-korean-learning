@@ -10,9 +10,11 @@ export async function recordConversationTurn(
   onLevel: (level: number) => void,
   options: {
     silenceMs?: number;
+    maxSeconds?: number;
     onReady?: (finish: (() => void) | null) => void;
   } = {},
 ): Promise<ArrayBuffer> {
+  const clipSeconds=Math.min(maxClipSeconds,Math.max(1,options.maxSeconds ?? maxClipSeconds));
   if (signal.aborted) throw new DOMException("Stopped", "AbortError");
   if (!navigator.mediaDevices?.getUserMedia)
     throw new Error(
@@ -92,14 +94,14 @@ export async function recordConversationTurn(
         onLevel(Math.min(100, Math.round(rms * 1000)));
         const count = Math.min(
           samples.length,
-          context.sampleRate * maxClipSeconds - clip.samples,
+          context.sampleRate * clipSeconds - clip.samples,
         );
         if (count > 0) {
           clip.chunks.push(samples.slice(0, count));
           clip.samples += count;
         }
         if (
-          clip.samples >= context.sampleRate * maxClipSeconds ||
+          clip.samples >= context.sampleRate * clipSeconds ||
           (clip.speechDetected
             ? elapsed - lastSpeech >= (options.silenceMs ?? 1800)
             : silenceDecision(elapsed, lastSpeech, false) !== "continue")
@@ -109,7 +111,7 @@ export async function recordConversationTurn(
       source.connect(processor);
       processor.connect(mute);
       mute.connect(context.destination);
-      clip.timer = window.setTimeout(() => finish(), maxClipSeconds * 1000);
+      clip.timer = window.setTimeout(() => finish(), clipSeconds * 1000);
       options.onReady?.(() => finish());
       void context.resume().catch((error) => {
         reject(error);

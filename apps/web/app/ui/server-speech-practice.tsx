@@ -41,6 +41,12 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     void localSpeechAvailable().then(available=>{if(alive){setReady(available);setNotice(available?"Ready. Say the phrase; a pause finishes the recording.":"Speech practice is unavailable right now. Try again shortly or write your answer.");}});
     return ()=>{alive=false;version.current++;controller.current?.abort();if(capture.current){capture.current.recorder.onstop=null;if(capture.current.recorder.state==="recording")capture.current.recorder.stop();}release();stopKoreanPlayback();};
   },[]);
+  async function reconnect() {
+    const attempt=++version.current;setState("checking");setNotice("Connecting to speech practice…");
+    const available=await localSpeechAvailable();
+    if(attempt!==version.current)return;
+    setReady(available);setState("ready");setNotice(available?"Ready. Say the phrase; a pause finishes the recording.":"Speech practice is unavailable. You can still write your answer.");
+  }
   function check(text: string) {
     const answer=text.trim(); if(!answer)return;
     const correct=matchesPracticeAnswer(korean,answer,expectedRomanization);
@@ -99,6 +105,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   return <section className="speech-practice" aria-label="Korean speech practice">
     <h3>Listen, then try saying it</h3>
     <p role="status">{notice}</p>
+    {!ready && <button type="button" className="button button-quiet" disabled={state!=="ready"} onClick={()=>void reconnect()}>Retry speech connection</button>}
     {variant !== "lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={state!=="ready"} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speech-practice-actions">
       <button type="button" className="button button-soft" disabled={state!=="ready"} onClick={()=>void listen()}>{state==="playing"?"Playing Korean…":"Listen to Korean"}</button>
