@@ -1,10 +1,10 @@
 # Cloudflare hosted beta setup
 
-Status (16 October 2026): the website and API are deployed on Render, with Neon connected and real Cloudflare inference verified. Public website: https://saegim-website.onrender.com. API: https://saegim-api.onrender.com. Cloudflare billing shows Workers Free active and no payment method. The API uses Render Free. Credential replacement remains an owner handoff because a dashboard observation included the initial AI token; replace it in Render and revoke the initial token before promoting the beta.
+Status (16 October 2026): the website and API are deployed on Render, with Neon connected and real Cloudflare inference verified. Public website: https://saegim.onrender.com. The earlier https://saegim-website.onrender.com address remains available. API: https://saegim-api.onrender.com. Cloudflare billing shows Workers Free active and no payment method. The API uses Render Free. The owner replaced the initial AI token and revoked it. The replacement was verified active with Workers AI permissions restricted to one account; tutoring and transcription still passed afterward.
 
 Deployment checks passed through the website /api proxy: database health; temporary account registration; secure HttpOnly cookie; session reload; logout and login; Qwen tutor answer and beginner conversation; Whisper transcription of the packaged Chris greeting as 안녕하세요. Temporary test accounts were deleted. The local suite passed 98 tests. These checks establish connectivity, not comprehensive Korean teaching quality, capacity or uptime.
 
-Render resources: Blueprint saegim-beta (exs-db8tf2ff3r2c73fc1k70), API srv-db8tf5ss728c73b15tk0, website srv-db8tf5ss728c73b15tkg. Both deploy branch fix/windows-local-setup at 23333e0. Dashboard overrides enable Cloudflare server variables, build the website with `npm ci --include=dev && NEXT_PUBLIC_API_URL=/api npm run build:hosted`, publish `apps/web/.next-hosted-public`, and rewrite `/api/*` to `https://saegim-api.onrender.com/*`. WEB_ORIGINS is the exact website HTTPS origin. The committed Blueprint still contains conservative initial defaults; review dashboard overrides before manually syncing it. Save-only environment edits require a new deployment to activate; restarting alone did not activate the saved provider values.
+Render resources: Blueprint saegim-beta (exs-db8tf2ff3r2c73fc1k70), API srv-db8tf5ss728c73b15tk0, website srv-db8tf5ss728c73b15tkg. Both deploy branch fix/windows-local-setup; see the Render dashboard for each current deployed commit. The shorter site is a separate free static service, saegim (srv-db8tprnavr4c73cb0cf0), with the same API rewrite, hosted build settings and security headers. Dashboard overrides enable Cloudflare server variables, build the website with `npm ci --include=dev && NEXT_PUBLIC_API_URL=/api npm run build:hosted`, publish `apps/web/.next-hosted-public`, and rewrite `/api/*` to `https://saegim-api.onrender.com/*`. WEB_ORIGINS contains the two exact website HTTPS origins, separated by a comma. The committed Blueprint still contains conservative initial defaults; review dashboard overrides before manually syncing it. Save-only environment edits require a new deployment to activate; restarting alone did not activate the saved provider values.
 
 
 ## Architecture
@@ -13,7 +13,7 @@ Render hosts the public static website and the existing Nest API; Neon remains t
 
 All tutor and transcription calls require an existing Saegim session. Database-backed atomic limits share a default allowance of 200 AI requests/project/day and 25/account/day. Failed provider calls consume reservations. These are request controls, not an exact meter of Cloudflare Neurons. No paid model fallback is implemented.
 
-Chris/Jessica recorded clips remain packaged with the website. This integration does not host Supertonic or generate new Chris/Jessica conversation audio. Unrecorded replies use available browser Korean speech; those voices can sound different. Exact dynamic voices still require a synthesis host.
+Chris/Jessica recorded clips remain packaged with the website. This integration does not host Supertonic or generate new Chris/Jessica conversation audio. Unrecorded replies use available browser Korean speech, preferring installed voices; hosted builds can also use browser-vendor voices. Those voices can sound different. Exact dynamic voices still require a synthesis host.
 
 ## Repository
 
@@ -73,3 +73,7 @@ On failure, set API `TUTOR_PROVIDER=disabled` and remove `SPEECH_PROVIDER`, rebu
 - https://developers.cloudflare.com/workers-ai/models/whisper-large-v3-turbo/
 - https://developers.cloudflare.com/workers-ai/platform/pricing/
 - https://render.com/docs/redirects-rewrites
+
+## Beta feedback and shorter address
+
+Primary site: https://saegim.onrender.com. Feedback: https://saegim.onrender.com/feedback/. The static QR points to https://forms.gle/ZwEJV2Dnzo4yEHEX9; no third-party QR image service is used. The owner can view feedback in Google Forms Responses and its linked spreadsheet. Emails are not collected and respondent summaries are disabled. One clearly labelled deployment test response is retained. The initial Blueprint remains conservative; do not sync it blindly over dashboard hosting overrides.

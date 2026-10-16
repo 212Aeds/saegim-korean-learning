@@ -54,7 +54,7 @@ export class OpenRouterTutorProvider extends TutorProvider {
       };
       if (usesCloudflareTutor()) {
         const result = await cloudflareRequest("tutor", {
-          messages: input.conversation ? [{role:"system",content:conversationPolicy(input.conversation) + " Return only JSON with explanation (Korean reply with one question), hint (English translation), and nextExercise (short English tip). Each field must be 1–450 plain-text characters. /no_think"},...input.conversation.messages] : payload.messages,
+          messages: input.conversation ? [{role:"system",content:conversationPolicy(input.conversation) + " Return only JSON with explanation (Korean reply with one question), hint (English translation), and nextExercise (short English tip). Each field must be 1–450 plain-text characters. /no_think"},...input.conversation.messages] : [{role:"system",content:payload.messages[0].content + " Answer directly with a short example. Follow the checked facts below when relevant. /no_think\n" + lessonGrounding},payload.messages[1]],
           max_tokens:1500, temperature:0.2, stream:false,
           response_format:{type:"json_schema",json_schema:payload.response_format.json_schema.schema},
         }) as {response?:unknown;choices?:Array<{finish_reason?:string;message?:{content?:unknown}}>};
