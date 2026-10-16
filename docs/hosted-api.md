@@ -1,11 +1,11 @@
 # Hosted account API: ready for account setup
 
-Status: deployment files prepared; **no hosted service has been created**. Render signup and access to the repository are still needed. The repository branch containing these files must be pushed before Render can read them. No credentials are committed.
+Status: deployment files prepared; **no hosted service has been created**. Render signup and access to the repository are still needed. The setup is pushed on branch `fix/windows-local-setup` for Render to read. No credentials are committed.
 
 ## Deploy the account API
 
 1. Create/sign in to a Render account at https://dashboard.render.com. Choose a free Hobby workspace and do not enable paid compute or add a payment method for this setup.
-2. Connect the GitHub repository `212Aeds/sori-korean-learning`, branch `fix/windows-local-setup`, as a Blueprint using `render.yaml`. Review the service: one **Free** Node web service plus one static website, no new database, no disk, no AI hardware. Automatic deployments are off.
+2. Connect the GitHub repository `212Aeds/saegim-korean-learning`, branch `fix/windows-local-setup`, as a Blueprint using `render.yaml`. Review the service: one **Free** Node web service plus one static website, no new database, no disk, no AI hardware. Automatic deployments are off.
 3. Enter the existing Neon pooled PostgreSQL connection string as the server-only `DATABASE_URL` secret, including `sslmode=require`. This grants this API access to that database; enter it yourself in Render, never in the website's public environment variables.
 4. Set `WEB_ORIGINS` to your final website HTTPS origin, with no trailing slash. Keep the spending and AI flags exactly as provided.
 5. Deploy both services. The static website publishes lessons, review and recorded audio without localhost dependencies. Check `https://YOUR-API.onrender.com/v1/health` returns `status: ok` and `database: connected`. Do not rerun database migrations blindly; the existing Neon schema is already used locally.

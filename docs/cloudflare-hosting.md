@@ -10,6 +10,10 @@ All tutor and transcription calls require an existing Saegim session. Database-b
 
 Chris/Jessica recorded clips remain packaged with the website. This integration does not host Supertonic or generate new Chris/Jessica conversation audio. Unrecorded replies use available browser Korean speech; those voices can sound different. Exact dynamic voices still require a synthesis host.
 
+## Repository
+
+The setup is pushed on branch `fix/windows-local-setup` at `https://github.com/212Aeds/saegim-korean-learning`. GitHub reports the former `sori-korean-learning` URL has moved there. Select the renamed repository in Render.
+
 ## Provider setup (owner action required)
 
 1. Finish Render signup and connect GitHub. Complete Cloudflare signup and select **Workers Free**. Do not upgrade the Workers plan or add prepaid AI Gateway credits for this deployment.
