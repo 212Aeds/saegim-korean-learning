@@ -14,7 +14,7 @@ export function isMono16kWav(buffer:ArrayBuffer) {
 export async function localSpeechAvailable(): Promise<boolean> {
   if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) return false;
   try {
-    const response = await fetch(localSpeechUrl ? `${localSpeechUrl}/health` : `${hostedApiUrl}/v1/speech/status`, {credentials:localSpeechUrl ? "omit" : "include",signal: AbortSignal.timeout(10000), cache:"no-store"});
+    const response = await fetch(localSpeechUrl ? `${localSpeechUrl}/health` : `${hostedApiUrl}/v1/speech/status`, {credentials:localSpeechUrl ? "omit" : "include",signal: AbortSignal.timeout(localSpeechUrl ? 10000 : 75000), cache:"no-store"});
     const body = await response.json();
     return response.ok && (localSpeechUrl ? body.status === "ok" && body.paidFallback === false : body.transcription === true);
   } catch { return false; }

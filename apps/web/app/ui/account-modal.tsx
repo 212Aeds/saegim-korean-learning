@@ -1,5 +1,5 @@
 "use client";
-import { freePublishing, paidFeaturesEnabled, deviceProgressKey } from "../release";
+import { freePublishing, paidFeaturesEnabled, deviceProgressKey, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
@@ -397,6 +397,7 @@ export function AccountModal({
                       : "Sign in"}
                   {!busy && <ArrowRight size={17} />}
                 </button>
+                {busy && hostedAiEnabled && <p className="account-private" role="status">Connecting to your account. After a quiet spell, the service can take about a minute to wake up.</p>}
               </form>
             ) : (
               <div className="account-message" role="status">

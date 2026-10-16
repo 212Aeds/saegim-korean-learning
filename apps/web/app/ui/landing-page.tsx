@@ -104,10 +104,10 @@ export function LandingPage({
         ["Is it free?", "Yes. The lessons, review cards, word collection, and practice in this version are available without a subscription."],
         ["Where is my progress saved?", freeMode ? "In this browser on this device. It does not sync between devices. Clearing site data or using private browsing can remove progress. Download your learning data from Account before clearing it; automatic backup import is not available yet." : "Your signed-in account keeps your progress together. You can download your learning data from Account."],
         ["Can I listen to Korean?", "Hangul letter names and selected phrases include recorded Chris and Jessica audio. Other items use the available speech service or a supported Korean device voice. Reading and writing practice remain available when audio is unavailable."],
-        ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. About & feedback links to our public issue tracker; please keep personal information out of reports."],
+        ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. Open Feedback below to share a bug or idea through our private response form; please keep personal information out of reports."],
       ].map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
       <footer className="landing-footer">
-        <span><a href="/learn/">Learning guides</a> · <a href="/privacy/">Privacy</a> · <a href="/about/">About & feedback</a></span>
+        <span><a href="/learn/">Learning guides</a> · <a href="/feedback/">Feedback</a> · <a href="/privacy/">Privacy</a> · <a href="/about/">About</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
         <span>한국어, 한 걸음씩 · Korean, one step at a time.</span>
       </footer>

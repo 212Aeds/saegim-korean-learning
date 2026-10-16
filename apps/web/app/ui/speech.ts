@@ -1,5 +1,5 @@
 import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
-import { paidFeaturesEnabled } from "../release";
+import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
 import { naturalSpeechText, consonantName } from "./hangul-answers";
 export type KoreanSpeechOptions = {
@@ -49,7 +49,7 @@ export function listKoreanVoices() {
     .getVoices()
     .filter(
       (voice) =>
-        voice.lang.toLowerCase().startsWith("ko") && voice.localService,
+        voice.lang.toLowerCase().startsWith("ko") && (voice.localService || hostedAiEnabled),
     );
   const unique = new Map<string, SpeechSynthesisVoice>();
   for (const voice of korean) {
@@ -63,13 +63,7 @@ export function listKoreanVoices() {
       voicePriority(left) - voicePriority(right) ||
       left.name.localeCompare(right.name),
   );
-  const familiarAndAlternatives = choices.filter((voice) =>
-    /yuna|eddy|reed|rocko/i.test(voice.name),
-  );
-  const fallback = choices.filter(
-    (voice) => !familiarAndAlternatives.includes(voice),
-  );
-  return [...familiarAndAlternatives, ...fallback].slice(0, 4);
+  return choices.slice(0, 4);
 }
 
 function voicePriority(voice: SpeechSynthesisVoice) {
@@ -93,6 +87,8 @@ function selectedKoreanVoice(
   voices: SpeechSynthesisVoice[],
   options: KoreanSpeechOptions,
 ) {
+  const selectedURI = voices.find((voice) => voice.voiceURI === options.voiceURI);
+  if (selectedURI) return selectedURI;
   const namedVoice = options.voiceName
     ? voices.find((voice) => voice.name === options.voiceName)
     : undefined;
@@ -129,6 +125,12 @@ async function waitForKoreanVoices(
     speech.addEventListener("voiceschanged", finish, { once: true });
     speech.getVoices();
   });
+}
+
+export async function koreanConversationAudioAvailable() {
+  if (typeof window === "undefined") return false;
+  if (localSpeechUrl || (paidFeaturesEnabled && apiUrl)) return true;
+  return (await waitForKoreanVoices()).length > 0;
 }
 
 function playDeviceKorean(text: string, options: KoreanSpeechOptions = {}, finished?: (success: boolean) => void) {

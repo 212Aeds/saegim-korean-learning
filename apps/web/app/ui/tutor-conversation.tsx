@@ -17,6 +17,7 @@ import {
   saveElevenLabsVoice,
   stopKoreanPlayback,
   prefetchLocalKorean,
+  koreanConversationAudioAvailable,
   type ElevenLabsVoice,
 } from "./speech";
 import { voiceTiming, thinkingPause } from "./conversation-timing";
@@ -214,6 +215,10 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     }, 600_000);
     let wav: ArrayBuffer | undefined;
     try {
+      setPhase("Getting Korean audio ready…");
+      if (!(await koreanConversationAudioAvailable()))
+        throw new Error("A Korean browser voice is needed for spoken conversations. Enable a Korean voice on your device, or continue chatting by text.");
+      if (controller.signal.aborted) return;
       const started = Date.now();
       for (
         let turn = 0;
