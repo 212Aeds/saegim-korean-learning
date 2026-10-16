@@ -3,12 +3,15 @@ import { HttpException, HttpStatus, Injectable, ServiceUnavailableException } fr
 import { ProviderUsageService, TUTOR_REQUEST_RESERVATION_MICRO_USD } from "../provider-usage.service";
 import { TutorProvider, usesLocalTutor } from "./tutor-provider";
 import type { TutorAnswer, ConversationRequest } from "./tutor.schema";
+import {checkedHangulAnswer} from "./lesson-grounding";
 
 @Injectable()
 export class TutorService {
   constructor(private readonly provider: TutorProvider, private readonly usage: ProviderUsageService) {}
 
   async answer(accountId: string, question: string, lessonContext: string, conversation?: ConversationRequest): Promise<TutorAnswer> {
+    const checked = conversation ? null : checkedHangulAnswer(question);
+    if (checked) return checked;
     if (!this.provider.isAvailable()) throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
     const reservation = usesCloudflareTutor() ? await this.usage.allowFreeInference(accountId) : usesLocalTutor() ? {allowed:true, reason:undefined} : await this.usage.allowAndRecord(accountId, "tutor", TUTOR_REQUEST_RESERVATION_MICRO_USD);
     if (!reservation.allowed) {

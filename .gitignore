@@ -21,3 +21,4 @@ coverage/
 *.tsbuildinfo
 .venv/
 __pycache__/
+.site-redirect/
