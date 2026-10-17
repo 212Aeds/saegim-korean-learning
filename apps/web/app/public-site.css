@@ -152,3 +152,16 @@ button.landing-mini-card:disabled {cursor:wait;}
 .feedback-banner a:focus-visible {outline:3px solid var(--forest);outline-offset:4px;}
 @media(max-width:600px){.feedback-banner{align-items:flex-start;flex-direction:column;gap:12px;padding:18px;}.feedback-banner>a{align-self:flex-start;}.landing-nav{height:auto;min-height:78px;gap:12px;flex-wrap:wrap;padding:14px 0;}.landing-nav-actions{flex-wrap:wrap;gap:12px;}.guide-nav nav{flex-wrap:wrap;}}
 @media(prefers-reduced-motion:no-preference){.feedback-banner{animation:section-settle 300ms ease-out both;}.feedback-banner>a,.public-nav-link{transition:background-color 180ms ease,transform 180ms ease;}.feedback-banner>a:hover{transform:translateY(-2px);}.feedback-banner>a:active{transform:translateY(1px);}.feedback-qr{transition:transform 220ms ease;}.feedback-qr:hover{transform:rotate(-2deg) scale(1.02);}}
+
+.beta-checklist {padding:28px;margin:32px 0;border:1px solid var(--line);border-radius:18px;background:var(--paper);}
+.beta-checklist h2 {font-family:Georgia,serif;font-size:30px;line-height:1.2;font-weight:400;margin:12px 0;}
+.beta-checklist p {font-size:14px;line-height:1.7;color:var(--muted);}
+.beta-checklist fieldset {border:0;padding:0;margin:22px 0;min-width:0;}
+.beta-checklist legend {font-size:12px;color:var(--forest);font-weight:650;margin-bottom:10px;}
+.beta-checklist label {display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;line-height:1.65;}
+.beta-checklist input {flex:none;width:20px;height:20px;margin:3px 0;accent-color:var(--forest);}
+.beta-checklist label strong {display:block;color:var(--forest);font-size:15px;margin-bottom:4px;}
+.beta-checklist input:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
+.beta-checklist .beta-checklist-note {font-size:12px;}
+@media(max-width:600px){.beta-checklist{padding:20px;}.beta-checklist h2{font-size:26px;}}
+@media(prefers-reduced-motion:no-preference){.beta-checklist label{transition:background-color 180ms ease;}.beta-checklist label:has(input:checked){background:#eef1e5;}}

@@ -20,7 +20,14 @@ test('word recall lessons reuse chapter senses, gate on the word lesson and prec
 });
 test('feedback reports include only explicit report fields and bound their size',()=>{
  const report=makeFeedbackReport({area:'speak',publishing:true,title:' Audio stopped ',steps:'Listen, then change card.',expected:'The next card is silent.',email:'private@example.org',conversation:'private chat',password:'secret'});
- assert.match(report,/Area: speak/);assert.match(report,/Public website/);assert.match(report,/Audio stopped/);
+ assert.match(report,/Area: speak/);assert.match(report,/Device-only website/);assert.match(report,/Audio stopped/);
  for(const secret of ['private@example.org','private chat','secret'])assert.ok(!report.includes(secret));
  assert.ok(makeFeedbackReport({area:'learn',publishing:false,title:'x'.repeat(1000),steps:'x'.repeat(5000),expected:'x'.repeat(5000)}).length<3000);
+});
+
+test('feedback reports distinguish hosted beta from device-only and local builds',()=>{
+ const fields={area:'today',title:'Report',steps:'Test steps',expected:''};
+ assert.match(makeFeedbackReport({...fields,publishing:false,hosted:true}),/Version: Hosted beta/);
+ assert.match(makeFeedbackReport({...fields,publishing:true,hosted:false}),/Version: Device-only website/);
+ assert.match(makeFeedbackReport({...fields,publishing:false,hosted:false}),/Version: Local full app/);
 });

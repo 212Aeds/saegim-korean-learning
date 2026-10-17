@@ -1,9 +1,16 @@
 # Saegim first website testing round
 
-Test the static publishing build first. Its recorded audio, lessons, review, and
-browser progress work without the laptop's model servers. Public accounts,
-cloud sync, live AI, and microphone transcription are separate deployment work;
-do not promise them as part of this static release.
+The live hosted beta is at https://saegim.onrender.com. Its accounts and progress
+use the hosted API and database; tutor replies and transcription use bounded
+Cloudflare free-plan requests. Recorded phrases and device voices handle audio.
+Free-hosting cold starts and AI quotas still apply. The separate device-only
+publishing build excludes accounts and live AI; do not confuse the two builds.
+
+The public testing checklist is at https://saegim.onrender.com/feedback/. Its
+checkmarks are temporary and award no learning progress. In the app's report
+panel, testers can preview, copy, or download explicitly entered details before
+pasting them into the linked Google Form. Clipboard denial has a download and
+manual-selection fallback. No account data or chats are attached automatically.
 
 ## Small initial round
 
@@ -46,7 +53,7 @@ automatically.
 
 - Check the current static build on phone and desktop, keyboard-only navigation,
   reduced-motion preferences, reload persistence, and both recorded voices.
-- Run `npm test`, `npm run audio:check`, and `npm run build:free`.
+- Run `npm test`, `npm run audio:check`, and the build for the intended deployment (`npm run build:hosted` or `npm run build:free`).
 - Publish only the static output, with no environment files or model services.
 - Configure sitemap/canonical URLs only after a real public HTTPS domain exists.
 - Keep unresolved issues in a list with steps, severity, owner, and re-test result.
