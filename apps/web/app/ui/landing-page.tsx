@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import {playKorean,stopKoreanPlayback} from "./speech";
 import { SoriMascot } from "./sori-mascot";
+import { FeedbackBanner } from "./feedback-banner";
 import { FounderStory } from "./founder-story";
 import { lessons } from "../curriculum";
 
@@ -37,10 +38,12 @@ export function LandingPage({
         <div className="landing-nav-actions">
           <a className="public-nav-link" href="#your-path">Explore</a>
           <a className="public-nav-link" href="/learn/">Guides</a>
+          <a className="public-nav-link" href="/feedback/">Feedback</a>
           <span className="free-pill"><span /> Always free</span>
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
       </header>
+      <FeedbackBanner />
 
       <section className="landing-hero" id="home">
         <div className="landing-copy">

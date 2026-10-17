@@ -31,6 +31,7 @@ import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { reviewOverview } from "./ui/review-session";
 import { LearningCollection } from "./ui/learning-collection";
 import { LevelFocus } from "./ui/level-focus";
+import { FeedbackBanner } from "./ui/feedback-banner";
 import { FeedbackReport } from "./ui/feedback-report";
 import { SpeakDeck } from "./ui/speak-deck";
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
@@ -525,6 +526,7 @@ export default function Home() {
         </header>
 
         <div className="page-content">
+          <FeedbackBanner compact />
           <div className="greeting-row">
             <div>
               {tab === "today" && account && (

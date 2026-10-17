@@ -141,3 +141,14 @@ button.landing-mini-card:disabled {cursor:wait;}
 .account-password-toggle {justify-self:start;padding:6px 0;background:none;border:0;color:var(--forest);font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
 .account-password-toggle:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
 @media(prefers-reduced-motion:no-preference){.account-tabs button{transition:background-color 180ms ease,color 180ms ease;}.account-form{animation:section-settle 220ms ease-out;}.site-mascot-logo{transition:transform 220ms ease;}.landing-brand:hover .site-mascot-logo{transform:rotate(-5deg);}}
+
+.feedback-banner {display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;margin:22px 0 0;background:#eef1e5;border:1px solid #d8dfcc;border-radius:16px;}
+.feedback-beta-label {font-size:10px;font-weight:750;letter-spacing:.12em;color:var(--forest);}
+.feedback-banner p {margin:7px 0 0;font-size:14px;line-height:1.6;color:var(--ink);max-width:650px;}
+.feedback-banner>a {flex-shrink:0;display:block;padding:10px 16px;border-radius:11px;background:var(--forest);color:#fff;font-size:14px;font-weight:650;text-decoration:none;}
+.feedback-link-note {display:block;font-size:10px;font-weight:400;opacity:.85;margin-top:4px;}
+.feedback-banner-compact {margin:0 0 24px;padding:16px 20px;}
+.feedback-banner-compact p {font-size:12px;}
+.feedback-banner a:focus-visible {outline:3px solid var(--forest);outline-offset:4px;}
+@media(max-width:600px){.feedback-banner{align-items:flex-start;flex-direction:column;gap:12px;padding:18px;}.feedback-banner>a{align-self:flex-start;}.landing-nav{height:auto;min-height:78px;gap:12px;flex-wrap:wrap;padding:14px 0;}.landing-nav-actions{flex-wrap:wrap;gap:12px;}.guide-nav nav{flex-wrap:wrap;}}
+@media(prefers-reduced-motion:no-preference){.feedback-banner{animation:section-settle 300ms ease-out both;}.feedback-banner>a,.public-nav-link{transition:background-color 180ms ease,transform 180ms ease;}.feedback-banner>a:hover{transform:translateY(-2px);}.feedback-banner>a:active{transform:translateY(1px);}.feedback-qr{transition:transform 220ms ease;}.feedback-qr:hover{transform:rotate(-2deg) scale(1.02);}}
