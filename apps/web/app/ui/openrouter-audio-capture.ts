@@ -21,7 +21,7 @@ export function releaseCapture(capture: OpenRouterCapture | undefined) {
   capture.processor.disconnect();
   capture.mute.disconnect();
   capture.stream.getTracks().forEach((track) => track.stop());
-  if (capture.context.state !== "closed") void capture.context.close();
+  if (capture.context.state !== "closed") void capture.context.close().catch(() => {});
   capture.chunks.forEach((chunk) => chunk.fill(0));
   capture.chunks = [];
 }
@@ -45,19 +45,34 @@ export function encodeWav(capture: OpenRouterCapture) {
   const trimmed = raw.slice(Math.max(0, first - padding), Math.min(raw.length, last + padding + 1));
   raw.fill(0);
   const gain = Math.min(3, 0.85 / peak);
-  const output = new ArrayBuffer(44 + trimmed.length * 2);
+  // Normalize hardware rates (including 44.1/48 kHz) before upload, without
+  // asking mobile browsers to decode their own MediaRecorder container.
+  const outputRate = 16000;
+  const length = Math.max(1, Math.round(trimmed.length * outputRate / capture.context.sampleRate));
+  const pcm = new Float32Array(length);
+  const ratio = capture.context.sampleRate / outputRate;
+  for (let i = 0; i < length; i++) {
+    const start = i * ratio, end = Math.min(trimmed.length, (i + 1) * ratio);
+    let sum = 0, weight = 0;
+    for (let j = Math.floor(start); j < Math.ceil(end); j++) {
+      const overlap = Math.max(0, Math.min(end, j + 1) - Math.max(start, j));
+      sum += trimmed[j] * overlap; weight += overlap;
+    }
+    pcm[i] = weight ? sum / weight : 0;
+  }
+  const output = new ArrayBuffer(44 + pcm.length * 2);
   const view = new DataView(output);
   const write = (offset: number, value: string) => [...value].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
   write(0, "RIFF"); view.setUint32(4, output.byteLength - 8, true); write(8, "WAVE");
   write(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-  view.setUint32(24, capture.context.sampleRate, true); view.setUint32(28, capture.context.sampleRate * 2, true);
-  view.setUint16(32, 2, true); view.setUint16(34, 16, true); write(36, "data"); view.setUint32(40, trimmed.length * 2, true);
+  view.setUint32(24, outputRate, true); view.setUint32(28, outputRate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true); write(36, "data"); view.setUint32(40, pcm.length * 2, true);
   let offset = 44;
-  for (const sample of trimmed) {
+  for (const sample of pcm) {
     const clamped = Math.max(-1, Math.min(1, sample * gain));
     view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
     offset += 2;
   }
-  trimmed.fill(0);
+  trimmed.fill(0); pcm.fill(0);
   return output;
 }

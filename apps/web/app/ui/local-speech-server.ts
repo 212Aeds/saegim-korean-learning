@@ -46,7 +46,12 @@ export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal):
   const response = await fetch(`${localSpeechUrl || hostedApiUrl}/v1/speech/transcribe`, {
     method:"POST", credentials:localSpeechUrl ? "omit" : "include", headers:localSpeechUrl ? {} : {"Content-Type":"audio/wav","X-Saegim-Speech-Consent":"true"}, body:localSpeechUrl ? form : wav, signal:signal ? AbortSignal.any([signal,AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000), cache:"no-store",
   });
+  if (!response.ok) {
+    throw Error(response.status === 401 ? "Sign in again to use speech. You can still write your answer."
+      : response.status === 429 ? "Speech practice has reached its free limit or is busy. Try again later, or write your answer."
+      : "Speech could not be checked right now. Try again shortly, or write your answer.");
+  }
   const body = await response.json();
-  if (!response.ok || typeof body.transcript !== "string") throw Error(body.error || "Local transcription failed.");
+  if (typeof body.transcript !== "string" || body.transcript.length > 2000) throw Error("The transcript was incomplete. Try again or write your answer.");
   return body.transcript;
 }

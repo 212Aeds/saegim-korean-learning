@@ -317,22 +317,24 @@ export async function playElevenLabsKorean(
       !response.headers.get("content-type")?.toLowerCase().startsWith("audio/"))
     )
       throw new Error();
-    const blob = localSpeechUrl || recorded ? await localAudio(text, voice) : await response!.blob();
+    // A packaged clip has a public URL already. Start it directly inside the
+    // tap gesture so mobile autoplay rules do not reject an awaited fetch.
+    const blob = recorded ? undefined : localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
     if (
       version !== playbackVersion ||
       controller.signal.aborted ||
-      !blob.size ||
-      blob.size > 5 * 1024 * 1024
+      (blob && (!blob.size || blob.size > 5 * 1024 * 1024))
     ) {
       throw new Error();
     }
-    const url = URL.createObjectURL(blob);
+    const url = recorded ?? URL.createObjectURL(blob!);
     const audio = new Audio(url);
-    activeUrl = url;
+    audio.preload = "auto";
+    activeUrl = recorded ? undefined : url;
     activeAudio = audio;
     audio.playbackRate = Math.min(1.4, Math.max(0.65, rate));
     const release = () => {
-      URL.revokeObjectURL(url);
+      if (!recorded) URL.revokeObjectURL(url);
       if (activeAudio === audio) {
         activeAudio = undefined;
         activeUrl = undefined;

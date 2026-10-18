@@ -13,10 +13,10 @@ test('recorded letter names resolve by selected voice and point to real WAV file
 test('recorded playback needs no speech server or paid provider and retains pace',async()=>{
  const oldFetch=global.fetch,oldWindow=global.window,oldAudio=global.Audio;let audio,calls=[];
  global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null},speechSynthesis:{cancel(){}}};
- global.Audio=class{constructor(){audio=this;}async play(){}pause(){}};
+ global.Audio=class{constructor(url){audio=this;this.src=url;}async play(){}pause(){}};
  global.fetch=async(url,options)=>{calls.push(url);assert.ok(url.startsWith('/audio/lessons/'));assert.equal(options.method,undefined);return {ok:true,headers:new Headers({'content-type':'audio/wav'}),blob:async()=>new Blob(['audio'])};};
  const {playElevenLabsKorean,stopKoreanPlayback}=require('../apps/web/app/ui/speech.ts');
- try{assert.equal((await playElevenLabsKorean('ㄱ','chris',1.2)).source,'catalog');assert.equal(audio.playbackRate,1.2);assert.equal(calls.length,1);}finally{stopKoreanPlayback();global.fetch=oldFetch;global.window=oldWindow;global.Audio=oldAudio;}
+ try{assert.equal((await playElevenLabsKorean('ㄱ','chris',1.2)).source,'catalog');assert.equal(audio.playbackRate,1.2);assert.equal(calls.length,0);assert.match(audio.src,/^\/audio\/lessons\//);}finally{stopKoreanPlayback();global.fetch=oldFetch;global.window=oldWindow;global.Audio=oldAudio;}
 });
 
 test('release audio audit verifies assets and rejects unsafe, mismatched, or missing files',()=>{
