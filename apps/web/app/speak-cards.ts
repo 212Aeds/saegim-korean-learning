@@ -1,4 +1,4 @@
-import { opinionSpeaking } from "./opinion-speaking";
+import { learningPhrases } from "./phrase-lessons";
 import { lessons } from "./curriculum";
 import { journeyTopics } from "./journey-content";
 import { hangulLetters } from "./more-lessons";
@@ -360,10 +360,17 @@ const topicExampleCards: SpeakingCard[] = journeyTopics.filter(topic=>topic.path
   grammarTitle:"One familiar word, one useful sentence",
   grammarTip:`${word} means ${meaning} in this chapter. Listen to the whole sentence, then recall it before revealing the guide.`,
 })));
-const conversationCards: SpeakingCard[] = [...topicExampleCards,...lessons
+const phraseCards: SpeakingCard[] = learningPhrases.map(phrase=>({
+  id:`speak-${phrase.level === "stretch" ? "opinion" : "phrase"}-${phrase.id}`,lessonId:phrase.lessonId,kind:"phrase",
+  promptLabel:phrase.topic,prompt:phrase.korean,korean:phrase.korean,meaning:phrase.meaning,
+  romanization:transcriptRomanization(phrase.korean),focus:phrase.focus,focusMeaning:phrase.focusMeaning,
+  focusRomanization:transcriptRomanization(phrase.focus),grammarTitle:phrase.topic,grammarTip:phrase.tip,
+}));
+const conversationCards: SpeakingCard[] = [...phraseCards.filter(card=>!card.id.startsWith("speak-opinion-")),...topicExampleCards,...lessons
   .filter(
     (lesson) =>
       lesson.category === "Conversation" &&
+      !learningPhrases.some(phrase=>phrase.lessonId===lesson.id) &&
       lesson.briefing &&
       /^[가-힣][가-힣\s,.!?]*$/u.test(lesson.briefing.example),
   )
@@ -382,11 +389,7 @@ const conversationCards: SpeakingCard[] = [...topicExampleCards,...lessons
     grammarTitle: lesson.briefing!.focus,
     grammarTip: lesson.briefing!.explanation,
   }))];
-const opinionCards: SpeakingCard[] = opinionSpeaking.map(([id,korean,meaning,focus,focusMeaning,grammarTip])=>({
-  id:`speak-opinion-${id}`,lessonId:"opinions-dialogue",kind:"phrase",promptLabel:"Opinions and connected ideas",
-  prompt:korean,korean,meaning,romanization:transcriptRomanization(korean),focus,focusMeaning,
-  focusRomanization:transcriptRomanization(focus),grammarTitle:"Give a view, then connect an idea",grammarTip,
-}));
+const opinionCards = phraseCards.filter(card=>card.id.startsWith("speak-opinion-"));
 
 export function speakingCardsForProfile(
   profile: LearningProfile,

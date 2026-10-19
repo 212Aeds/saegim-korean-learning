@@ -19,7 +19,7 @@ test('chapter progress needs all four actual lessons and ignores duplicate or un
 });
 test('a complete course review collection can be stored without the previous 500-card failure',()=>{
  const cards=deduplicateReviewItems(lessons.flatMap(l=>createQuestionReviewItems(l.id,l.questions)));
- assert.ok(cards.length>500);assert.equal(lessons.length,140);
+ assert.ok(cards.length>500);assert.equal(lessons.length,148);
  const full={...initialProgress,completed:lessons.length,completedLessonIds:lessons.map(l=>l.id),reviewItems:cards};
  const saved=progressSchema.safeParse(full);assert.equal(saved.success,true,saved.error?.message);
  assert.ok(Buffer.byteLength(JSON.stringify(full))>100*1024);

@@ -1,4 +1,5 @@
 import { consonantAnswers, consonantNameQuestion } from "./ui/hangul-answers";
+import { phraseLessons } from "./phrase-lessons";
 import { moreLessons } from "./more-lessons";
 import { foundationLessons } from "./foundation-lessons";
 import { journeyLessons } from "./journey-content";
@@ -385,6 +386,7 @@ export const lessons: Lesson[] = [
   ...foundationLessons,
   ...consolidationLessons,
   ...wordRecallLessons,
+  ...phraseLessons,
 ];
 
 export function shuffle<T>(items: T[]): T[] {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "./icons";
 import { FeedbackToggle } from "./feedback-toggle";
+import { PhrasePicker } from "./phrase-picker";
 import { FlipCard } from "./flip-card";
 import { WordReference } from "./word-reference";
 import { LevelFocus } from "./level-focus";
@@ -159,26 +160,8 @@ export function SpeakDeck({
           style={{ transform: `scaleX(${(index + 1) / speakingCards.length})` }}
         />
       </div>
-      <label className="phrase-picker">
-        {card.kind === "pronunciation"
-          ? "Choose a familiar letter"
-          : card.kind === "word" ? "Choose a useful word" : "Choose a useful phrase"}
-        <select
-          value={card.id}
-          disabled={completing}
-          onChange={(event) => {
-            setFlipped(false);
-            onNavigate(event.target.value);
-          }}
-        >
-          {speakingCards.map((phrase) => (
-            <option key={phrase.id} value={phrase.id}>
-              {completedIds.includes(phrase.id) ? "✓ " : ""}
-              {phrase.meaning}
-            </option>
-          ))}
-        </select>
-      </label>
+      <PhrasePicker cards={speakingCards} current={card} completedIds={completedIds} disabled={completing}
+        onChoose={id=>{setFlipped(false);onNavigate(id);}} />
 
       <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : card.korean.length>30 ? "is-connected-card" : ""} ${flipped ? "is-flipped" : ""}`}>
         <div className="speak-card-top">
