@@ -14,6 +14,8 @@ export const conversationGuides = {
 } satisfies Record<LearningProfile["level"], { title: string; detail: string; goal: string; turns: number; starters: string[] }>;
 
 export const conversationSituations = [
+  { id:"weather",title:"Weather and seasons",prompt:"Let's talk about the weather and our favorite seasons at my level. Ask one question at a time.",phrase:"날씨가 좋아요.",meaning:"The weather is nice." },
+  { id:"shopping",title:"At a shop",prompt:"You are a shop assistant. Help me practice asking a price and requesting a receipt at my level. Use fictional prices.",phrase:"이거 얼마예요?",meaning:"How much is this?" },
   { id: "everyday", title: "Everyday life", prompt: "Let’s talk about everyday life at my level.", phrase: "다시 말해 주세요.", meaning: "Please say it again." },
   { id: "cafe", title: "At a café", prompt: "You are the café staff. Help me order a drink at my level.", phrase: "물을 마셔요.", meaning: "I drink water." },
   { id: "travel", title: "Finding your way", prompt: "Let’s practice asking for directions at my level.", phrase: "역이 어디예요?", meaning: "Where is the station?" },

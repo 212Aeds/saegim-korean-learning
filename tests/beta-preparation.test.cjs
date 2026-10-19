@@ -6,7 +6,7 @@ const {learningRoute}=require('../apps/web/app/learning-profile.ts');
 const {isLessonUnlocked}=require('../apps/web/app/learning-pathways.ts');
 const {makeFeedbackReport}=require('../apps/web/app/ui/feedback-report-text.ts');
 test('word recall lessons reuse chapter senses, gate on the word lesson and precede exchanges',()=>{
- assert.equal(wordRecallLessons.length,14);
+ assert.equal(wordRecallLessons.length,16);
  const route=learningRoute({level:'basic',reasons:['travel']}).map(l=>l.id);
  for(const lesson of wordRecallLessons){
    const source=lessons.find(l=>l.id===lesson.prerequisiteLessonIds[0]);

@@ -22,3 +22,21 @@ test('a microphone that produces no audio frames fails promptly and releases cap
  global.AudioContext=class{sampleRate=48000;state='running';createMediaStreamSource(){return node;}createScriptProcessor(){return {...node};}createGain(){return {...node,gain:{value:1}};}async resume(){}async close(){closed++;this.state='closed';}};
  try{const recording=recordConversationTurn(new AbortController().signal,()=>{});await new Promise(resolve=>setImmediate(resolve));assert.equal(typeof watchdog,'function');watchdog();await assert.rejects(recording,/no audio is arriving/);assert.equal(stopped,1);assert.equal(closed,1);}finally{Object.defineProperty(global,'navigator',nav);global.AudioContext=oldAudio;global.window=oldWindow;}
 });
+
+
+test('an audio stream that stalls after its first frame fails promptly and releases the mic',async()=>{
+ const nav=Object.getOwnPropertyDescriptor(global,'navigator'),oldAudio=global.AudioContext,oldWindow=global.window;
+ let watchdog,processor,stopped=0,settled=false;const node={connect(){},disconnect(){}};
+ Object.defineProperty(global,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){stopped++;}}]})}}});
+ global.window={setTimeout(callback,ms){if(ms===4000)watchdog=callback;return 1;},clearTimeout(){}};
+ global.AudioContext=class{sampleRate=48000;state='running';createMediaStreamSource(){return node;}createScriptProcessor(){processor={...node};return processor;}createGain(){return {...node,gain:{value:1}};}async resume(){}async close(){this.state='closed';}};
+ const controller=new AbortController();let outcome;
+ try{
+  outcome=recordConversationTurn(controller.signal,()=>{}).then(()=>{settled=true;return null;},error=>{settled=true;return error;});
+  await new Promise(resolve=>setImmediate(resolve));
+  processor.onaudioprocess({inputBuffer:{getChannelData:()=>new Float32Array(4096)}});
+  watchdog();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(settled,true,'lost audio frames must not leave recording running until the full clip timeout');
+  assert.match((await outcome).message,/audio stopped arriving/);assert.equal(stopped,1);
+ }finally{controller.abort();await outcome;Object.defineProperty(global,'navigator',nav);global.AudioContext=oldAudio;global.window=oldWindow;}
+});

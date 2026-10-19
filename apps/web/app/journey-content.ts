@@ -13,6 +13,28 @@ type Topic = {
 };
 export const journeyTopics: Topic[] = [
   {
+    id:"seasons", title:"Weather and seasons", category:"Everyday", pathwayId:"daily-life",
+    items:[
+      ["날씨","weather","날씨가 좋아요.","The weather is nice."],
+      ["계절","season of the year","계절이 바뀌어요.","The season changes."],
+      ["봄","spring","봄을 좋아해요.","I like spring."],
+      ["여름","summer","여름은 더워요.","Summer is hot."],
+      ["가을","autumn; fall","가을은 시원해요.","Autumn is cool."],
+      ["겨울","winter","겨울은 추워요.","Winter is cold."],
+    ], dialogue:["날씨가 좋아요. 봄을 좋아해요.","The weather is nice. I like spring."],
+  },
+  {
+    id:"shopping", title:"Shopping essentials", category:"Everyday", pathwayId:"daily-life", dialoguePrerequisites:["polite-requests"],
+    items:[
+      ["가게","shop; store","가게에 가요.","I go to a shop."],
+      ["가격","price","가격이 비싸요.","The price is high."],
+      ["돈","money","돈이 있어요.","I have money."],
+      ["카드","card","카드가 있어요.","I have a card."],
+      ["현금","cash","현금이 있어요.","I have cash."],
+      ["영수증","receipt","영수증을 주세요.","Please give me the receipt."],
+    ], dialogue:["가게에 가요. 영수증을 주세요.","I go to a shop. Please give me the receipt."],
+  },
+  {
     id:"clothes", title:"Clothes and getting ready", category:"Everyday", pathwayId:"daily-life",
     items:[
       ["옷","clothes","옷을 사요.","I buy clothes."],

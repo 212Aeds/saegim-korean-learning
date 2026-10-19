@@ -18,7 +18,7 @@ test('chapter progress needs all three actual lessons and ignores duplicate or u
 });
 test('a complete course review collection can be stored without the previous 500-card failure',()=>{
  const cards=deduplicateReviewItems(lessons.flatMap(l=>createQuestionReviewItems(l.id,l.questions)));
- assert.ok(cards.length>500);assert.equal(lessons.length,116);
+ assert.ok(cards.length>500);assert.equal(lessons.length,124);
  const full={...initialProgress,completed:lessons.length,completedLessonIds:lessons.map(l=>l.id),reviewItems:cards};
  const saved=progressSchema.safeParse(full);assert.equal(saved.success,true,saved.error?.message);
  assert.ok(Buffer.byteLength(JSON.stringify(full))>100*1024);
@@ -48,6 +48,6 @@ test('new speaking examples keep saved IDs and unlock only after their lesson pr
  assert.ok(earned.some(c=>c.korean==='창문을 열어요.'));
 });
 test('new tutor situations keep the existing conversation request contract',()=>{
- for(const scenario of ['home','stay','messages','plans'])
+ for(const {id:scenario} of require('../apps/web/app/ui/conversation-guide.ts').conversationSituations)
   assert.equal(conversationRequestSchema.safeParse({messages:[{role:'user',content:'안녕하세요'}],level:'basic',scenario,consent:true}).success,true);
 });

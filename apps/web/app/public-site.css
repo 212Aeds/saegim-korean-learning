@@ -225,3 +225,7 @@ button.landing-mini-card:disabled {cursor:wait;}
 .feature-guide-settings {font:inherit;font-size:13px;color:var(--forest);background:none;border:0;text-decoration:underline;padding:14px 0;cursor:pointer;min-height:44px;}
 @media(max-width:540px) {.feature-guide-links {grid-template-columns:1fr;} .feature-guide summary span {display:block;margin:6px 0 0;}}
 @media(prefers-reduced-motion:no-preference) {.feature-guide-links button {transition:background .18s,border-color .18s;} .feature-guide[open] .feature-guide-links {animation:landing-arrive .22s ease-out;}}
+
+.speech-pause-control {display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:13px;color:var(--soft-ink);margin:14px 0;}
+.speech-pause-control select {font:inherit;font-size:16px;min-height:44px;max-width:100%;border:1px solid var(--line);border-radius:10px;background:var(--paper-strong);color:var(--ink);padding:8px 12px;}
+.speech-pause-control select:focus-visible {outline:3px solid var(--forest);outline-offset:2px;}

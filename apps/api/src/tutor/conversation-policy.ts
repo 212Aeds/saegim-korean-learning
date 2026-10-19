@@ -10,6 +10,8 @@ const levels: Record<ConversationRequest["level"], string> = {
 
 export function conversationPolicy(input: ConversationRequest) {
   const situations: Partial<Record<NonNullable<ConversationRequest["scenario"]>,string>> = {
+    weather:"Practice everyday weather and favorite seasons. Familiar examples: 날씨가 좋아요. 봄을 좋아해요. Do not claim to know current weather; use a fictional situation.",
+    shopping:"Practice shopping, prices, and asking for a receipt. Familiar examples: 이거 얼마예요? 영수증을 주세요. Use fictional prices; never request payment details.",
     home:"Practice a home or routine. Familiar examples: 집에 가요. 거실에서 쉬어요.",
     stay:"Practice arriving at accommodation and asking for help. Familiar examples: 예약이 있어요. 열쇠를 주세요.",
     messages:"Practice a message or fictional contact details. Familiar examples: 메시지를 보내요. 이메일을 읽어요. Use fictional addresses and numbers; do not request real private contact information.",

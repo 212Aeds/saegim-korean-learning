@@ -27,6 +27,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
 }) {
   const [voice,setVoice]=useState<ElevenLabsVoice>("jessica"), [pace,setPace]=useState(1);
   const [ready,setReady]=useState(false), [connecting,setConnecting]=useState(true);
+  const [pauseMs,setPauseMs]=useState(1300);
   const [state,setState]=useState<PracticeState>("ready");
   const [notice,setNotice]=useState("Getting speech practice ready. You can listen or write while you wait.");
   const [written,setWritten]=useState(""), [heard,setHeard]=useState("");
@@ -89,7 +90,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     setState("starting");setNotice("Allow microphone access if your browser asks. Wait for Listening before speaking.");setMatch(null);setHeard("");setLevel(0);stopKoreanPlayback();
     let wav:ArrayBuffer|undefined;
     try {
-      wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{silenceMs:1800,onReady:stop=>{
+      wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{silenceMs:pauseMs,onReady:stop=>{
         if(attempt!==version.current)return;
         finish.current=stop;
         if(stop){setState("listening");setNotice("Listening. Say the phrase, then pause—or tap Stop & check.");}
@@ -115,6 +116,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         {active && <button type="button" className="button button-quiet" onClick={()=>cancel()}>{state==="playing"?"Stop audio":"Cancel"}</button>}
       </div>
       {!ready && <button type="button" className="button button-quiet" disabled={connecting||active} onClick={()=>void reconnect()}>{connecting?"Connecting speech…":"Retry speech connection"}</button>}
+      <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>setPauseMs(Number(event.target.value))}><option value={900}>Quick · short words</option><option value={1300}>Natural · everyday phrases</option><option value={2200}>Unhurried · more thinking time</option></select></label>
       <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}

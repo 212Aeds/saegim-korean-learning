@@ -14,3 +14,11 @@ test('checked answers do not intercept unrelated Korean questions or conversatio
  const service=new TutorService({isAvailable:()=>false},{});
  await assert.rejects(service.answer('test','How do I build a Hangul syllable?','Hangul',{messages:[{role:'user',content:'Hello'}],level:'new',consent:true}),/unavailable/);
 });
+
+test('common polite greeting questions use a stable lesson answer without inference or quota',async()=>{
+ const service=new TutorService({isAvailable:()=>false,answer:()=>{throw Error('Must not call inference');}},{allowFreeInference:()=>{throw Error('Must not spend quota');}});
+ const answer=await service.answer('test-account','How do I say hello politely in Korean?','Greetings');
+ assert.match(answer.explanation,/안녕하세요/);assert.match(answer.hint,/National Institute of Korean Language/);
+ const {tutorAnswerSchema}=require('../apps/api/src/tutor/tutor.schema.ts');assert.equal(tutorAnswerSchema.safeParse(answer).success,true);
+ await assert.rejects(service.answer('test-account','How do I say hello politely in Korean and introduce myself?','Greetings'),/unavailable/);
+});

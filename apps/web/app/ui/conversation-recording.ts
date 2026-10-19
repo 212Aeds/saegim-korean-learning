@@ -96,6 +96,7 @@ export async function recordConversationTurn(
         if (settled) return;
         inputFrames++;
         window.clearTimeout(inputTimer);
+        inputTimer = window.setTimeout(()=>finish(false,new Error("Microphone audio stopped arriving. Check your input or Bluetooth connection, then tap Speak again.")),4000);
         const samples = event.inputBuffer.getChannelData(0);
         let energy = 0;
         for (const sample of samples) energy += sample * sample;
