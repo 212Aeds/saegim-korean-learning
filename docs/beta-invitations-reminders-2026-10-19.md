@@ -1,0 +1,7 @@
+# Beta invitations and optional study reminders
+
+Settings offers an unchecked opt-in to prepare a calendar file. The learner selects a time and either 14 daily events or eight weekly events, downloads the file and reviews it in their calendar before import. It contains no account details, uses floating local time, a display alarm, a transparent five-minute event and finite recurrence. Saegim does not send email or subscribe anyone. Imported events must be removed in the calendar; the UI explains this and warns against duplicate imports. Alert delivery and timezone interpretation belong to the calendar application. Calendar format checked against RFC 5545: https://www.rfc-editor.org/rfc/rfc5545.html .
+
+A public beta invitation offers user-triggered native sharing or clipboard/manual URL fallback, with no contact upload, referral tracking or support/payment buttons. FAQ describes optional matching voices and free limits. Conversation playback distinguishes preparation from actual playback using the audio play promise, retaining cancellation guards and both existing presets. No speed or quality benchmark is claimed.
+
+Email remains off: a future sender needs verified domain/sender configuration, separately recorded opt-in, unsubscribe and suppression handling, frequency/quiet-time controls and delivery limits before sending. Existing account emails are not marketing consent. No new provider, paid integration, credentials, database schema or account/progress changes are included.

@@ -48,6 +48,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [calling, setCalling] = useState(false),
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
+  const [audioStatus,setAudioStatus]=useState("");
   const [pendingMessage, setPendingMessage] = useState("");
   const [pace,setPace] = useState(1);
   const [phraseAdded,setPhraseAdded]=useState(false);
@@ -104,19 +105,22 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function listen(text: string, partner = voice) {
     const attempt=++listeningAttempt.current;
     setPlaying(true);
+    setNotice("");
+    setAudioStatus("Preparing your partner’s voice…");
     try {
       const result = await playElevenLabsKorean(text, partner, pace, {
         naturalOnly: true,
         consistentVoice: true,
         conversationVoice: true,
         waitForEnd: true,
+        onPlaybackStart:()=>{if(mounted.current&&attempt===listeningAttempt.current)setAudioStatus("Your partner is speaking…");},
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current)
         setNotice(browserVoices&&!voiceReady?"Set up the matching voices above to hear new replies. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
     } catch {
       if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
-      if (mounted.current && attempt===listeningAttempt.current) setPlaying(false);
+      if (mounted.current && attempt===listeningAttempt.current){setPlaying(false);setAudioStatus("");}
     }
   }
   async function replyTo(text: string, signal?: AbortSignal): Promise<Reply> {
@@ -295,12 +299,13 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         const reply = await replyTo(text, controller.signal);
         setDraft("");
         if (controller.signal.aborted) break;
-        setPhase(`${voice === "chris" ? "Chris" : "Jessica"} is speaking…`);
+        setPhase("Preparing your partner’s voice…");
         const playback = await playElevenLabsKorean(reply.korean, voice, pace, {
           naturalOnly: true,
           consistentVoice: true,
           conversationVoice: true,
           waitForEnd: true,
+          onPlaybackStart:()=>{if(!controller.signal.aborted)setPhase(`${voice === "chris" ? "Chris" : "Jessica"} is speaking…`);},
         });
         if (!playback.played && !controller.signal.aborted)
           throw new Error(
@@ -398,6 +403,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
         <label className="preference-toggle"><input type="checkbox" checked={speakReplies} disabled={!voiceReady} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
+        {playing && <p role="status">{audioStatus}</p>}
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
       <section className="conversation-guide" aria-label="Conversation practice for your level">

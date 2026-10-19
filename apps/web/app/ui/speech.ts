@@ -12,6 +12,7 @@ export type KoreanSpeechOptions = {
   consistentVoice?: boolean;
   conversationVoice?: boolean;
   waitForEnd?: boolean;
+  onPlaybackStart?: () => void;
 };
 export type ElevenLabsVoice = "jessica" | "chris";
 const elevenLabsVoiceStorageKey = "sori-elevenlabs-voice";
@@ -370,6 +371,7 @@ export async function playElevenLabsKorean(
       audio.onerror = () => finish(false);
     });
     await audio.play();
+    if(!controller.signal.aborted && version===playbackVersion)fallbackOptions.onPlaybackStart?.();
     window.clearTimeout(timeout);
     if (controller.signal.aborted || version !== playbackVersion) {
       audio.pause();
