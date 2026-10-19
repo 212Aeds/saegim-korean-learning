@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import {playKorean,stopKoreanPlayback} from "./speech";
 import { SoriMascot } from "./sori-mascot";
 import { FeedbackBanner } from "./feedback-banner";
+import { LandingSampler } from "./landing-sampler";
 import { FounderStory } from "./founder-story";
 import { lessons } from "../curriculum";
 
@@ -43,7 +44,6 @@ export function LandingPage({
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
       </header>
-      <FeedbackBanner />
 
       <section className="landing-hero" id="home">
         <div className="landing-copy">
@@ -56,6 +56,7 @@ export function LandingPage({
           <button className="button button-dark landing-cta" onClick={onCreateAccount}>
             {freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
+          <a className="landing-preview-link" href="#try-korean">Try a lesson preview first <span aria-hidden="true">↓</span></a>
           <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "A free account keeps your lessons and reviews together."}</span>
         </div>
         <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">
@@ -100,6 +101,8 @@ export function LandingPage({
           ["03", "RECALL · REVISIT", "Keep a little more", "Turn your lessons into review cards. Give tricky answers another try."],
         ].map(([number, sample, title, text]) => <article key={number}><span className="public-step-number">{number}</span><div className="public-path-sample" aria-hidden="true">{sample}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
+      <LandingSampler onStart={onCreateAccount} />
+      <FeedbackBanner />
       <FounderStory />
       <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
       <section className="public-faq" aria-labelledby="public-faq-title"><div><span className="micro-label">BEFORE YOU BEGIN</span><h2 id="public-faq-title">A few helpful answers.</h2></div><div>{[
