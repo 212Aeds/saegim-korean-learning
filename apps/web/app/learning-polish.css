@@ -136,3 +136,6 @@
  .speak-deck-navigation .speak-arrow {min-width:46px;min-height:46px;touch-action:manipulation;}
  .mobile-nav button {font-size:10px;}
 }
+
+.speak-flashcard.is-connected-card .speak-card-body h3 {font-size:clamp(26px,4.8vw,42px);line-height:1.55;letter-spacing:-.025em;word-break:keep-all;overflow-wrap:anywhere;}
+.hangul-large .speak-flashcard.is-connected-card .speak-card-body h3 {font-size:clamp(32px,5.6vw,50px);}

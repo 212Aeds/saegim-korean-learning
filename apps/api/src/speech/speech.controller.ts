@@ -10,7 +10,7 @@ import { KoreanSpeechProvider, SpeechProviderError } from "./speech-provider";
 import { SpeechAudioCacheService } from "./speech-audio-cache.service";
 
 const maxBytes = 2 * 1024 * 1024;
-const maxSeconds = 15;
+const maxSeconds = 30;
 
 function hasRecordingConsent(request: Request) {
   return request.header("x-saegim-speech-consent") === "true" || request.header("x-sori-speech-consent") === "true";
@@ -46,8 +46,8 @@ export class SpeechClipMiddleware implements NestMiddleware {
   }
 }
 
-function validateWav(audio: Buffer) {
-  const invalid = () => new BadRequestException("Use a valid mono PCM WAV clip of up to 15 seconds and 2 MB.");
+export function validateWav(audio: Buffer) {
+  const invalid = () => new BadRequestException("Use a valid mono PCM WAV clip of up to 30 seconds and 2 MB.");
   if (audio.length < 44 || audio.length > maxBytes ||
       audio.toString("latin1", 0, 4) !== "RIFF" || audio.toString("latin1", 8, 12) !== "WAVE" ||
       audio.readUInt32LE(4) + 8 !== audio.length) throw invalid();

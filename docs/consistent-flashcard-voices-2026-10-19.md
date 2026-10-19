@@ -1,0 +1,11 @@
+# Flashcard voices, placement, and longer pauses
+
+The missing-catalog path in playElevenLabsKorean used browser TTS even when a named Chris/Jessica voice was selected. Added an explicit consistentVoice option for authored lessons, speaking/review cards, guided examples, and practice. Missing audio now fails visibly instead of swapping voices. Dynamic AI conversation keeps its existing browser-speech capability; this change does not claim a hosted natural-voice synthesis service.
+
+Prepared missing recordings locally with the same Supertonic 3 M1/F1 presets and recording-quality settings as the original catalog. The preparation command now supports --flashcards, limits spoken text to Korean, and includes the authored opinions deck. The catalog coverage test checks both voices for every published speaking deck and pronounceable lesson-review front. Letter-building expressions keep their written prompts without a misleading spoken-word button.
+
+Placement now separates letters (new), readable words (Hangul), vocabulary and learned foundation phrases (basic), everyday sentence exchanges (intermediate), and eight authored connected-opinion cards (advanced). Completed IDs and review history are preserved; old saved cursors fall back to an eligible card when needed. Advanced material covers reasons, comparisons, conditions, preferences, and polite disagreement. References remain available for focus words and editorial status remains explicit.
+
+Pause choices are 3/5/10 seconds, default 3, persisted locally across remounted cards and shared with conversation practice. Conversation uses the same 3-second default at every level when no explicit preference exists; thinking time still varies by level. Recording and API duration are bounded at 30 seconds so a long pause fits; the 2 MB PCM bound, consent, quotas, and paid-provider controls remain unchanged.
+
+Optional local GPU preparation used an isolated ONNX Runtime 1.23.2 CUDA package in ignored work/, without replacing the installed speech runtime or changing production dependencies. Sources: https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html ; https://krdict.korean.go.kr/eng/dicSearch/SearchView?ParaWordNo=80259&nation=eng ; https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=보다

@@ -31,3 +31,12 @@ test('release audio audit verifies assets and rejects unsafe, mismatched, or mis
 test('starter words and greetings resolve to recorded audio in both voices',()=>{
  for(const phrase of ['가방','나무','바다','우유','죄송합니다'])for(const voice of ['chris','jessica'])assert.ok(recordedAudioUrl(phrase,voice),`${voice}: ${phrase}`);
 });
+
+test('every published speaking card and pronounceable lesson review front has both named recordings',()=>{
+ const {lessons}=require('../apps/web/app/curriculum.ts'),{speakingCardsForProfile}=require('../apps/web/app/speak-cards.ts');
+ const {flashcardSpeechText}=require('../apps/web/app/ui/recorded-audio.ts');
+ const texts=new Set(lessons.flatMap(l=>l.questions.map(q=>flashcardSpeechText(q.korean))).filter(Boolean));
+ for(const level of ['new','hangul','basic','intermediate','advanced'])for(const completed of [[],lessons.map(l=>l.id)])for(const card of speakingCardsForProfile({level,reasons:['family','travel','food','living']},completed))texts.add(card.korean);
+ for(const text of texts)for(const voice of ['chris','jessica'])assert.ok(recordedAudioUrl(text,voice),`${voice}: ${text}`);
+ assert.equal(flashcardSpeechText('ㄱ + ㅏ'),undefined);assert.equal(flashcardSpeechText('ㄱ'),'기역');
+});

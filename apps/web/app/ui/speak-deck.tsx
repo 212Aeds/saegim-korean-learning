@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "./icons";
 import { FeedbackToggle } from "./feedback-toggle";
 import { FlipCard } from "./flip-card";
+import { WordReference } from "./word-reference";
 import { LevelFocus } from "./level-focus";
 import { playCorrectAnswerSound } from "./feedback-sound";
 import { speakingCardsForProfile, type SpeakingCard } from "../speak-cards";
@@ -179,7 +180,7 @@ export function SpeakDeck({
         </select>
       </label>
 
-      <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : ""} ${flipped ? "is-flipped" : ""}`}>
+      <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : card.korean.length>30 ? "is-connected-card" : ""} ${flipped ? "is-flipped" : ""}`}>
         <div className="speak-card-top">
           <span>
             {String(index + 1).padStart(2, "0")} <i />{" "}
@@ -213,6 +214,7 @@ export function SpeakDeck({
               <div className="speak-grammar-tip">
                 <span>{card.kind === "word" ? "WORD PRACTICE" : "GRAMMAR NOTE"}</span>
                 <p>{card.grammarTip}</p>
+                <WordReference word={card.focus} />
               </div>
               {card.kind !== "word" && <div className="speak-focus-word">
                 <span>WORD TO NOTICE</span>

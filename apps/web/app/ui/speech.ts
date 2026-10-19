@@ -8,6 +8,7 @@ export type KoreanSpeechOptions = {
   voiceName?: string;
   rate?: number;
   naturalOnly?: boolean;
+  consistentVoice?: boolean;
   waitForEnd?: boolean;
 };
 export type ElevenLabsVoice = "jessica" | "chris";
@@ -288,6 +289,7 @@ export async function playElevenLabsKorean(
   const version = playbackVersion;
   const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
   if (!paidFeaturesEnabled && !localSpeechUrl && !recorded) {
+    if(fallbackOptions.consistentVoice)return {played:false,source:"unavailable"};
     await waitForKoreanVoices();
     if (version !== playbackVersion) return {played:false,source:"unavailable"};
     const played=await playDeviceUntilEnd(naturalSpeechText(text), {...fallbackOptions,rate});
@@ -376,7 +378,7 @@ export async function playElevenLabsKorean(
     if (activeUrl) URL.revokeObjectURL(activeUrl);
     activeAudio = undefined;
     activeUrl = undefined;
-    if (fallbackOptions.naturalOnly || consonantName(text.trim()))
+    if (fallbackOptions.consistentVoice || fallbackOptions.naturalOnly || consonantName(text.trim()))
       return { played: false, source: "unavailable" };
     await waitForKoreanVoices();
     if (version !== playbackVersion)

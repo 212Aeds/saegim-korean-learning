@@ -1,8 +1,8 @@
 // Lightweight endpoint detection, not speaker identification or a pronunciation score.
 // Browser noise suppression remains the primary noise reducer. This high-pass
 // filter attenuates rumble without gating quiet phonemes out of the saved audio.
-export function recordingPauseMs(value = 2000) {
-  return Number.isFinite(value) ? Math.min(3000, Math.max(1000, value)) : 2000;
+export function recordingPauseMs(value = 3000) {
+  return Number.isFinite(value) ? Math.min(10000, Math.max(3000, value)) : 3000;
 }
 export class MicrophoneActivity {
   ready = false;

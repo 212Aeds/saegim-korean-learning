@@ -29,3 +29,14 @@ test('every placement has a nonempty deck and opening vocabulary has both record
    for(const word of lessons.find(l=>l.id===id).words)
      for(const voice of ['chris','jessica']) assert.ok(manifest[`${voice}|${word}`],`${voice}: ${word}`);
 });
+
+test('opinion placement stays on connected opinion cards instead of inheriting beginner greetings',()=>{
+ const {lessons}=require('../apps/web/app/curriculum.ts');
+ for(const completed of [[],lessons.map(l=>l.id)]){
+  const cards=speakingCardsForProfile({level:'advanced',reasons:['family']},completed);
+  assert.ok(cards.length>=8);assert.ok(cards.every(c=>c.id.startsWith('speak-opinion-')));
+  assert.ok(cards.every(c=>c.kind==='phrase'&&c.korean.length>=14));
+  assert.ok(!cards.some(c=>['안녕','안녕하세요','가방'].includes(c.korean)));
+ }
+ const intermediate=speakingCardsForProfile({level:'intermediate',reasons:['travel']},[]);assert.ok(intermediate.every(c=>c.kind==='phrase'&&!c.id.startsWith('speak-opinion-')));
+});

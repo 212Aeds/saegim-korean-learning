@@ -58,7 +58,7 @@ export function WordPacks() {
                         word.example,
                         selectedElevenLabsVoice(),
                         preferredSpeechRate(),
-                        { naturalOnly: true, waitForEnd:true },
+                        { consistentVoice: true, naturalOnly: true, waitForEnd:true },
                       );
                       if (!audio.played && version===attempt.current)
                         setNotice(

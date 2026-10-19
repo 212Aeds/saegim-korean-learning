@@ -21,6 +21,7 @@ import {
   type ElevenLabsVoice,
 } from "./speech";
 import { voiceTiming, thinkingPause } from "./conversation-timing";
+import { preferredRecordingPause } from "./recording-preferences";
 import { recordConversationTurn } from "./conversation-recording";
 import { conversationGuides, conversationSituations } from "./conversation-guide";
 type Reply = { korean: string; english: string; feedback: string };
@@ -237,8 +238,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
               if (!controller.signal.aborted) setLevel(value);
             },
             {
-              silenceMs: voiceTiming(profile.level).silenceMs,
-              maxSeconds: localSpeechUrl ? 30 : 15,
+              silenceMs: preferredRecordingPause(voiceTiming(profile.level).silenceMs),
+              maxSeconds: 30,
               onReady: (finish) => {
                 sendTurn.current = finish;
                 if (!controller.signal.aborted) {setCanSendTurn(!!finish);if(finish)setPhase("Listening · speak, then pause");}

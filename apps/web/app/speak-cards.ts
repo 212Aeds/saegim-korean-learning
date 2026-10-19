@@ -1,3 +1,4 @@
+import { opinionSpeaking } from "./opinion-speaking";
 import { lessons } from "./curriculum";
 import { journeyTopics } from "./journey-content";
 import { hangulLetters } from "./more-lessons";
@@ -8,7 +9,6 @@ import {
   type LearningProfile,
 } from "./learning-profile";
 import { isLessonUnlocked } from "./learning-pathways";
-import { basicReadingPrerequisites } from "./foundation-lessons";
 import { transcriptRomanization } from "./ui/transcript-romanization";
 type Phrase = {
   korean: string;
@@ -382,13 +382,18 @@ const conversationCards: SpeakingCard[] = [...topicExampleCards,...lessons
     grammarTitle: lesson.briefing!.focus,
     grammarTip: lesson.briefing!.explanation,
   }))];
+const opinionCards: SpeakingCard[] = opinionSpeaking.map(([id,korean,meaning,focus,focusMeaning,grammarTip])=>({
+  id:`speak-opinion-${id}`,lessonId:"opinions-dialogue",kind:"phrase",promptLabel:"Opinions and connected ideas",
+  prompt:korean,korean,meaning,romanization:transcriptRomanization(korean),focus,focusMeaning,
+  focusRomanization:transcriptRomanization(focus),grammarTitle:"Give a view, then connect an idea",grammarTip,
+}));
+
 export function speakingCardsForProfile(
   profile: LearningProfile,
   completed: string[],
 ) {
   if (
-    profile.level === "new" &&
-    !basicReadingPrerequisites.every((id) => completed.includes(id))
+    profile.level === "new"
   ) {
     const next = recommendedLessons(completed, profile)[0];
     const ids = new Set([...completed, ...(next ? [next.id] : [])]);
@@ -399,10 +404,11 @@ export function speakingCardsForProfile(
     );
     return letterCards.filter((card) => covered.has(card.korean));
   }
+  if(profile.level === "advanced") return opinionCards;
   const route = new Map(
     learningRoute(profile).map((lesson, index) => [lesson.id, index]),
   );
-  const conversational = profile.level === "intermediate" || profile.level === "advanced";
+  const conversational = profile.level === "intermediate";
   const extras = conversationCards
           .filter((card) => {
             const lesson = lessons.find(
@@ -410,7 +416,8 @@ export function speakingCardsForProfile(
             )!;
             const prerequisites = lesson.prerequisiteLessonIds ?? [];
             const practiced = completed.includes(lesson.id) || (prerequisites.length > 0 && prerequisites.every(id => completed.includes(id)));
-            return (conversational || practiced) && isLessonUnlocked(
+            const matchingLevel = conversational ? lesson.level === "intermediate" : profile.level === "basic" && lesson.level === "foundation";
+            return matchingLevel && (conversational || practiced) && isLessonUnlocked(
               lesson,
               completed,
               placementKnowledge(profile),
@@ -429,11 +436,11 @@ export function speakingCardsForProfile(
   const words = wordCards.filter(card => wordLessonIds.has(card.lessonId!))
     .sort((left, right) => (route.get(left.lessonId!) ?? 999) - (route.get(right.lessonId!) ?? 999));
   // A vocabulary placement must not inherit the shared full-sentence deck.
-  const deck = conversational ? [...extras, ...speakingCards, ...words] : [...words, ...extras];
+  const deck = conversational ? extras : [...words, ...extras];
   return [...new Map(deck.map((card) => [card.korean, card])).values()];
 }
 const speakingCardIds = new Set(
-  [...speakingCards, ...letterCards, ...wordCards, ...conversationCards].map(
+  [...speakingCards, ...letterCards, ...wordCards, ...conversationCards, ...opinionCards].map(
     (card) => card.id,
   ),
 );

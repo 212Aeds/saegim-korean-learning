@@ -18,8 +18,8 @@ test('quiet voices survive a quiet-room calibration; rumble and short clicks do 
  const filter=new MicrophoneActivity(48000);for(let i=0;i<3;i++)filter.process(tone(30,.01));
  const rumble=filter.process(tone(30,.01));assert.equal(rumble.speaking,false);assert.ok(rumble.rms<.003,'filter must attenuate low-frequency rumble');
 });
-test('pause bounds are forgiving and stay in the requested one-to-three-second range',()=>{
- assert.equal(recordingPauseMs(),2000);assert.equal(recordingPauseMs(1000),1000);assert.equal(recordingPauseMs(900),1000);assert.equal(recordingPauseMs(9999),3000);assert.equal(recordingPauseMs(NaN),2000);
+test('pause bounds are forgiving and stay in the requested three-to-ten-second range',()=>{
+ assert.equal(recordingPauseMs(),3000);assert.equal(recordingPauseMs(3000),3000);assert.equal(recordingPauseMs(900),3000);assert.equal(recordingPauseMs(5000),5000);assert.equal(recordingPauseMs(10000),10000);assert.equal(recordingPauseMs(20000),10000);assert.equal(recordingPauseMs(NaN),3000);
 });
 
 test('resuming a quiet short sound resets an existing pause before confirmation catches up',()=>{

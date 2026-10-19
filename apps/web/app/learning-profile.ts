@@ -10,7 +10,7 @@ export function placementKnowledge(profile = defaultLearningProfile) {
   if (profile.level === "hangul") return hangul;
   const basic = ["hello-there", "introductions", "sentence-order", "sentence-particles", "polite-present", "count-to-ten"];
   if(profile.level === "advanced") return [...hangul,...lessons.filter(lesson=>lesson.pathwayId === "grammar" || lesson.level === "foundation" || lesson.level === "intermediate").map(lesson=>lesson.id)];
-  return profile.level === "basic" ? [...hangul, "hello-there"] : [...hangul, ...basic, "at-the-cafe", "ask-a-question", "polite-past", "plans-and-intentions", "connect-with-go"];
+  return profile.level === "basic" ? [...hangul, "hello-there"] : [...hangul, ...basic, ...lessons.filter(lesson=>lesson.category === "Vocabulary" && lesson.level === "foundation").map(lesson=>lesson.id), "at-the-cafe", "ask-a-question", "polite-past", "plans-and-intentions", "connect-with-go"];
 }
 export function learningRoute(profile = defaultLearningProfile) {
   const foundations = profile.level === "new"

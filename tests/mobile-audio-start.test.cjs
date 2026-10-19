@@ -10,3 +10,9 @@ test('packaged Korean playback starts inside the tap without waiting for a fetch
  try{const playback=playElevenLabsKorean('안녕하세요','jessica');assert.equal(played,true);assert.equal(calls,0);assert.match(src,/^\/audio\//);assert.equal((await playback).source,'catalog');}finally{stopKoreanPlayback();global.window=oldWindow;global.Audio=oldAudio;global.fetch=oldFetch;}
 });
 
+
+test('a named flashcard voice never silently switches to a browser voice for a missing clip',async()=>{
+ const old=global.window;let attempts=0;
+ global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null},speechSynthesis:{cancel(){},getVoices(){attempts++;return []}}};
+ try{const result=await playElevenLabsKorean('This missing clip must not be synthesized','chris',1,{consistentVoice:true});assert.equal(result.played,false);assert.equal(result.source,'unavailable');assert.equal(attempts,0);}finally{stopKoreanPlayback();global.window=old;}
+});

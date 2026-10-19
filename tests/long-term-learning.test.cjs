@@ -35,8 +35,8 @@ test('recorded study supports a full year and reaches a real year milestone',()=
  assert.equal(progressSchema.safeParse(progress).success,true);
 });
 test('new speaking examples keep saved IDs and unlock only after their lesson prerequisites',()=>{
- const ids=lessons.map(l=>l.id),advanced={level:'advanced',reasons:['travel']};
- const full=speakingCardsForProfile(advanced,ids);
+ const ids=lessons.map(l=>l.id),intermediate={level:'intermediate',reasons:['travel']};
+ const full=speakingCardsForProfile(intermediate,ids);
  assert.ok(full.some(c=>c.korean==='창문을 열어요.'));
  assert.ok(full.some(c=>c.korean==='메시지를 보내요.'));
  assert.equal(new Set(full.map(c=>c.korean)).size,full.length);
@@ -44,9 +44,9 @@ test('new speaking examples keep saved IDs and unlock only after their lesson pr
  const basic={level:'basic',reasons:['living']},before=speakingCardsForProfile(basic,[]);
  assert.ok(!before.some(c=>c.id==='speak-example-home-5'));
  const after=speakingCardsForProfile(basic,[...placementKnowledge(basic),'home-words','polite-present']);
- assert.ok(after.some(c=>c.korean==='창문을 열어요.'));
+ assert.ok(after.every(c=>c.kind==='word'||c.lessonId && lessons.find(l=>l.id===c.lessonId).level==='foundation'));
  const earned=speakingCardsForProfile({level:'hangul',reasons:['living']},['home-words','polite-present']);
- assert.ok(earned.some(c=>c.korean==='창문을 열어요.'));
+ assert.ok(earned.every(c=>c.kind==='word'));
 });
 test('new tutor situations keep the existing conversation request contract',()=>{
  for(const {id:scenario} of require('../apps/web/app/ui/conversation-guide.ts').conversationSituations)

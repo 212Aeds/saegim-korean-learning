@@ -8,7 +8,7 @@ test('new topic chains stay behind reading, preserve recall order, and reach spe
  const {isLessonUnlocked}=require('../apps/web/app/learning-pathways.ts');
  const {placementKnowledge}=require('../apps/web/app/learning-profile.ts');
  const {speakingCardsForProfile}=require('../apps/web/app/speak-cards.ts');
- const full=speakingCardsForProfile({level:'advanced',reasons:['family','food']},lessons.map(l=>l.id));
+ const full=speakingCardsForProfile({level:'basic',reasons:['family','food']},lessons.map(l=>l.id));
  for(const id of ['family','fruit','table','outdoors']){
   const chain=['words','word-recall','dialogue','consolidation'].map(stage=>lessons.find(l=>l.id===`${id}-${stage}`));
   assert.equal(chain.filter(Boolean).length,4);assert.equal(isLessonUnlocked(chain[0],[]),false);

@@ -22,3 +22,7 @@ coverage/
 .venv/
 __pycache__/
 .site-redirect/
+
+# Optional local audio preparation runtime; never part of the website build.
+work/audio-gpu-runtime/
+work/start-gpu-audio.py

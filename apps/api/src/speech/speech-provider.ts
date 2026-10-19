@@ -4,7 +4,7 @@ import { Injectable } from "@nestjs/common";
 export abstract class KoreanSpeechProvider {
   abstract isAvailable(): boolean;
   // An enabled adapter must bound and cancel its own network request within
-  // 15 seconds and never retain or log audio/transcripts.
+  // 30 seconds and never retain or log audio/transcripts.
   abstract transcribe(audio: Uint8Array, contentType: string, locale: "ko-KR"): Promise<{ transcript: string }>;
   abstract synthesize(text: string, voice: "jessica" | "chris"): Promise<{ audio: Uint8Array; contentType: "audio/mpeg" }>;
 }

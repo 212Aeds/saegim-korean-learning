@@ -9,6 +9,7 @@ import { playCorrectAnswerSound } from "./feedback-sound";
 import { FeedbackToggle } from "./feedback-toggle";
 import { FlipCard } from "./flip-card";
 import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from "./speech";
+import { flashcardSpeechText } from "./recorded-audio";
 import { ListeningControls } from "./listening-controls";
 import { WordReference } from "./word-reference";
 import { KoreanInput } from "./korean-keyboard";
@@ -37,18 +38,20 @@ export function ReviewModal({
   const [missedCards, setMissedCards] = useState<ReviewItem[]>([]);
   const [recall, setRecall] = useState("");
   const card = sessionItems[index];
+  const audioText=card ? flashcardSpeechText(card.front) : undefined;
   const [audioBusy,setAudioBusy]=useState(false);
+  const [audioNotice,setAudioNotice]=useState("");
   const playback=useRef(0);
   useEffect(()=>{
-    setAudioBusy(false);
-    if(card) void prefetchLocalKorean(card.front,preferences.speechVoice);
+    setAudioBusy(false);setAudioNotice("");
+    if(audioText) void prefetchLocalKorean(audioText,preferences.speechVoice);
     return ()=>{playback.current++;stopKoreanPlayback();};
   },[card?.id,preferences.speechVoice]);
   async function listen() {
-    if(!card || audioBusy)return;
-    const attempt=++playback.current;setAudioBusy(true);
-    await playElevenLabsKorean(card.front,preferences.speechVoice,preferences.speechPace,{naturalOnly:true,waitForEnd:true});
-    if(attempt===playback.current)setAudioBusy(false);
+    if(!card || !audioText || audioBusy)return;
+    const attempt=++playback.current;setAudioBusy(true);setAudioNotice("");
+    const result=await playElevenLabsKorean(audioText,preferences.speechVoice,preferences.speechPace,{consistentVoice:true,naturalOnly:true,waitForEnd:true});
+    if(attempt===playback.current){setAudioBusy(false);if(!result.played)setAudioNotice("That recording couldn’t play. Tap Listen to try again.");}
   }
 
   function finishCard(remembered: boolean) {
@@ -100,10 +103,11 @@ export function ReviewModal({
           {revealed && recall && <p className="review-your-answer"><strong>Your recall:</strong> {recall}</p>}
           <div className="flashcard-tools">
             <FeedbackToggle />
-            <button className="button button-quiet" disabled={audioBusy} onClick={() => void listen()}>{audioBusy?"Playing Korean…":"Listen to Korean"}</button>
+            {audioText && <button className="button button-quiet" disabled={audioBusy} onClick={() => void listen()}>{audioBusy?"Playing Korean…":"Listen to Korean"}</button>}
             {audioBusy && <button className="button button-quiet" onClick={()=>{playback.current++;stopKoreanPlayback();setAudioBusy(false);}}>Stop audio</button>}
             <button className="button button-soft" aria-pressed={revealed} onClick={() => setRevealed(!revealed)}>{revealed ? "Back to question" : "Reveal card"} <ArrowRight size={16} /></button>
           </div>
+          {audioNotice && <p role="status">{audioNotice}</p>}
           <ListeningControls voice={preferences.speechVoice} pace={preferences.speechPace} disabled={audioBusy} onVoiceChange={speechVoice=>onPreferencesChange({...preferences,speechVoice})} onPaceChange={speechPace=>onPreferencesChange({...preferences,speechPace})} />
           {revealed && <><WordReference word={card.front} /><p className="recall-rating-hint">How did your recall feel? Your rating plans the next review.</p>
             <div className="answer-actions">

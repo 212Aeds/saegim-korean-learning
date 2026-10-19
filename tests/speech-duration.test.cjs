@@ -1,0 +1,5 @@
+const fs=require('node:fs'),ts=require('typescript'),{test}=require('node:test'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true,esModuleInterop:true}}).outputText,p);
+const {validateWav}=require('../apps/api/src/speech/speech.controller.ts');
+function clip(seconds){const b=Buffer.alloc(44+16000*2*seconds);b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(16000,24);b.writeUInt32LE(32000,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(b.length-44,40);return b;}
+test('long pauses fit a bounded thirty-second recording contract',()=>{assert.equal(validateWav(clip(25)),25);assert.equal(validateWav(clip(30)),30);assert.throws(()=>validateWav(clip(31)),/30 seconds/);const invalid=clip(10);invalid.writeUInt16LE(2,22);assert.throws(()=>validateWav(invalid));});

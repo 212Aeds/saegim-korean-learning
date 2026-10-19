@@ -128,7 +128,7 @@ export function LessonModal({
   async function listen(text: string, rate = preferences.speechPace) {
     const attempt = ++playbackAttempt.current;
     setAudioBusy(true); setAudioNotice("");
-    const result = await playElevenLabsKorean(text, preferences.speechVoice, rate, { naturalOnly: true, waitForEnd: true });
+    const result = await playElevenLabsKorean(text, preferences.speechVoice, rate, { consistentVoice: true, naturalOnly: true, waitForEnd: true });
     if (attempt !== playbackAttempt.current) return;
     setAudioBusy(false);
     if (!result.played) setAudioNotice("Korean audio is unavailable on this device. Continue with writing or enable a local Korean voice in your device settings.");

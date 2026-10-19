@@ -1,4 +1,4 @@
-export const maxClipSeconds = 15;
+export const maxClipSeconds = 30;
 const maxClipBytes = 2 * 1024 * 1024;
 
 export type OpenRouterCapture = {
@@ -28,7 +28,7 @@ export function releaseCapture(capture: OpenRouterCapture | undefined) {
 
 export function encodeWav(capture: OpenRouterCapture) {
   if (!capture.samples || capture.samples > capture.context.sampleRate * maxClipSeconds || 44 + Math.ceil(capture.samples * 16000 / capture.context.sampleRate) * 2 > maxClipBytes) {
-    throw new Error("Keep each practice clip under 15 seconds.");
+    throw new Error("Keep each practice clip under 30 seconds.");
   }
   const raw = new Float32Array(capture.samples);
   let rawOffset = 0;

@@ -68,7 +68,7 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
     if (!text || audioBusy) return;
     const attempt = ++playback.current; setAudioBusy(true); setAudioNotice("");
     try {
-      const result = await playElevenLabsKorean(text, preferences.speechVoice, preferences.speechPace, {naturalOnly:true,waitForEnd:true});
+      const result = await playElevenLabsKorean(text, preferences.speechVoice, preferences.speechPace, {consistentVoice:true,naturalOnly:true,waitForEnd:true});
       if (attempt === playback.current && !result.played) setAudioNotice("The selected voice is unavailable. Keep practicing or try Listen again.");
     } catch { if (attempt === playback.current) setAudioNotice("Audio could not start. Please try again."); }
     finally { if (attempt === playback.current) setAudioBusy(false); }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-server";
 import { playElevenLabsKorean, preferredSpeechRate, selectedElevenLabsVoice, saveSpeechRate, saveElevenLabsVoice, prefetchLocalKorean, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 import { playCorrectAnswerSound, unlockPracticeSounds } from "./feedback-sound";
+import { preferredRecordingPause, saveRecordingPause } from "./recording-preferences";
 import { recordConversationTurn } from "./conversation-recording";
 import { ListeningControls } from "./listening-controls";
 import { matchesPracticeAnswer } from "./speech-check";
@@ -27,7 +28,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
 }) {
   const [voice,setVoice]=useState<ElevenLabsVoice>("jessica"), [pace,setPace]=useState(1);
   const [ready,setReady]=useState(false), [connecting,setConnecting]=useState(true);
-  const [pauseMs,setPauseMs]=useState(2000);
+  const [pauseMs,setPauseMs]=useState(3000);
   const [pauseRemaining,setPauseRemaining]=useState<number|null>(null);
   const [state,setState]=useState<PracticeState>("ready");
   const [notice,setNotice]=useState("Getting speech practice ready. You can listen or write while you wait.");
@@ -36,6 +37,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   const version=useRef(0), busy=useRef(false), mounted=useRef(true);
   const controller=useRef<AbortController|null>(null), finish=useRef<(()=>void)|null>(null);
   const active=state!=="ready";
+  useEffect(()=>setPauseMs(preferredRecordingPause()),[]);
   useEffect(()=>{setVoice(selectedVoice ?? selectedElevenLabsVoice());setPace(selectedPace ?? preferredSpeechRate());},[selectedVoice,selectedPace]);
   useEffect(()=>{void prefetchLocalKorean(korean,voice);},[korean,voice]);
   function cancel(message="Attempt canceled. Ready when you are.") {
@@ -61,7 +63,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   useEffect(()=>{
     if(state!=="listening")return;
     setSeconds(0);const started=Date.now();
-    const timer=window.setInterval(()=>setSeconds(Math.min(15,Math.floor((Date.now()-started)/1000))),250);
+    const timer=window.setInterval(()=>setSeconds(Math.min(30,Math.floor((Date.now()-started)/1000))),250);
     return ()=>window.clearInterval(timer);
   },[state]);
   async function reconnect() {
@@ -79,7 +81,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   async function listen() {
     if(busy.current)return;
     busy.current=true;const attempt=++version.current;setState("playing");setNotice("Preparing Korean audio…");
-    try {const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,naturalOnly:true});
+    try {const result=await playElevenLabsKorean(korean,voice,pace,{waitForEnd:true,consistentVoice:true,naturalOnly:true});
       if(attempt===version.current)setNotice(result.played?"Your turn. Tap Speak, then say the phrase.":"Audio could not start. Tap Listen to try again, or write your answer.");
     }catch{if(attempt===version.current)setNotice("Audio could not start. Try again or write your answer.");}
     finally{if(attempt===version.current){busy.current=false;setState("ready");}}
@@ -109,7 +111,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>
     {variant!=="lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={active} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speaking-mic-panel" data-active={state==="listening"}>
-      <div className="speech-input-meter-label"><span>{state==="listening"?pauseRemaining!==null?`Pause · checking in ${(pauseRemaining/1000).toFixed(1)}s`:level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 15s</strong>}</div>
+      <div className="speech-input-meter-label"><span>{state==="listening"?pauseRemaining!==null?`Pause · checking in ${(pauseRemaining/1000).toFixed(1)}s`:level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 30s</strong>}</div>
       <meter min={0} max={100} value={level} aria-label="Microphone input level" />
       <div className="speech-practice-actions">
         {variant!=="lesson-speaking" && <button type="button" className="button button-soft" disabled={active} onClick={()=>void listen()}><SpeakerHigh size={18}/>{state==="playing"?"Playing Korean…":"Listen"}</button>}
@@ -117,7 +119,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         {active && <button type="button" className="button button-quiet" onClick={()=>cancel()}>{state==="playing"?"Stop audio":"Cancel"}</button>}
       </div>
       {!ready && <button type="button" className="button button-quiet" disabled={connecting||active} onClick={()=>void reconnect()}>{connecting?"Connecting speech…":"Retry speech connection"}</button>}
-      <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>setPauseMs(Number(event.target.value))}><option value={1000}>1 second · quick replies</option><option value={2000}>2 seconds · natural pace</option><option value={3000}>3 seconds · more thinking time</option></select><small>Your pause starts after your last words. Keep speaking to extend it, or tap Stop &amp; check to send now.</small></label>
+      <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>{const value=Number(event.target.value);setPauseMs(value);saveRecordingPause(value);}}><option value={3000}>3 seconds · natural pace</option><option value={5000}>5 seconds · take a breath</option><option value={10000}>10 seconds · unhurried</option></select><small>Your pause starts after your last words. Keep speaking to extend it, or tap Stop &amp; check to send now.</small></label>
       <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}
