@@ -27,7 +27,8 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
 }) {
   const [voice,setVoice]=useState<ElevenLabsVoice>("jessica"), [pace,setPace]=useState(1);
   const [ready,setReady]=useState(false), [connecting,setConnecting]=useState(true);
-  const [pauseMs,setPauseMs]=useState(1300);
+  const [pauseMs,setPauseMs]=useState(2000);
+  const [pauseRemaining,setPauseRemaining]=useState<number|null>(null);
   const [state,setState]=useState<PracticeState>("ready");
   const [notice,setNotice]=useState("Getting speech practice ready. You can listen or write while you wait.");
   const [written,setWritten]=useState(""), [heard,setHeard]=useState("");
@@ -39,7 +40,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   useEffect(()=>{void prefetchLocalKorean(korean,voice);},[korean,voice]);
   function cancel(message="Attempt canceled. Ready when you are.") {
     version.current++; controller.current?.abort(); controller.current=null; finish.current=null; busy.current=false;
-    stopKoreanPlayback();setState("ready");setLevel(0);setSeconds(0);setNotice(message);
+    stopKoreanPlayback();setState("ready");setLevel(0);setSeconds(0);setPauseRemaining(null);setNotice(message);
   }
   useEffect(()=>{
     mounted.current=true;
@@ -90,7 +91,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     setState("starting");setNotice("Allow microphone access if your browser asks. Wait for Listening before speaking.");setMatch(null);setHeard("");setLevel(0);stopKoreanPlayback();
     let wav:ArrayBuffer|undefined;
     try {
-      wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{silenceMs:pauseMs,onReady:stop=>{
+      wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{silenceMs:pauseMs,onSilence:remaining=>{if(attempt===version.current)setPauseRemaining(remaining);},onCalibrating:()=>{if(attempt===version.current)setNotice("Adjusting to background noise… Wait for Listening, then speak.");},onReady:stop=>{
         if(attempt!==version.current)return;
         finish.current=stop;
         if(stop){setState("listening");setNotice("Listening. Say the phrase, then pause—or tap Stop & check.");}
@@ -108,7 +109,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>
     {variant!=="lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={active} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speaking-mic-panel" data-active={state==="listening"}>
-      <div className="speech-input-meter-label"><span>{state==="listening"?level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 15s</strong>}</div>
+      <div className="speech-input-meter-label"><span>{state==="listening"?pauseRemaining!==null?`Pause · checking in ${(pauseRemaining/1000).toFixed(1)}s`:level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 15s</strong>}</div>
       <meter min={0} max={100} value={level} aria-label="Microphone input level" />
       <div className="speech-practice-actions">
         {variant!=="lesson-speaking" && <button type="button" className="button button-soft" disabled={active} onClick={()=>void listen()}><SpeakerHigh size={18}/>{state==="playing"?"Playing Korean…":"Listen"}</button>}
@@ -116,7 +117,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         {active && <button type="button" className="button button-quiet" onClick={()=>cancel()}>{state==="playing"?"Stop audio":"Cancel"}</button>}
       </div>
       {!ready && <button type="button" className="button button-quiet" disabled={connecting||active} onClick={()=>void reconnect()}>{connecting?"Connecting speech…":"Retry speech connection"}</button>}
-      <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>setPauseMs(Number(event.target.value))}><option value={900}>Quick · short words</option><option value={1300}>Natural · everyday phrases</option><option value={2200}>Unhurried · more thinking time</option></select></label>
+      <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>setPauseMs(Number(event.target.value))}><option value={1000}>1 second · quick replies</option><option value={2000}>2 seconds · natural pace</option><option value={3000}>3 seconds · more thinking time</option></select><small>Your pause starts after your last words. Keep speaking to extend it, or tap Stop &amp; check to send now.</small></label>
       <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}

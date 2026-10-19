@@ -8,7 +8,7 @@ test('soft microphone speech is captured at the native device rate while digital
  global.window={setTimeout,clearTimeout};global.AudioContext=class{constructor(input){options=input;}sampleRate=48000;state='running';createMediaStreamSource(){return node;}createScriptProcessor(){processor={...node};return processor;}createGain(){return {...node,gain:{value:1}};}async resume(){}async close(){this.state='closed';}};
  const feed=samples=>processor.onaudioprocess({inputBuffer:{getChannelData:()=>samples}});
  try{
- const recording=recordConversationTurn(new AbortController().signal,value=>{level=Math.max(level,value);});await new Promise(resolve=>setImmediate(resolve));assert.equal(options,undefined);
+ const recording=recordConversationTurn(new AbortController().signal,value=>{level=Math.max(level,value);});await new Promise(resolve=>setImmediate(resolve));assert.equal(options,undefined);for(let i=0;i<4;i++)feed(new Float32Array(4096));
  const quiet=Float32Array.from({length:4096},(_,i)=>.0012*Math.sin(2*Math.PI*220*i/48000));elapsed=500;feed(quiet);elapsed=600;feed(quiet);assert.ok(level>=5,'soft speech must show a visible input level');elapsed=2600;feed(new Float32Array(4096));const wav=await recording;assert.equal(new DataView(wav).getUint32(24,true),16000);
  const silent=recordConversationTurn(new AbortController().signal,()=>{});await new Promise(resolve=>setImmediate(resolve));elapsed+=8100;feed(new Float32Array(4096));await assert.rejects(silent,/No speech detected/);assert.equal(stops,2);
  }finally{Object.defineProperty(global,'navigator',oldNav);Object.defineProperty(global,'performance',oldClock);global.AudioContext=oldAudio;global.window=oldWindow;}

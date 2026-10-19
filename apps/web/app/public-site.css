@@ -229,3 +229,5 @@ button.landing-mini-card:disabled {cursor:wait;}
 .speech-pause-control {display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:13px;color:var(--soft-ink);margin:14px 0;}
 .speech-pause-control select {font:inherit;font-size:16px;min-height:44px;max-width:100%;border:1px solid var(--line);border-radius:10px;background:var(--paper-strong);color:var(--ink);padding:8px 12px;}
 .speech-pause-control select:focus-visible {outline:3px solid var(--forest);outline-offset:2px;}
+
+.speech-pause-control small {flex-basis:100%;font-size:12px;line-height:1.6;}

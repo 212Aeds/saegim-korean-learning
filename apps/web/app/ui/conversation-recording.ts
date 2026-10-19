@@ -4,6 +4,7 @@ import {
   maxClipSeconds,
   type OpenRouterCapture,
 } from "./openrouter-audio-capture";
+import { MicrophoneActivity, recordingPauseMs } from "./microphone-activity";
 import { silenceDecision } from "./speech-check";
 export async function recordConversationTurn(
   signal: AbortSignal,
@@ -11,6 +12,8 @@ export async function recordConversationTurn(
   options: {
     silenceMs?: number;
     maxSeconds?: number;
+    onSilence?: (remainingMs: number | null) => void;
+    onCalibrating?: () => void;
     onReady?: (finish: (() => void) | null) => void;
   } = {},
 ): Promise<ArrayBuffer> {
@@ -65,9 +68,9 @@ export async function recordConversationTurn(
       let inputFrames = 0;
       let inputTimer: number | undefined;
       const started = performance.now();
-      let lastSpeech = 0,
-        noiseFloor = 0.00015;
-      let voicedSamples = 0;
+      let lastSpeech = 0, readyAnnounced = false;
+      const activity = new MicrophoneActivity(audioContext.sampleRate);
+      const pauseMs = recordingPauseMs(options.silenceMs);
       const finish = (aborted = false, inputError?: Error) => {
         if (settled) return;
         settled = true;
@@ -87,6 +90,7 @@ export async function recordConversationTurn(
           releaseCapture(clip);
           released = true;
           options.onReady?.(null);
+          options.onSilence?.(null);
           onLevel(0);
         }
       };
@@ -97,20 +101,15 @@ export async function recordConversationTurn(
         inputFrames++;
         window.clearTimeout(inputTimer);
         inputTimer = window.setTimeout(()=>finish(false,new Error("Microphone audio stopped arriving. Check your input or Bluetooth connection, then tap Speak again.")),4000);
-        const samples = event.inputBuffer.getChannelData(0);
-        let energy = 0;
-        for (const sample of samples) energy += sample * sample;
-        const rms = Math.sqrt(energy / samples.length);
+        const {samples,rms,speaking,continuing} = activity.process(event.inputBuffer.getChannelData(0));
         const elapsed = performance.now() - started;
-        if (!clip.speechDetected && elapsed < 400 && rms < 0.0006)
-          noiseFloor = noiseFloor * 0.9 + rms * 0.1;
-        const threshold = Math.max(0.0006, noiseFloor * 2.5);
-        if (rms > threshold) {
-          voicedSamples += samples.length;
-          if (voicedSamples >= audioContext.sampleRate * 0.12) clip.speechDetected = true;
-          lastSpeech = elapsed;
-        } else voicedSamples = 0;
-        onLevel(rms > threshold ? Math.min(100, Math.max(8, Math.round(Math.sqrt(rms / 0.03) * 100))) : 0);
+        if (activity.ready && !readyAnnounced) {
+          readyAnnounced=true;options.onReady?.(() => finish());
+        }
+        if (speaking) clip.speechDetected=true;
+        if (clip.speechDetected && continuing) lastSpeech=elapsed;
+        options.onSilence?.(clip.speechDetected && !continuing ? Math.max(0,pauseMs-(elapsed-lastSpeech)) : null);
+        onLevel(activity.ready ? Math.min(100,Math.round(Math.sqrt(rms / 0.03) * 100)) : 0);
         const count = Math.min(
           samples.length,
           audioContext.sampleRate * clipSeconds - clip.samples,
@@ -122,7 +121,7 @@ export async function recordConversationTurn(
         if (
           clip.samples >= audioContext.sampleRate * clipSeconds ||
           (clip.speechDetected
-            ? elapsed - lastSpeech >= (options.silenceMs ?? 1800)
+            ? elapsed - lastSpeech >= pauseMs
             : silenceDecision(elapsed, lastSpeech, false) !== "continue")
         )
           finish();
@@ -133,7 +132,7 @@ export async function recordConversationTurn(
       clip.timer = window.setTimeout(() => finish(), clipSeconds * 1000);
       inputTimer = window.setTimeout(()=>{if(!inputFrames)finish(false,new Error("Your microphone opened but no audio is arriving. Check your device’s microphone or Bluetooth input, then try again."));},4000);
       if (signal.aborted) { finish(true); return; }
-      void audioContext.resume().then(()=>{if(!settled) options.onReady?.(() => finish());}).catch((error) => {
+      void audioContext.resume().then(()=>{if(!settled) options.onCalibrating?.();}).catch((error) => {
         if (!settled) { reject(error); finish(true); }
       });
     });

@@ -230,7 +230,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         let text =
           turn === 0 ? draft.trim().replace(/\s+/gu, " ").slice(0, 600) : "";
         if (!text) {
-          setPhase("Listening · speak, then pause");
+          setPhase("Adjusting microphone · wait a moment");
           wav = await recordConversationTurn(
             controller.signal,
             (value) => {
@@ -241,7 +241,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
               maxSeconds: localSpeechUrl ? 30 : 15,
               onReady: (finish) => {
                 sendTurn.current = finish;
-                if (!controller.signal.aborted) setCanSendTurn(!!finish);
+                if (!controller.signal.aborted) {setCanSendTurn(!!finish);if(finish)setPhase("Listening · speak, then pause");}
               },
             },
           );
