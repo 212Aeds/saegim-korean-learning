@@ -25,3 +25,10 @@ no-frame watchdog cleanup, phone chime resume, prior cancellation/late-stream
 cleanup, WAV normalization, and playback ordering. 115 tests passed. Physical
 phone microphones, Bluetooth routing, noisy rooms, and real accents still need
 user beta testing; simulated input and viewport checks do not prove those cases.
+
+Live follow-up: commit 0479926 deployed successfully and the updated microphone
+help rendered in the signed-in desktop browser. A quieter greeting fixture was
+recognized by the real transcription endpoint as `안녕하세요`. The final narrow
+viewport browser check timed out; do not treat that check as passed. Physical
+phone microphone behavior and the final mobile UI remain unverified in this pass.
+The temporary synthetic account and credential files were removed afterwards.
