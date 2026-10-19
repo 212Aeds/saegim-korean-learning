@@ -261,7 +261,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
               body: wav,
               signal: AbortSignal.any([
                 controller.signal,
-                AbortSignal.timeout(20000),
+                AbortSignal.timeout(65000),
               ]),
             });
             if (!response.ok)
