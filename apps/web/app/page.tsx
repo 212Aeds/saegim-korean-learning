@@ -30,6 +30,7 @@ import { AccountModal, type LearnerAccount } from "./ui/account-modal";
 import { ReviewModal as ReviewDeck } from "./ui/review-modal";
 import { reviewOverview } from "./ui/review-session";
 import { LearningCollection } from "./ui/learning-collection";
+import { FeatureGuide } from "./ui/feature-guide";
 import { LevelFocus } from "./ui/level-focus";
 import { FeedbackBanner } from "./ui/feedback-banner";
 import { FeedbackReport } from "./ui/feedback-report";
@@ -526,6 +527,7 @@ export default function Home() {
         </header>
 
         <div className="page-content">
+          <FeatureGuide sections={tabs} onNavigate={navigateTo} onSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}} />
           <FeedbackBanner compact />
           <div className="greeting-row">
             <div>
