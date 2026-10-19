@@ -18,8 +18,8 @@ export function LearningCollection({ completed, profile=defaultLearningProfile, 
         const next=lessons.find(lesson=>lesson.id===chapter.nextLessonId)!;
         const ready=isLessonUnlocked(next,completed,placementKnowledge(profile));
         return <article className={chapter.complete?"chapter-card is-complete":"chapter-card"} key={chapter.id}>
-          <span className="micro-label">{chapter.complete?"CHAPTER COMPLETE":`${chapter.done} OF 3 STEPS`}</span><h4>{chapter.title}</h4>
-          <progress max={3} value={chapter.done} aria-label={`${chapter.title}: ${chapter.done} of 3 steps complete`} />
+          <span className="micro-label">{chapter.complete?"CHAPTER COMPLETE":`${chapter.done} OF ${chapter.stages.length} STEPS`}</span><h4>{chapter.title}</h4>
+          <progress max={chapter.stages.length} value={chapter.done} aria-label={`${chapter.title}: ${chapter.done} of ${chapter.stages.length} steps complete`} />
           <ol>{chapter.stages.map(stage=><li key={stage.id} className={stage.completed?"is-complete":""}><span aria-hidden="true">{stage.completed?"✓":"○"}</span>{stage.label}</li>)}</ol>
           {onLesson && <button type="button" className="button button-quiet" disabled={!ready} onClick={()=>onLesson(next)}>{chapter.complete?"Revisit chapter":!ready?"Earlier steps first":chapter.done?"Keep going":"Start chapter"}</button>}
           {!ready && <small className="chapter-prerequisite">{prerequisiteLabel(next,completed,placementKnowledge(profile))}</small>}

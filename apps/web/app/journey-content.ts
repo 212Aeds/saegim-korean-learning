@@ -5,6 +5,8 @@ import { transcriptRomanization } from "./ui/transcript-romanization";
 type Topic = {
   pathwayId?: "daily-life" | "connections";
   dialoguePrerequisites?: string[];
+  note?: string;
+  acceptedMeanings?: Record<string,string[]>;
   id: string;
   title: string;
   category: KoreanWord["category"];
@@ -12,6 +14,209 @@ type Topic = {
   dialogue: [string, string];
 };
 export const journeyTopics: Topic[] = [
+{
+  "id": "family",
+  "acceptedMeanings": {"할머니": ["grandma"], "할아버지": ["grandpa"], "아이": ["kid"]},
+  "title": "Family connections",
+  "category": "People",
+  "pathwayId": "connections",
+  "note": "부모님 is a respectful word for parents. 할머니 and 할아버지 use their family meanings here; these words can also refer to older adults.",
+  "items": [
+    [
+      "할머니",
+      "grandmother",
+      "할머니를 만나요.",
+      "I meet my grandmother."
+    ],
+    [
+      "할아버지",
+      "grandfather",
+      "할아버지와 이야기해요.",
+      "I talk with my grandfather."
+    ],
+    [
+      "부모님",
+      "parents",
+      "부모님 사진이에요.",
+      "It is a photo of my parents."
+    ],
+    [
+      "아들",
+      "son",
+      "아들이 있어요.",
+      "I have a son."
+    ],
+    [
+      "딸",
+      "daughter",
+      "딸이 있어요.",
+      "I have a daughter."
+    ],
+    [
+      "아이",
+      "child",
+      "아이가 웃어요.",
+      "The child smiles."
+    ]
+  ],
+  "dialogue": [
+    "할머니를 만나요. 할아버지와 이야기해요.",
+    "I meet my grandmother. I talk with my grandfather."
+  ]
+},
+{
+  "id": "fruit",
+  "acceptedMeanings": {"사과": ["apples"], "바나나": ["bananas"], "딸기": ["strawberries"], "포도": ["grapes"], "오렌지": ["oranges"], "배": ["pears"]},
+  "title": "Fruit and small snacks",
+  "category": "Food & drink",
+  "pathwayId": "daily-life",
+  "note": "Use the food senses in this topic: 배 means pear here, and 사과 means apple. The same spellings can have other dictionary meanings.",
+  "items": [
+    [
+      "사과",
+      "apple",
+      "사과를 먹어요.",
+      "I eat an apple."
+    ],
+    [
+      "바나나",
+      "banana",
+      "바나나를 사요.",
+      "I buy a banana."
+    ],
+    [
+      "딸기",
+      "strawberry",
+      "딸기가 맛있어요.",
+      "The strawberry is delicious."
+    ],
+    [
+      "포도",
+      "grape",
+      "포도를 좋아해요.",
+      "I like grapes."
+    ],
+    [
+      "오렌지",
+      "orange",
+      "오렌지가 있어요.",
+      "There is an orange."
+    ],
+    [
+      "배",
+      "pear",
+      "배를 먹어요.",
+      "I eat a pear."
+    ]
+  ],
+  "dialogue": [
+    "사과를 먹어요. 포도를 좋아해요.",
+    "I eat an apple. I like grapes."
+  ]
+},
+{
+  "id": "table",
+  "acceptedMeanings": {"컵": ["cups"], "접시": ["plates", "dish"], "숟가락": ["spoons"]},
+  "title": "At the table",
+  "category": "Food & drink",
+  "pathwayId": "daily-life",
+  "dialoguePrerequisites": [
+    "polite-requests"
+  ],
+  "note": "숟가락 means spoon, while 젓가락 means chopsticks. Put the item before 주세요 to make a polite request.",
+  "items": [
+    [
+      "컵",
+      "cup",
+      "컵이 있어요.",
+      "There is a cup."
+    ],
+    [
+      "접시",
+      "plate",
+      "접시가 작아요.",
+      "The plate is small."
+    ],
+    [
+      "숟가락",
+      "spoon",
+      "숟가락을 주세요.",
+      "Please give me a spoon."
+    ],
+    [
+      "젓가락",
+      "chopsticks",
+      "젓가락을 주세요.",
+      "Please give me chopsticks."
+    ],
+    [
+      "설탕",
+      "sugar",
+      "설탕이 필요해요.",
+      "I need sugar."
+    ],
+    [
+      "소금",
+      "salt",
+      "소금이 있어요.",
+      "There is salt."
+    ]
+  ],
+  "dialogue": [
+    "숟가락을 주세요. 젓가락을 주세요.",
+    "Please give me a spoon. Please give me chopsticks."
+  ]
+},
+{
+  "id": "outdoors",
+  "acceptedMeanings": {"산": ["mountains"], "강": ["rivers"], "호수": ["lakes"], "숲": ["woods"], "길": ["roads", "paths"], "꽃": ["flowers"]},
+  "title": "A walk outdoors",
+  "category": "Everyday",
+  "pathwayId": "daily-life",
+  "note": "에 can mark a destination, as in 산에 가요. 에서 marks where an action takes place, as in 숲에서 걸어요.",
+  "items": [
+    [
+      "산",
+      "mountain",
+      "산에 가요.",
+      "I go to a mountain."
+    ],
+    [
+      "강",
+      "river",
+      "강이 보여요.",
+      "I can see a river."
+    ],
+    [
+      "호수",
+      "lake",
+      "호수가 커요.",
+      "The lake is big."
+    ],
+    [
+      "숲",
+      "forest",
+      "숲에서 걸어요.",
+      "I walk in the forest."
+    ],
+    [
+      "길",
+      "road; path",
+      "길을 걸어요.",
+      "I walk along a path."
+    ],
+    [
+      "꽃",
+      "flower",
+      "꽃이 예뻐요.",
+      "The flower is pretty."
+    ]
+  ],
+  "dialogue": [
+    "숲에서 걸어요. 꽃이 예뻐요.",
+    "I walk in the forest. The flower is pretty."
+  ]
+},
   {
     id:"seasons", title:"Weather and seasons", category:"Everyday", pathwayId:"daily-life",
     items:[
@@ -318,6 +523,7 @@ export const journeyLessons: Lesson[] = journeyTopics.flatMap((topic) => {
       authoredOnly: true,
       briefing: {
         focus: `Meet six words for ${topic.title.toLowerCase()}.`,
+        watchFor: topic.note,
         explanation:
           "Read each word, connect it with a meaning, then recall its Korean spelling. The examples show one contextual sense; words can have other dictionary meanings.",
         useWhen:
@@ -344,6 +550,7 @@ export const journeyLessons: Lesson[] = journeyTopics.flatMap((topic) => {
       authoredOnly: true,
       briefing: {
         focus: "Move from single words to useful sentences.",
+        watchFor: topic.note,
         explanation: advanced
           ? "제 생각에는 introduces a personal view. Connect an idea with a reason in conversation; the app can help you explore wording."
           : "Pay attention to the final polite ending and to 에 for a destination or 에서 for a place where an action happens. Some examples ask a question or describe what exists.",

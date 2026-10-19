@@ -14,7 +14,7 @@ export const wordRecallLessons: Lesson[] = journeyTopics.map(topic => ({
   questions: topic.items.map(([korean, meaning], index) => ({
     id: `${topic.id}-meaning-recall-${index}`, type: "text", korean,
     prompt: "Recall this word’s English meaning.", answer: meaning,
-    accepted: meaning.split(";").map(sense => sense.trim()).filter(Boolean),
+    accepted: [...meaning.split(";").map(sense => sense.trim()).filter(Boolean), ...(topic.acceptedMeanings?.[korean] ?? [])],
     placeholder: "English meaning", tip: `${korean}: ${meaning}.`,
   })),
 }));

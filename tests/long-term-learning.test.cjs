@@ -9,16 +9,17 @@ const {speakingCardsForProfile,normalizeSpeakingCardIds}=require('../apps/web/ap
 const {placementKnowledge}=require('../apps/web/app/learning-profile.ts');
 const {conversationRequestSchema}=require('../apps/api/src/tutor/tutor.schema.ts');
 
-test('chapter progress needs all three actual lessons and ignores duplicate or unknown IDs',()=>{
+test('chapter progress needs all four actual lessons and ignores duplicate or unknown IDs',()=>{
  let chapter=chapterProgress(['home-words','home-words','unknown']).find(c=>c.id==='home');
- assert.equal(chapter.done,1);assert.equal(chapter.complete,false);assert.equal(chapter.nextLessonId,'home-dialogue');
+ assert.equal(chapter.done,1);assert.equal(chapter.complete,false);assert.equal(chapter.nextLessonId,'home-word-recall');
  chapter=chapterProgress(['home-words','home-dialogue','home-consolidation']).find(c=>c.id==='home');
- assert.equal(chapter.complete,true);assert.equal(chapter.nextLessonId,'home-consolidation');
+ assert.equal(chapter.complete,false);assert.equal(chapter.nextLessonId,'home-word-recall');
+ chapter=chapterProgress(['home-words','home-word-recall','home-dialogue','home-consolidation']).find(c=>c.id==='home');assert.equal(chapter.complete,true);assert.equal(chapter.stages.length,4);assert.equal(chapter.nextLessonId,'home-consolidation');
  assert.equal(chapterProgress([]).filter(c=>c.complete).length,0);
 });
 test('a complete course review collection can be stored without the previous 500-card failure',()=>{
  const cards=deduplicateReviewItems(lessons.flatMap(l=>createQuestionReviewItems(l.id,l.questions)));
- assert.ok(cards.length>500);assert.equal(lessons.length,124);
+ assert.ok(cards.length>500);assert.equal(lessons.length,140);
  const full={...initialProgress,completed:lessons.length,completedLessonIds:lessons.map(l=>l.id),reviewItems:cards};
  const saved=progressSchema.safeParse(full);assert.equal(saved.success,true,saved.error?.message);
  assert.ok(Buffer.byteLength(JSON.stringify(full))>100*1024);
