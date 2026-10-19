@@ -1,0 +1,3 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,p);
+const {encodeWav}=require('../apps/web/app/ui/openrouter-audio-capture.ts');
+test('high-rate laptop input is bounded by the resulting WAV size rather than uncompressed input size',()=>{const samples=new Float32Array(96000*12).fill(.03);const wav=encodeWav({context:{sampleRate:96000},samples:samples.length,chunks:[samples]});assert.equal(wav.byteLength,44+16000*12*2);assert.equal(new DataView(wav).getUint32(24,true),16000);});

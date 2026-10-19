@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { localSpeechAvailable, transcribeOnLocalServer } from "./local-speech-server";
 import { playElevenLabsKorean, preferredSpeechRate, selectedElevenLabsVoice, saveSpeechRate, saveElevenLabsVoice, prefetchLocalKorean, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
+import { playCorrectAnswerSound, unlockPracticeSounds } from "./feedback-sound";
 import { recordConversationTurn } from "./conversation-recording";
 import { ListeningControls } from "./listening-controls";
 import { matchesPracticeAnswer } from "./speech-check";
@@ -70,7 +71,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   function check(text:string) {
     const answer=text.trim();if(!answer)return;
     const correct=matchesPracticeAnswer(korean,answer,expectedRomanization);
-    setHeard(answer);setMatch(correct);onResult?.(answer,correct);
+    setHeard(answer);setMatch(correct);onResult?.(answer,correct);if(correct&&!onResult)playCorrectAnswerSound();
     setNotice(correct?"Nice work! That matches the target wording.":"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
   }
   async function listen() {
@@ -83,6 +84,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   }
   async function start() {
     if(!ready||busy.current)return;
+    unlockPracticeSounds();
     busy.current=true;const attempt=++version.current, current=new AbortController();controller.current=current;
     setState("starting");setNotice("Allow microphone access if your browser asks. Wait for Listening before speaking.");setMatch(null);setHeard("");setLevel(0);stopKoreanPlayback();
     let wav:ArrayBuffer|undefined;
@@ -105,7 +107,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>
     {variant!=="lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={active} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speaking-mic-panel" data-active={state==="listening"}>
-      <div className="speech-input-meter-label"><span>{state==="listening"?level>=3?"Sound reaching your mic":"Mic is quiet · speak when ready":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 15s</strong>}</div>
+      <div className="speech-input-meter-label"><span>{state==="listening"?level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 15s</strong>}</div>
       <meter min={0} max={100} value={level} aria-label="Microphone input level" />
       <div className="speech-practice-actions">
         {variant!=="lesson-speaking" && <button type="button" className="button button-soft" disabled={active} onClick={()=>void listen()}><SpeakerHigh size={18}/>{state==="playing"?"Playing Korean…":"Listen"}</button>}
@@ -113,6 +115,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
         {active && <button type="button" className="button button-quiet" onClick={()=>cancel()}>{state==="playing"?"Stop audio":"Cancel"}</button>}
       </div>
       {!ready && <button type="button" className="button button-quiet" disabled={connecting||active} onClick={()=>void reconnect()}>{connecting?"Connecting speech…":"Retry speech connection"}</button>}
+      <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}
     <details className="speaking-write"><summary>Prefer to write? Try Korean or romanization</summary><form onSubmit={event=>{event.preventDefault();if(!busy.current)check(written);}}>

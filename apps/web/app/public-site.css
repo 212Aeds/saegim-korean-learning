@@ -165,3 +165,25 @@ button.landing-mini-card:disabled {cursor:wait;}
 .beta-checklist .beta-checklist-note {font-size:12px;}
 @media(max-width:600px){.beta-checklist{padding:20px;}.beta-checklist h2{font-size:26px;}}
 @media(prefers-reduced-motion:no-preference){.beta-checklist label{transition:background-color 180ms ease;}.beta-checklist label:has(input:checked){background:#eef1e5;}}
+
+.microphone-help {margin-top:16px;border-top:1px solid var(--line);padding-top:10px;}
+.microphone-help summary {cursor:pointer;color:var(--forest);font-size:12px;line-height:1.7;padding:8px 0;}
+.microphone-help p {font-size:12px;line-height:1.8;color:var(--muted);}
+.microphone-help summary:focus-visible {outline:2px solid var(--forest);outline-offset:3px;}
+@media(prefers-reduced-motion:no-preference){
+ .landing-copy {animation:landing-arrive 480ms cubic-bezier(.2,.7,.3,1) both;}
+ .landing-art {animation:landing-arrive 650ms cubic-bezier(.2,.7,.3,1) both;}
+ .landing-promises article {animation:landing-arrive 500ms ease-out both;}
+ .landing-promises article:nth-child(2) {animation-delay:80ms;}
+ .landing-promises article:nth-child(3) {animation-delay:160ms;}
+ .landing-mini-card,.public-path-grid article,.landing-cta svg {transition:transform 200ms ease,box-shadow 200ms ease;}
+ .landing-mini-card:active {transform:translateY(2px) scale(.98);}
+ .landing-cta:hover svg {transform:translateX(4px);}
+ .landing-sun {animation:landing-sun-drift 9s ease-in-out infinite;}
+ @keyframes landing-arrive {from{opacity:.6;translate:0 12px;}to{opacity:1;translate:0 0;}}
+ @keyframes landing-sun-drift {0%,100%{translate:0 0;}50%{translate:0 -8px;}}
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .public-path-grid article:hover {transform:translateY(-4px);}
+ .landing-mini-card:hover {transform:translateY(-3px);box-shadow:0 14px 30px rgb(48 67 43 / 10%);}
+}

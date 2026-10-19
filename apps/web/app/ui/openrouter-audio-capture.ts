@@ -27,7 +27,7 @@ export function releaseCapture(capture: OpenRouterCapture | undefined) {
 }
 
 export function encodeWav(capture: OpenRouterCapture) {
-  if (!capture.samples || capture.samples > capture.context.sampleRate * maxClipSeconds || 44 + capture.samples * 2 > maxClipBytes) {
+  if (!capture.samples || capture.samples > capture.context.sampleRate * maxClipSeconds || 44 + Math.ceil(capture.samples * 16000 / capture.context.sampleRate) * 2 > maxClipBytes) {
     throw new Error("Keep each practice clip under 15 seconds.");
   }
   const raw = new Float32Array(capture.samples);
@@ -35,8 +35,8 @@ export function encodeWav(capture: OpenRouterCapture) {
   for (const chunk of capture.chunks) { raw.set(chunk, rawOffset); rawOffset += chunk.length; }
   let peak = 0;
   for (const sample of raw) peak = Math.max(peak, Math.abs(sample));
-  if (peak < 0.002) { raw.fill(0); throw new Error("No speech detected. Try again closer to your microphone."); }
-  const threshold = Math.max(0.0015, peak * 0.025);
+  if (peak < 0.0006) { raw.fill(0); throw new Error("No speech detected. Try again closer to your microphone."); }
+  const threshold = Math.max(0.00015, peak * 0.025);
   let first = 0;
   let last = raw.length - 1;
   while (first < raw.length && Math.abs(raw[first]) < threshold) first++;
@@ -44,7 +44,7 @@ export function encodeWav(capture: OpenRouterCapture) {
   const padding = Math.floor(capture.context.sampleRate * 0.2);
   const trimmed = raw.slice(Math.max(0, first - padding), Math.min(raw.length, last + padding + 1));
   raw.fill(0);
-  const gain = Math.min(3, 0.85 / peak);
+  const gain = Math.min(12, 0.85 / peak);
   // Normalize hardware rates (including 44.1/48 kHz) before upload, without
   // asking mobile browsers to decode their own MediaRecorder container.
   const outputRate = 16000;

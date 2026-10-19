@@ -1,5 +1,6 @@
 "use client";
 
+import { playCorrectAnswerSound } from "./feedback-sound";
 import { useEffect, useState } from "react";
 
 export function FeedbackToggle() {
@@ -11,5 +12,6 @@ export function FeedbackToggle() {
     const next = !muted;
     setMuted(next);
     try { window.localStorage.setItem("saegim-feedback-muted", String(next)); } catch { /* Keep the control usable. */ }
+    if(!next)playCorrectAnswerSound();
   }}>Practice sounds: {muted ? "off" : "on"}</button>;
 }
