@@ -5,3 +5,5 @@ Settings offers an unchecked opt-in to prepare a calendar file. The learner sele
 A public beta invitation offers user-triggered native sharing or clipboard/manual URL fallback, with no contact upload, referral tracking or support/payment buttons. FAQ describes optional matching voices and free limits. Conversation playback distinguishes preparation from actual playback using the audio play promise, retaining cancellation guards and both existing presets. No speed or quality benchmark is claimed.
 
 Email remains off: a future sender needs verified domain/sender configuration, separately recorded opt-in, unsubscribe and suppression handling, frequency/quiet-time controls and delivery limits before sending. Existing account emails are not marketing consent. No new provider, paid integration, credentials, database schema or account/progress changes are included.
+
+Owner selected calendar reminders plus email preparation. The detailed disabled-by-default release plan and draft message are in [email-reminders-preparation.md](email-reminders-preparation.md). No email enrollment or sending is active.
