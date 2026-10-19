@@ -384,9 +384,9 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
       <section className="conversation-guide" aria-label="Conversation practice for your level">
         <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>
         <p className="conversation-goal"><strong>Try this today</strong>{guide.goal}</p>
-        <div className="conversation-situations" role="group" aria-label="Choose a practice situation">
+        <details className="conversation-scenario-browser"><summary>Practice situation: {situation.title}</summary><div className="conversation-situations" role="group" aria-label="Choose a practice situation">
           {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || playing} onClick={() => { history.current=[];setTurns([]);setNotice("");setScenario(item.id);setDraft(item.prompt); }}>{item.title}</button>)}
-        </div>
+        </div></details>
         {turns.length > 0 && <small>Choosing a situation starts a fresh conversation. You can also describe any topic in your message.</small>}
         <div className="conversation-session-meter"><span><strong>{koreanTurns}</strong> / {guide.turns} Korean replies in this visit</span><progress max={guide.turns} value={Math.min(koreanTurns, guide.turns)} aria-label="Korean replies practiced in this conversation" /></div>
         {koreanTurns >= guide.turns && <p className="conversation-checkpoint" role="status">A little conversation, completed. Keep going or take a break. This counts replies, not fluency or pronunciation.</p>}

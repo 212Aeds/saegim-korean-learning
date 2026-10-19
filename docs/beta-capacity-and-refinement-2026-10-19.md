@@ -1,0 +1,13 @@
+# Beta capacity and refinement
+
+Invite 10–20 testers initially; this is a staged-rollout recommendation, not a measured concurrent-user capacity. The free inference code defaults to 200 shared tutor/transcription requests per day and 25 per account. A spoken turn generally uses two reservations, while typed chat uses one. Provider quotas can stop requests sooner. Lessons and static recorded playback do not consume inference reservations. Check actual Render/Cloudflare/Neon dashboard usage before expanding; no load test or guaranteed user count is claimed.
+
+Render free services have 750 workspace instance-hours per month, idle spin-down, and bandwidth/build allowances. The static audio catalog makes bandwidth relevant. Keep the existing free-only provider controls; do not enable paid inference to increase capacity. Sources: https://render.com/docs/free ; https://developers.cloudflare.com/workers-ai/platform/pricing/
+
+For public voluntary support, recommend a Ko-fi one-time-tip page, with the user's own payout setup and public link. Ko-fi Free can charge 0% platform fee on one-time tips; payment processing fees still apply and Contributor settings affect platform fees. Venmo business profiles are a US-oriented alternative at the published 1.9% + $0.10 direct-payment fee. No financial account, payout setting, or payment destination was created or published. No charity or tax-deductibility claim is made. Sources: https://help.ko-fi.com/hc/en-us/articles/360002506494-Does-Ko-fi-take-a-fee ; https://venmo.com/business/profiles
+
+Search now combines topic metadata, focus meanings, and curated food/greeting/family aliases with normalized query tokens. English words match prefixes rather than arbitrary internal substrings, so son does not match person or reason. Multiple query tokens must all match. Korean substring and romanization search remain supported, with level and topic filters preserved.
+
+Eight new greeting/meal phrases are taught in two six-question companion lessons, bringing the course to 150 lessons. New Chris/Jessica clips were generated offline with unchanged local presets. The guide presents Today/Learn/Review first, with other tools and practical help under disclosures. Conversation situations collapse behind their current selection. The repeated feedback strip is smaller and word/practice introductions are shorter.
+
+Hosted tutor/conversation/transcription smoke checks use synthetic accounts and a prerecorded test clip, then delete the test account. No room microphone recording is used. Dynamic hosted conversation TTS still depends on an installed Korean browser voice and is not claimed to use Chris/Jessica for arbitrary generated replies. Recorded authored phrases use those named presets.

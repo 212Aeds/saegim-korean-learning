@@ -150,3 +150,7 @@
 @keyframes phrase-reveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.phrase-browser-trigger{padding:15px}.phrase-browser-panel{padding:0 12px 14px}.phrase-browser-filters{grid-template-columns:minmax(0,1fr)}.phrase-browser-filters input,.phrase-browser-filters select{font-size:16px}.phrase-browser-results button{padding:12px 8px}.phrase-browser-results strong{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.phrase-browser-panel{animation:none}.phrase-browser-results button{transition:none}}
+
+.guide-more,.conversation-scenario-browser{margin:14px 0;border-top:1px solid #e2e6dc;padding-top:12px}.guide-more summary,.conversation-scenario-browser summary{padding:10px 0;min-height:44px;cursor:pointer;color:#345346;font-size:14px}.guide-more p{font-size:14px;line-height:1.65}.conversation-scenario-browser .conversation-situations{margin-top:10px}
+
+.feedback-banner-compact{background:transparent;border:0;border-bottom:1px solid #e2e6dc;border-radius:0;padding:4px 0 12px;margin-bottom:16px;gap:12px;flex-direction:row;align-items:center}.feedback-banner-compact p,.feedback-banner-compact .feedback-link-note{display:none}.feedback-banner-compact>a{min-height:44px;display:flex;align-items:center;padding:8px 12px;font-size:12px}

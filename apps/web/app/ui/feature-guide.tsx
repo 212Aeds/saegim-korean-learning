@@ -25,12 +25,14 @@ export function FeatureGuide({sections,onNavigate,onSettings}: {
   }
   return <details className="feature-guide" ref={panel}>
     <summary>Find your next step <span>A quick guide to Saegim</span></summary>
-    <p className="feature-guide-intro">Start with Today. Follow Learn for new material, then use Review to help it stick. Explore the other tools whenever you like.</p>
+    <p className="feature-guide-intro">A simple routine: choose your next lesson, learn one small thing, then revisit it tomorrow. Your level and goals stay changeable in Settings.</p>
     <nav className="feature-guide-links" aria-label="Feature guide">
-      {sections.map(section=><button key={section.id} type="button" onClick={()=>{close();onNavigate(section.id);}}>
+      {sections.filter(section=>["today","learn","review"].includes(section.id)).map(section=><button key={section.id} type="button" onClick={()=>{close();onNavigate(section.id);}}>
         <strong>{section.label}</strong><span>{descriptions[section.id]}</span>
       </button>)}
     </nav>
+    <details className="guide-more"><summary>More ways to practice</summary><nav className="feature-guide-links" aria-label="More practice tools">{sections.filter(section=>!["today","learn","review"].includes(section.id)).map(section=><button key={section.id} type="button" onClick={()=>{close();onNavigate(section.id);}}><strong>{section.label}</strong><span>{descriptions[section.id]}</span></button>)}</nav></details>
+    <details className="guide-more"><summary>Help with phrases or speaking</summary><p>In Speak, open Browse phrases and search a word or topic, such as food, son, or hello. Results stay within your current level and unlocked material.</p><p>Listen first, then tap Speak. The pause begins after your last words: choose 3, 5, or 10 seconds, or tap Stop &amp; check to send immediately. If your microphone is unavailable, open Prefer to write.</p><p>For a conversation, choose AI Tutor, then Conversation. Pick a situation or describe your own. You can type throughout and turn spoken replies on or off.</p></details>
     <button type="button" className="feature-guide-settings" onClick={()=>{close();onSettings();}}>Change your level, goals, or audio in Settings</button>
   </details>;
 }

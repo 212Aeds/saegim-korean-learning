@@ -17,7 +17,7 @@ test('a short phrase page searches both languages and filters by topic without l
  assert.deepEqual(cards.map(c=>c.id),snapshot);
 });
 test('every phrase is taught in a small matching lesson with preserved prerequisites',()=>{
- assert.equal(learningPhrases.length,32);assert.equal(phraseLessons.length,8);
+ assert.equal(learningPhrases.length,40);assert.equal(phraseLessons.length,10);
  for(const lesson of phraseLessons){assert.ok(lessons.some(l=>l.id===lesson.id));assert.equal(lesson.questions.length,6);assert.ok(lesson.prerequisiteLessonIds.every(id=>lessons.some(l=>l.id===id)));}
  for(const phrase of learningPhrases){const lesson=lessons.find(l=>l.id===phrase.lessonId);assert.ok(lesson.questions.some(q=>q.korean===phrase.korean&&q.answer===phrase.meaning));}
 });
@@ -30,4 +30,13 @@ test('new phrases respect placement and alphabet-first learning',()=>{
  const intermediate=speakingCardsForProfile({level:'intermediate',reasons:['travel']},all);
  for(const p of learningPhrases.filter(p=>p.level==='intermediate'))assert.ok(intermediate.some(c=>c.korean===p.korean));
  const advanced=speakingCardsForProfile({level:'advanced',reasons:['travel']},[]);assert.equal(advanced.length,16);assert.ok(advanced.every(c=>c.id.startsWith('speak-opinion-')));
+});
+
+test('phrase search understands topics and whole English words without matching son inside person',()=>{
+ const cards=speakingCardsForProfile({level:'intermediate',reasons:['family','food']},[]);
+ for(const query of ['food','hello','son'])assert.ok(phrasePage(cards,'',query,0).total>0,query);
+ assert.ok(phrasePage(cards,'','food',0).cards.some(c=>/spicy|dinner|food|tea|drink/i.test(c.meaning)));
+ assert.ok(phrasePage(cards,'','son',0).cards.every(c=>/\bsons?\b/i.test(c.meaning)));
+ assert.ok(phrasePage(cards,'','  HELLO  ',0).total>0);
+ assert.equal(phrasePage(cards,'','food nonexistentword',0).total,0);
 });

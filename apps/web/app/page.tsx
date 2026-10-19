@@ -1311,7 +1311,7 @@ function WordsView({
       <div className="page-intro words-intro">
         <h2>Your growing word bank</h2>
         <p>
-          Browse 5,000 community-dictionary and Saegim references with local access when the database is offline. Definitions and app-authored examples retain their source and review status.
+          Find a word, explore its meaning, and practice related words by topic. Source links and review notes are available with each entry.
           Tap a word to hear it.
         </p>
       </div>

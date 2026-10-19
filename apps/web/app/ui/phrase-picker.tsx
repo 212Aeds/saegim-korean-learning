@@ -19,7 +19,7 @@ export function PhrasePicker({cards,current,completedIds,disabled,onChoose}:{car
     {open&&<div id={id} className="phrase-browser-panel" onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();close();}}}>
       <div className="phrase-browser-filters">
         <label>Topic<select value={topic} onChange={event=>{setTopic(event.target.value);setPage(0);}}><option value="">All topics</option>{topics.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-        <label>Find a {noun==="phrases"?"phrase":noun==="letters"?"letter":"word"}<input ref={searchInput} type="search" value={query} placeholder="Korean, English, or romanization" onChange={event=>{setQuery(event.target.value);setPage(0);}} /></label>
+        <label>Find a {noun==="phrases"?"phrase":noun==="letters"?"letter":"word"}<input ref={searchInput} type="search" value={query} placeholder="Try food, son, hello, or Korean" onChange={event=>{setQuery(event.target.value);setPage(0);}} /></label>
       </div>
       <p className="phrase-browser-status" role="status">{results.total?`${results.page*6+1}–${Math.min(results.total,(results.page+1)*6)} of ${results.total}`:"No matches. Try another word or topic."}</p>
       <ul className="phrase-browser-results">

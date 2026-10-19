@@ -5,6 +5,18 @@ type PhraseLine = readonly [id: string, korean: string, meaning: string, focus: 
 type PhraseChapter = {id: string; title: string; level: "foundation" | "intermediate" | "stretch"; prerequisite: string; focus: string; lines: readonly PhraseLine[]};
 // App-authored contextual practice, with dictionary references on lesson/card views.
 const chapters: PhraseChapter[] = [
+  {id:"phrase-greetings",title:"Greetings: start and end a chat",level:"intermediate",prerequisite:"polite-past",focus:"Greet someone, ask a follow-up, and close the exchange.",lines:[
+    ["hello-feeling","안녕하세요. 오늘 기분이 어때요?","Hello. How are you feeling today?","기분","mood; feeling","어때요 asks how something is. Use 기분 to ask about someone's mood or feeling."],
+    ["long-time","오랜만이에요. 잘 지냈어요?","Long time no see. Have you been well?","오랜만","a long time since something last happened","잘 지냈어요 asks how someone has been, using the polite past tense."],
+    ["meet-learning","만나서 반가워요. 저는 한국어를 배우고 있어요.","Nice to meet you. I am learning Korean.","한국어","Korean language","만나서 반가워요 is a polite first-meeting greeting; -고 있어요 describes ongoing learning."],
+    ["talk-again","다음에 또 이야기해요. 좋은 하루 보내세요.","Let's talk again another time. Have a good day.","하루","a day","다음에 means next time. 좋은 하루 보내세요 wishes the other person a good day."],
+  ]},
+  {id:"phrase-meals",title:"Food: share a meal",level:"intermediate",prerequisite:"at-the-cafe",focus:"Talk about food preferences and make a polite request.",lines:[
+    ["spicy-food","매운 음식을 잘 못 먹어요.","I cannot eat spicy food very well.","음식","food","잘 못 describes difficulty doing something; 매운 modifies 음식 as spicy."],
+    ["without-meat","고기 없이 만들어 주실 수 있어요?","Could you make it without meat?","고기","meat","없이 means without. -아/어 주실 수 있어요 politely asks whether someone can do something for you."],
+    ["food-ingredients","이 음식에는 뭐가 들어가요?","What ingredients are in this food?","재료","ingredient","뭐가 asks what is included. 들어가요 can describe an ingredient being put into a dish."],
+    ["dinner-together","같이 저녁 먹을까요?","Shall we have dinner together?","저녁","evening; dinner","같이 means together, and -(으)ㄹ까요 suggests an action together."],
+  ]},
   {id:"phrase-courtesy",title:"Small polite replies",level:"foundation",prerequisite:"hello-there",focus:"Short polite replies for everyday encounters.",lines:[
     ["thanks-reply","아니에요. 괜찮아요.","Not at all. It is okay.","괜찮다","to be okay","아니에요 can politely answer thanks; 괜찮아요 reassures the other person."],
     ["wait","잠깐만요.","Just a moment, please.","잠깐","a moment","잠깐만요 is a brief polite request to wait."],
