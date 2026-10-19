@@ -1,3 +1,4 @@
+import { browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
 import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
 import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -9,6 +10,7 @@ export type KoreanSpeechOptions = {
   rate?: number;
   naturalOnly?: boolean;
   consistentVoice?: boolean;
+  conversationVoice?: boolean;
   waitForEnd?: boolean;
 };
 export type ElevenLabsVoice = "jessica" | "chris";
@@ -128,9 +130,12 @@ async function waitForKoreanVoices(
   });
 }
 
+export function usesBrowserConversationVoices(){return hostedAiEnabled && !localSpeechUrl && !paidFeaturesEnabled;}
+
 export async function koreanConversationAudioAvailable() {
   if (typeof window === "undefined") return false;
   if (localSpeechUrl || (paidFeaturesEnabled && apiUrl)) return true;
+  if(usesBrowserConversationVoices())return browserVoiceState().phase === "ready";
   return (await waitForKoreanVoices()).length > 0;
 }
 
@@ -228,7 +233,7 @@ export type CatalogVoice = {
 };
 export type KoreanPlayback = {
   played: boolean;
-  source: "catalog" | "elevenlabs" | "local" | "device" | "unavailable";
+  source: "catalog" | "elevenlabs" | "local" | "device" | "browser-model" | "unavailable";
 };
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 let activeAudio: HTMLAudioElement | undefined;
@@ -288,7 +293,10 @@ export async function playElevenLabsKorean(
   stopKoreanPlayback();
   const version = playbackVersion;
   const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
-  if (!paidFeaturesEnabled && !localSpeechUrl && !recorded) {
+  const browserVoice=!!fallbackOptions.conversationVoice && usesBrowserConversationVoices() && !recorded;
+  if(browserVoice)primeBrowserVoicePlayback();
+  if(browserVoice && browserVoiceState().phase!=="ready")return {played:false,source:"unavailable"};
+  if (!paidFeaturesEnabled && !localSpeechUrl && !recorded && !browserVoice) {
     if(fallbackOptions.consistentVoice)return {played:false,source:"unavailable"};
     await waitForKoreanVoices();
     if (version !== playbackVersion) return {played:false,source:"unavailable"};
@@ -297,10 +305,10 @@ export async function playElevenLabsKorean(
   }
   const controller = new AbortController();
   pendingAudio = controller;
-  const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : 20_000);
+  const timeout = window.setTimeout(() => controller.abort(), localSpeechUrl ? 180_000 : browserVoice ? 120_000 : 20_000);
   try {
-    if (!localSpeechUrl && !apiUrl && !recorded) throw new Error();
-    const response = localSpeechUrl || recorded ? null : await fetch(`${apiUrl}/v1/speech/synthesize`, {
+    if (!localSpeechUrl && !apiUrl && !recorded && !browserVoice) throw new Error();
+    const response = localSpeechUrl || recorded || browserVoice ? null : await fetch(`${apiUrl}/v1/speech/synthesize`, {
       method: "POST",
       credentials: localSpeechUrl ? "omit" : "include",
       cache: "no-store",
@@ -321,7 +329,7 @@ export async function playElevenLabsKorean(
       throw new Error();
     // A packaged clip has a public URL already. Start it directly inside the
     // tap gesture so mobile autoplay rules do not reject an awaited fetch.
-    const blob = recorded ? undefined : localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
+    const blob = recorded ? undefined : browserVoice ? await synthesizeBrowserVoice(naturalSpeechText(text),voice,controller.signal) : localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
     if (
       version !== playbackVersion ||
       controller.signal.aborted ||
@@ -330,7 +338,8 @@ export async function playElevenLabsKorean(
       throw new Error();
     }
     const url = recorded ?? URL.createObjectURL(blob!);
-    const audio = new Audio(url);
+    const audio = browserVoice ? browserVoicePlaybackElement() : new Audio(url);
+    if(browserVoice)audio.src=url;
     audio.preload = "auto";
     activeUrl = recorded ? undefined : url;
     activeAudio = audio;
@@ -369,7 +378,7 @@ export async function playElevenLabsKorean(
     }
     if (fallbackOptions.waitForEnd && !(await ended))
       return { played: false, source: "unavailable" };
-    return { played: true, source: recorded ? "catalog" : localSpeechUrl ? "local" : "elevenlabs" };
+    return { played: true, source: recorded ? "catalog" : browserVoice ? "browser-model" : localSpeechUrl ? "local" : "elevenlabs" };
   } catch {
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };

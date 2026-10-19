@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
+import { browserVoiceState, browserVoicesConsented, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { transcriptRomanization } from "./transcript-romanization";
@@ -18,6 +19,7 @@ import {
   stopKoreanPlayback,
   prefetchLocalKorean,
   koreanConversationAudioAvailable,
+  usesBrowserConversationVoices,
   type ElevenLabsVoice,
 } from "./speech";
 import { voiceTiming, thinkingPause } from "./conversation-timing";
@@ -49,6 +51,10 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   const [pendingMessage, setPendingMessage] = useState("");
   const [pace,setPace] = useState(1);
   const [phraseAdded,setPhraseAdded]=useState(false);
+  const [voiceSetup,setVoiceSetup]=useState(browserVoiceState);
+  const browserVoices=usesBrowserConversationVoices();
+  const voiceReady=!browserVoices||voiceSetup.phase==="ready";
+  useEffect(()=>{const unsubscribe=subscribeBrowserVoices(setVoiceSetup);if(browserVoices&&browserVoicesConsented())void enableBrowserVoices().catch(()=>{});return unsubscribe;},[browserVoices]);
   const composer=useRef<HTMLFormElement|null>(null);
   const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
@@ -101,10 +107,12 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     try {
       const result = await playElevenLabsKorean(text, partner, pace, {
         naturalOnly: true,
+        consistentVoice: true,
+        conversationVoice: true,
         waitForEnd: true,
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current)
-        setNotice("Voice playback is unavailable. You can continue by typing.");
+        setNotice(browserVoices&&!voiceReady?"Set up the matching voices above to hear new replies. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
     } catch {
       if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
@@ -183,6 +191,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function sendMessage(message: string) {
     const text = message.trim().replace(/\s+/gu, " ").slice(0, 600);
     if (!text || request.current || calling || playing) return;
+    if(browserVoices&&speakReplies)primeBrowserVoicePlayback();
     setDraft(text);
     setNotice("");
     try {
@@ -202,6 +211,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
   async function send(event: FormEvent) { event.preventDefault(); await sendMessage(draft); }
   async function startCall() {
     if (call.current || request.current || playing) return;
+    if(browserVoices)primeBrowserVoicePlayback();
     const controller = new AbortController();
     call.current = controller;
     setCalling(true);
@@ -218,7 +228,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     try {
       setPhase("Getting Korean audio ready…");
       if (!(await koreanConversationAudioAvailable()))
-        throw new Error("A Korean browser voice is needed for spoken conversations. Enable a Korean voice on your device, or continue chatting by text.");
+        throw new Error("Set up Chris and Jessica above before starting a voice conversation. You can keep chatting by text.");
       if (controller.signal.aborted) return;
       const started = Date.now();
       for (
@@ -288,6 +298,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         setPhase(`${voice === "chris" ? "Chris" : "Jessica"} is speaking…`);
         const playback = await playElevenLabsKorean(reply.korean, voice, pace, {
           naturalOnly: true,
+          consistentVoice: true,
+          conversationVoice: true,
           waitForEnd: true,
         });
         if (!playback.played && !controller.signal.aborted)
@@ -376,9 +388,16 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           ))}
         </div>
       </div>
+      {browserVoices&&<section className="conversation-voice-setup" aria-label="Conversation voice setup">
+        <strong>{voiceReady?"The same Chris and Jessica voices as your lessons":"Bring Chris and Jessica into your conversation"}</strong>
+        {!voiceReady&&<p>Around 430 MB of voice files are needed the first time. First setup can take a little time. Speech is generated on this device, with no paid requests. Files are saved where browser storage allows.</p>}
+        {voiceSetup.phase==="loading"?<><p role="status">{voiceSetup.message} {voiceSetup.progress}%</p><progress value={voiceSetup.progress} max={100} aria-label="Voice setup progress"/><button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent}>Cancel setup</button></>:!voiceReady?<button type="button" className="button button-dark" onClick={()=>void enableBrowserVoices().catch(()=>{})}>Set up matching voices · about 430 MB</button>:<small>Ready for this visit. Your selected partner keeps the same voice.</small>}
+        {voiceSetup.phase==="error"&&<p role="status">{voiceSetup.message}</p>}
+        <details><summary>Voice model &amp; license</summary><a href="/voices/MODEL-LICENSE.txt" target="_blank" rel="noopener noreferrer">Supertonic 3 · OpenRAIL-M model license</a><a href="/voices/SUPERTONIC-LICENSE.txt" target="_blank" rel="noopener noreferrer">Browser adapter · MIT license</a>{voiceReady&&<button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent} disabled={calling||playing}>Unload conversation voices</button>}</details>
+      </section>}
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
-        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
+        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} disabled={!voiceReady} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
       <section className="conversation-guide" aria-label="Conversation practice for your level">
@@ -506,7 +525,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         ) : (
           <button
             className="button button-dark"
-            disabled={thinking || playing || !apiUrl}
+            disabled={thinking || playing || !apiUrl || !voiceReady}
             onClick={() => void startCall()}
           >
             Start voice conversation

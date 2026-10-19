@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --hostname 0.0.0.0",
-    "build": "next build --webpack",
+    "build": "node ../../scripts/prepare-browser-voices.cjs && next build --webpack",
     "start": "next start --hostname 0.0.0.0"
   },
   "dependencies": {
@@ -13,6 +13,7 @@
     "es-hangul": "^2.4.0",
     "hangul-js": "^0.2.6",
     "next": "^16.4.0",
+    "onnxruntime-web": "1.30.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
