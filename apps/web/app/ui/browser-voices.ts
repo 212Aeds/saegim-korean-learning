@@ -22,13 +22,14 @@ export function subscribeBrowserVoices(listener:(value:BrowserVoiceState)=>void)
 export function browserVoicesConsented(){try{return typeof window!=="undefined"&&window.localStorage.getItem(consentKey)==="true";}catch{return false;}}
 function connect(){
   if(worker)return worker;
-  worker=new Worker('/voices/worker.js',{type:"module"});
+  const connected=worker=new Worker('/voices/worker.js',{type:"module"});
   worker.onmessage=({data})=>{
+    if(worker!==connected)return;
     if(data.type==="progress"){if(state.phase==="loading")update({phase:"loading",progress:data.progress,message:data.message});return;}
     const item=pending.get(data.id);if(!item)return;pending.delete(data.id);clearTimeout(item.timer);
     if(data.type==="error")item.reject(new Error(data.message));else item.resolve(data.wav);
   };
-  worker.onerror=()=>cancelBrowserVoices("Voice setup could not finish. Retry, or continue by text.");
+  worker.onerror=()=>{if(worker===connected)cancelBrowserVoices("Voice setup could not finish. Retry, or continue by text.");};
   return worker;
 }
 function request(type:"initialize"|"synthesize",fields:Record<string,unknown>={},signal?:AbortSignal){

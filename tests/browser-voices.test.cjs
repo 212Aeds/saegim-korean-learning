@@ -11,9 +11,13 @@ test('matching voices need explicit setup, share initialization, and release can
   workers[0].reply('ready');await first;assert.equal(voices.browserVoiceState().phase,'ready');
   const abort=new AbortController(),audio=voices.synthesizeBrowserVoice('안녕하세요.','chris',abort.signal);
   assert.equal(workers[0].messages.at(-1).voice,'chris');abort.abort();await assert.rejects(audio,error=>error.name==='AbortError');assert.equal(workers[0].terminated,true);assert.equal(voices.browserVoiceState().phase,'idle');
-  const retry=voices.enableBrowserVoices();workers[1].reply('ready');await retry;
+  const retry=voices.enableBrowserVoices();
+  workers[0].onmessage({data:{type:'progress',progress:99,message:'Old download'}});assert.equal(voices.browserVoiceState().progress,0);
+  workers[0].onerror();assert.equal(workers[1].terminated,undefined);assert.equal(voices.browserVoiceState().phase,'loading');
+  workers[1].reply('ready');await retry;
   const generated=voices.synthesizeBrowserVoice('반가워요.','jessica',new AbortController().signal);workers[1].reply('audio',{wav:new ArrayBuffer(48)});const firstClip=await generated;assert.equal(firstClip.type,'audio/wav');const sent=workers[1].messages.length;assert.equal(await voices.synthesizeBrowserVoice('반가워요.','jessica',new AbortController().signal),firstClip);assert.equal(workers[1].messages.length,sent);
-  voices.forgetBrowserVoiceConsent();assert.equal(voices.browserVoicesConsented(),false);assert.equal(workers[1].terminated,true);
+  workers[1].onerror();assert.equal(voices.browserVoiceState().phase,'error');assert.equal(workers[1].terminated,true);
+  voices.forgetBrowserVoiceConsent();assert.equal(voices.browserVoicesConsented(),false);assert.equal(voices.browserVoiceState().phase,'idle');
  }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
 });
 test('matching voice manifest pins the same M1/F1 model files and SHA-256 identities',()=>{

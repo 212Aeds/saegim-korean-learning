@@ -11,3 +11,5 @@ Setup progress, cancellation, retry, resource unload, a short initial warmup, an
 Real browser verification generated an uncatalogued sentence with each preset: 안녕하세요. 한국어로 같이 이야기해요. Each produced a playable 424,160-byte WAV with distinct hashes. Hosted transcription recovered the entire sentence from both saved browser-generated clips. Synthetic test accounts were removed. Physical phone microphone recording was not used. Additional tests cover consent, shared initialization, cancellation/retry, replay reuse, readiness, and model-only conversation playback without device voice enumeration.
 
 Sources: https://github.com/supertone-oss-archive/supertonic/tree/1e9799e964ea4c0dad7cde993b65c3c813a7b373/web ; https://huggingface.co/Supertone/supertonic-3/tree/3cadd1ee6394adea1bd021217a0e650ede09a323 ; https://onnxruntime.ai/docs/tutorials/web/
+
+Retry isolation follow-up: delayed progress and errors from a terminated worker are ignored, so canceling and restarting setup cannot let the previous attempt overwrite progress or terminate the replacement. A synthetic worker regression test reproduces the stale-event failure before the fix.
