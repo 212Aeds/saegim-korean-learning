@@ -1,4 +1,5 @@
 "use client";
+import {useGuestLearning} from "./guest-learning";
 import { useEffect, useRef, useState } from "react";
 import { ListeningControls } from "./listening-controls";
 import { KoreanInput } from "./korean-keyboard";
@@ -11,6 +12,7 @@ export function DeviceListeningPractice({korean, expectedRomanization, selectedV
   onVoiceChange?: (voice: ElevenLabsVoice) => void; onPaceChange?: (rate: number) => void;
   onResult?: (transcript: string, matches: boolean) => void;
 }) {
+  const guest=useGuestLearning();
   const [voice,setVoice] = useState(selectedVoice ?? selectedElevenLabsVoice);
   const [pace,setPace] = useState(selectedPace ?? preferredSpeechRate);
   const [written,setWritten] = useState("");
@@ -38,7 +40,7 @@ export function DeviceListeningPractice({korean, expectedRomanization, selectedV
   }
   return <section className="speech-practice" aria-label="Korean listening and writing practice">
     <span className="micro-label">LISTEN & RECALL</span>
-    <p>Listen, say it aloud, then try writing it from memory.</p>
+    <p>{guest ? "Guest practice uses listening and writing. An optional account enables speech recognition." : "Listen, say it aloud, then try writing it from memory."}</p>
     <ListeningControls voice={voice} pace={pace}
       onVoiceChange={value=>{stop();setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}}
       onPaceChange={value=>{stop();setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />

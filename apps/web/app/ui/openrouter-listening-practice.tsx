@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import {useGuestLearning} from "./guest-learning";
 import { DeviceListeningPractice } from "./device-listening-practice";
 import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -17,6 +18,8 @@ import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElev
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export function OpenRouterListeningPractice(props: Parameters<typeof PaidListeningPractice>[0]) {
+  const guest=useGuestLearning();
+  if(guest)return <DeviceListeningPractice {...props} />;
   if (localSpeechUrl || hostedAiEnabled) return <ServerSpeechPractice {...props} />;
   return paidFeaturesEnabled ? <PaidListeningPractice {...props} /> : <DeviceListeningPractice {...props} />;
 }

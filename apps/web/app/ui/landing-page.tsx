@@ -19,10 +19,12 @@ import { lessons } from "../curriculum";
 export function LandingPage({
   onCreateAccount,
   onSignIn,
+  onStartGuest,
   freeMode = false,
 }: {
   onCreateAccount: () => void;
   onSignIn: () => void;
+  onStartGuest?: () => void;
   freeMode?: boolean;
 }) {
   const [samplePlaying,setSamplePlaying]=useState(false);
@@ -55,11 +57,12 @@ export function LandingPage({
             A welcoming place to practice Korean, at your own pace.
           </p>
           <a className="button button-dark landing-cta" href="#try-korean">Try a lesson — no account needed <ArrowRight size={17}/></a>
+          {onStartGuest && <button className="button button-dark" onClick={onStartGuest}>Start learning · no email needed</button>}
           <button className="button button-quiet" onClick={onCreateAccount}>
             {freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
 
-          <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "A free account keeps your lessons and reviews together."}</span>
+          <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "Try lessons without an email. Guest progress stays on this device; an account is optional for syncing."}</span>
         </div>
         <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">
           <span className="landing-orbit orbit-one" />
@@ -103,11 +106,11 @@ export function LandingPage({
           ["03", "RECALL · REVISIT", "Keep a little more", "Turn your lessons into review cards. Give tricky answers another try."],
         ].map(([number, sample, title, text]) => <article key={number}><span className="public-step-number">{number}</span><div className="public-path-sample" aria-hidden="true">{sample}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
-      <LandingSampler onStart={onCreateAccount} />
+      <LandingSampler onStart={onStartGuest ?? onCreateAccount} />
       <FeedbackBanner />
       <FounderStory />
       <BetaInvitation />
-      <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
+      <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onStartGuest ?? onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
       <section className="public-faq" aria-labelledby="public-faq-title"><div><span className="micro-label">BEFORE YOU BEGIN</span><h2 id="public-faq-title">A few helpful answers.</h2></div><div>{[
         ["Do I need to know Hangul?", "No. Choose “brand new” and start with letters and syllable blocks. If you already know some Korean, choose a suitable starting level."],
         ["Is it free?", "Yes. The lessons, review cards, word collection, and practice in this version are available without a subscription."],

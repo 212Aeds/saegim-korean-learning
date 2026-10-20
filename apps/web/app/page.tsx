@@ -1,7 +1,7 @@
 "use client";
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -25,6 +25,7 @@ import {
 } from "./ui/icons";
 import {prefetchLocalKorean,usesBrowserConversationVoices} from "./ui/speech";
 import {browserVoicesConsented,enableBrowserVoices} from "./ui/browser-voices";
+import {GuestLearningContext} from "./ui/guest-learning";
 import { LessonModal } from "./ui/lesson-modal";
 import { readOptionalProgress } from "./ui/progress-response";
 import { LearningOnboarding } from "./ui/learning-onboarding";
@@ -151,16 +152,22 @@ export default function Home() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(lessons[0]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewFocus, setReviewFocus] = useState<"due" | "missed" | "practice">("due");
+  const [guestAuthOpen,setGuestAuthOpen]=useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountMode, setAccountMode] = useState<"create" | "login">("create");
+  const restoreVersion=useRef(0);
   const [account, setAccount] = useState<LearnerAccount | null>(null);
+  const guest=account?.id === "device-only";
   const [ready, setReady] = useState(false);
   const [loadingSection, setLoadingSection] = useState<Tab | null>(null);
 
   useEffect(() => {
     async function restoreProgress() {
-      if (freePublishing) {
+      const version=restoreVersion.current;
+      let storedGuest=null;
+      try { storedGuest=JSON.parse(window.localStorage.getItem(deviceProfileKey)??"null"); } catch {}
+      if (freePublishing || storedGuest?.id === "device-only") {
         try {
           const profile = JSON.parse(window.localStorage.getItem(deviceProfileKey) ?? "null");
           if (profile?.id === "device-only" && ["new","hangul","basic","intermediate","advanced"].includes(profile.learningProfile?.level)) setAccount(profile);
@@ -170,36 +177,42 @@ export default function Home() {
         setReady(true); return;
       }
       let current = initialProgress;
-      const saved = window.localStorage.getItem("sori-progress");
+      let saved:string|null=null;
+      try {saved=window.localStorage.getItem("sori-progress");}catch{}
       if (saved) {
         try {
           current = normalizeProgress(
             JSON.parse(saved) as Partial<SavedProgress>,
           );
         } catch {
-          window.localStorage.removeItem("sori-progress");
+          try{window.localStorage.removeItem("sori-progress");}catch{}
         }
       }
+      setProgress(current);
+      setReady(true); // Public content must not wait for the account server.
       const apiUrl = publicApiUrl;
       if (apiUrl) {
         try {
           const accountResponse = await fetch(`${apiUrl}/v1/auth/me`, {
             credentials: "include",
+            signal: AbortSignal.timeout(65000),
           });
           if (accountResponse.ok) {
             const user =
               (await accountResponse.json()) as LearnerAccount | null;
             if (user?.id) {
-              setAccount(user);
+              if(version!==restoreVersion.current)return;
               const progressResponse = await fetch(`${apiUrl}/v1/progress/me`, {
                 credentials: "include",
               });
+              if (!progressResponse.ok) throw new Error("Account progress unavailable");
               if (progressResponse.ok) {
                 const remote =
                   await readOptionalProgress(progressResponse);
                 if (remote) current = normalizeProgress(remote);
                 else {
                   current = {...initialProgress, dailyGoalMinutes: user.learningProfile?.dailyMinutes ?? initialProgress.dailyGoalMinutes};
+                  if(version!==restoreVersion.current)return;
                   await fetch(`${apiUrl}/v1/progress/me`, {
                     method: "PUT",
                     credentials: "include",
@@ -208,12 +221,15 @@ export default function Home() {
                   });
                 }
               }
+              if(version!==restoreVersion.current)return;
+              setAccount(user);
             }
           }
         } catch {
           // Offline practice continues from browser storage.
         }
       }
+      if(version!==restoreVersion.current)return;
       setProgress(current);
       setReady(true);
     }
@@ -221,13 +237,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    window.localStorage.setItem(freePublishing ? deviceProgressKey : "sori-progress", JSON.stringify(progress));
-    if (freePublishing && account) window.localStorage.setItem(deviceProfileKey, JSON.stringify(account));
+    if (!ready || !account) return;
+    try { window.localStorage.setItem(freePublishing || guest ? deviceProgressKey : "sori-progress", JSON.stringify(progress));
+    if (guest && account) window.localStorage.setItem(deviceProfileKey,JSON.stringify(account)); } catch { /* Private browsing may not retain device progress. */ }
+
     saveElevenLabsVoice(progress.learningPreferences.speechVoice);
     saveSpeechRate(progress.learningPreferences.speechPace);
     const apiUrl = publicApiUrl;
-    if (apiUrl && account) {
+    if (apiUrl && account && !guest) {
       const timer = window.setTimeout(() => {
         void fetch(`${apiUrl}/v1/progress/me`, {
           method: "PUT",
@@ -340,6 +357,7 @@ export default function Home() {
   }
 
   async function authenticateLearner(user: LearnerAccount) {
+    restoreVersion.current++;
     const apiUrl = publicApiUrl;
     if (apiUrl) {
       const response = await fetch(`${apiUrl}/v1/progress/me`, {
@@ -349,7 +367,7 @@ export default function Home() {
       const remote = await readOptionalProgress(response);
       if (remote) setProgress(normalizeProgress(remote));
       else {
-        const fresh = {...initialProgress, dailyGoalMinutes:user.learningProfile?.dailyMinutes ?? initialProgress.dailyGoalMinutes};
+        const fresh = {...(guest ? progress : initialProgress), dailyGoalMinutes:user.learningProfile?.dailyMinutes ?? progress.dailyGoalMinutes};
         const saved = await fetch(`${apiUrl}/v1/progress/me`, {
           method: "PUT",
           credentials: "include",
@@ -360,10 +378,14 @@ export default function Home() {
         setProgress(fresh);
       }
     }
+    try {window.localStorage.removeItem(deviceProfileKey);}catch{}
+    setGuestAuthOpen(false);setAccountOpen(false);
     setAccount(user);
   }
 
   async function signOut() {
+    restoreVersion.current++;
+    if(guest){try{window.localStorage.removeItem(deviceProfileKey);}catch{}setAccount(null);return;}
     const apiUrl = publicApiUrl;
     if (apiUrl) {
       await fetch(`${apiUrl}/v1/auth/logout`, {
@@ -375,7 +397,7 @@ export default function Home() {
   }
 
   async function deleteAccount() {
-    if (freePublishing) { window.localStorage.removeItem(deviceProfileKey); window.localStorage.removeItem(deviceProgressKey); setProgress(initialProgress); setAccount(null); return; }
+    if (freePublishing || guest) { window.localStorage.removeItem(deviceProfileKey); window.localStorage.removeItem(deviceProgressKey); setProgress(initialProgress); setAccount(null); return; }
     const apiUrl = publicApiUrl;
     if (apiUrl) {
       const response = await fetch(`${apiUrl}/v1/account/me`, {
@@ -393,8 +415,8 @@ export default function Home() {
     setAccount(updated); setProgress(nextProgress);
     if (!levelChanged) return;
     stopKoreanPlayback();
-    window.localStorage.setItem(freePublishing ? deviceProgressKey : "sori-progress", JSON.stringify(nextProgress));
-    if (freePublishing) window.localStorage.setItem(deviceProfileKey, JSON.stringify(updated));
+    window.localStorage.setItem(freePublishing || guest ? deviceProgressKey : "sori-progress", JSON.stringify(nextProgress));
+    if (freePublishing || guest) window.localStorage.setItem(deviceProfileKey, JSON.stringify(updated));
     else if (publicApiUrl) {
       const response = await fetch(`${publicApiUrl}/v1/progress/me`, {method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(nextProgress)});
       if (!response.ok) throw new Error("Your level was saved, but progress could not sync. Please try again before refreshing.");
@@ -418,6 +440,7 @@ export default function Home() {
       <main className="landing-shell">
         <LandingPage
           freeMode={freePublishing}
+          onStartGuest={()=>{restoreVersion.current++;try {const saved=JSON.parse(window.localStorage.getItem(deviceProgressKey)??"null");setProgress(saved?normalizeProgress(saved):initialProgress);}catch{setProgress(initialProgress);}setAccount({id:"device-only",email:"",displayName:"Learner",learningProfile:{...defaultLearningProfile,onboardingCompleted:false}});}}
           onCreateAccount={() => {
             if (freePublishing) {
               try { const saved=JSON.parse(window.localStorage.getItem(deviceProfileKey)??"null");
@@ -451,7 +474,7 @@ export default function Home() {
   if (!account.learningProfile?.onboardingCompleted) return <LearningOnboarding account={account} onSignOut={signOut} onSaved={updated => {setAccount(updated);setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile?.dailyMinutes??15}));}} />;
 
   return (
-    <main className="app-shell">
+    <GuestLearningContext.Provider value={guest}><main className="app-shell">
       <aside className="sidebar" aria-label="Main navigation">
         <a
           className="brand"
@@ -501,7 +524,7 @@ export default function Home() {
             <strong>{account?.displayName ?? "Language learner"}</strong>
             <span>
               {account
-                ? freePublishing ? "Device-only learning" : "Free learner account"
+                ? freePublishing || guest ? "Device-only learning" : "Free learner account"
                 : currentStreak
                   ? `Beginner · ${currentStreak} day${currentStreak === 1 ? "" : "s"}`
                   : "Beginner · New learner"}
@@ -626,7 +649,7 @@ export default function Home() {
           {tab === "words" && (
             <WordsView
               learnedWords={progress.wordsLearned}
-              apiUrl={publicApiUrl}
+              apiUrl={guest ? undefined : publicApiUrl}
               onHear={(text) => speakKorean(text)}
             />
           )}
@@ -661,7 +684,8 @@ export default function Home() {
             />
           )}
           {tab === "practice" && <PracticePage key={account.learningProfile?.level ?? "new"} progress={progress} profile={account.learningProfile ?? defaultLearningProfile} preferences={progress.learningPreferences} onSessionComplete={() => setProgress((current) => recordActivity(current))} />}
-          {tab === "tutor" && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} completedLessonIds={progress.completedLessonIds} />}
+          {tab === "tutor" && guest && <section><h2>Your tutor, when you’re ready</h2><p>Lessons, cards and written practice work without an email. An optional account unlocks AI practice within the free daily limits.</p><button className="button button-dark" onClick={()=>{setGuestAuthOpen(true);setAccountMode("create");setAccountOpen(true);}}>Create an optional account</button></section>}
+          {tab === "tutor" && !guest && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} completedLessonIds={progress.completedLessonIds} />}
           </div>
 
           {loadingSection && (
@@ -671,6 +695,7 @@ export default function Home() {
             </div>
           )}
 
+          {guest && <aside className="guest-learning-note"><p>Guest practice · Progress stays in this browser. Clearing site data or private browsing can erase it.</p><button className="button button-quiet" onClick={()=>{setGuestAuthOpen(true);setAccountMode("create");setAccountOpen(true);}}>Optional account for syncing</button></aside>}
           <FeedbackReport area={tab} publishing={freePublishing}/>
           <footer className="page-footer">
             <span>Made for curious minds, with care.</span>
@@ -725,19 +750,19 @@ export default function Home() {
           completedLessonIds={progress.completedLessonIds}
           onOpenSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}}
           apiUrl={publicApiUrl}
-          account={{...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
+          account={guest && guestAuthOpen ? null : {...account,learningProfile:{...(account.learningProfile??defaultLearningProfile),dailyMinutes:progress.dailyGoalMinutes}}}
           preferences={progress.learningPreferences}
           onAccountUpdated={updateAccount}
           onPreferencesChange={(learningPreferences) =>
             setProgress((current) => ({ ...current, learningPreferences }))
           }
-          onClose={() => {setAccountOpen(false);setSettingsOpen(false);}}
+          onClose={() => {setAccountOpen(false);setSettingsOpen(false);setGuestAuthOpen(false);}}
           onAuthenticated={authenticateLearner}
           onSignOut={signOut}
           onDelete={deleteAccount}
         />
       )}
-    </main>
+    </main></GuestLearningContext.Provider>
   );
 }
 

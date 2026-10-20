@@ -93,7 +93,7 @@ export function AccountModal({
   async function saveProfileName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!account || !onAccountUpdated) return;
-    if (freePublishing) { await onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
+    if (freePublishing || account?.id === "device-only") { await onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
     if (!apiUrl) return;
     setBusy(true);
     setMessage("");
@@ -119,7 +119,7 @@ export function AccountModal({
   }
 
   async function exportData() {
-    if (freePublishing) {
+    if (freePublishing || account?.id === "device-only") {
       const url=URL.createObjectURL(new Blob([JSON.stringify({account,progress:JSON.parse(window.localStorage.getItem(deviceProgressKey)??"null")},null,2)],{type:"application/json"}));
       const link=document.createElement("a"); link.href=url; link.download="saegim-device-backup.json"; link.click(); URL.revokeObjectURL(url); return;
     }
@@ -148,7 +148,7 @@ export function AccountModal({
 
   async function deleteAccount() {
     const confirmed = window.confirm(
-      freePublishing ? "Clear learning data on this device? Export a backup first. This cannot be undone." : "Delete your Saegim account and synced progress? This cannot be undone. Your copy on this device will stay here.",
+      (freePublishing || account?.id === "device-only") ? "Clear learning data on this device? Export a backup first. This cannot be undone." : "Delete your Saegim account and synced progress? This cannot be undone. Your copy on this device will stay here.",
     );
     if (!confirmed) return;
     setBusy(true);
@@ -193,13 +193,13 @@ export function AccountModal({
           <div className="account-content">
             <h2 id="account-title">{settingsOnly ? "Settings, at your pace." : "Your Account."}</h2>
             <p>
-              {freePublishing ? "Practicing on this device as" : "Signed in as"} <strong>{account.displayName}</strong> ·{" "}
+              {(freePublishing || account?.id === "device-only") ? "Practicing on this device as" : "Signed in as"} <strong>{account.displayName}</strong> ·{" "}
               {account.email}
             </p>
             <div className="account-benefit">
               <CheckCircle size={20} />
               <span>
-                {freePublishing ? "Progress stays in this browser and does not sync. Keep a backup before clearing browser data." : "Your lesson and review progress syncs to your account."}
+                {(freePublishing || account?.id === "device-only") ? "Progress stays in this browser and does not sync. Keep a backup before clearing browser data." : "Your lesson and review progress syncs to your account."}
               </span>
             </div>
             {!settingsOnly && onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>⚙ Open Settings</button>}
@@ -221,7 +221,7 @@ export function AccountModal({
                 <div>
                   <span className="micro-label">MAKE IT YOURS</span>
                   <h3 id="learning-preferences-title">Learning comfort</h3>
-                  <p>{freePublishing ? "Your choices are saved in this browser." : "Your choices are saved with your account and restored across devices."}</p>
+                  <p>{(freePublishing || account?.id === "device-only") ? "Your choices are saved in this browser." : "Your choices are saved with your account and restored across devices."}</p>
                 </div>
                 <label className="preference-toggle">
                   <span><strong>Show romanization</strong><small>Keep pronunciation cues beside Hangul.</small></span>
@@ -290,7 +290,7 @@ export function AccountModal({
                 onClick={deleteAccount}
                 disabled={busy}
               >
-                {freePublishing ? "Clear this device’s learning data" : "Delete account and synced progress"}
+                {(freePublishing || account?.id === "device-only") ? "Clear this device’s learning data" : "Delete account and synced progress"}
               </button>
             </div>}
             {message && (
@@ -303,7 +303,7 @@ export function AccountModal({
               onClick={signOut}
               disabled={busy}
             >
-              <SignOut size={17} /> {freePublishing ? "Back to welcome" : "Sign out"}
+              <SignOut size={17} /> {(freePublishing || account?.id === "device-only") ? "Back to welcome" : "Sign out"}
             </button>}
           </div>
         ) : (

@@ -36,7 +36,7 @@ export function LearningOnboarding({
             setBusy(true);
             setNotice("");
             try {
-              if (freePublishing) { onSaved({...account,learningProfile:{...profile,onboardingCompleted:true,dailyMinutes:profile.dailyMinutes??15}}); return; }
+              if (freePublishing || account.id === "device-only") { onSaved({...account,learningProfile:{...profile,onboardingCompleted:true,dailyMinutes:profile.dailyMinutes??15}}); return; }
               const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/v1/account/me`,
                 {
