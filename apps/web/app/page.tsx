@@ -2,6 +2,7 @@
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
 import { useEffect, useMemo, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -26,21 +27,21 @@ import {
 import {prefetchLocalKorean,usesBrowserConversationVoices} from "./ui/speech";
 import {browserVoicesConsented,enableBrowserVoices} from "./ui/browser-voices";
 import {GuestLearningContext} from "./ui/guest-learning";
-import { LessonModal } from "./ui/lesson-modal";
+
 import { readOptionalProgress } from "./ui/progress-response";
-import { LearningOnboarding } from "./ui/learning-onboarding";
-import { AccountModal, type LearnerAccount } from "./ui/account-modal";
-import { ReviewModal as ReviewDeck } from "./ui/review-modal";
+
+import type {LearnerAccount} from "./ui/account-modal";
+
 import { reviewOverview } from "./ui/review-session";
-import { LearningCollection } from "./ui/learning-collection";
+
 import { FeatureGuide } from "./ui/feature-guide";
 import { LevelFocus } from "./ui/level-focus";
 import { FeedbackBanner } from "./ui/feedback-banner";
 import { FeedbackReport } from "./ui/feedback-report";
-import { SpeakDeck } from "./ui/speak-deck";
+
 import { normalizeSpeakingCardId, normalizeSpeakingCardIds } from "./speak-cards";
-import { PracticePage } from "./ui/practice-page";
-import { TutorPage } from "./ui/tutor-page";
+
+
 import { LandingPage } from "./ui/landing-page";
 import { SoriMascot } from "./ui/sori-mascot";
 import {habitProgress} from "./habit-progress";
@@ -140,6 +141,16 @@ function normalizeProgress(
   };
 }
 
+function SectionPending(){return <p role="status" aria-live="polite">Opening your learning space…</p>;}
+const LessonModal=dynamic(()=>import("./ui/lesson-modal").then(module=>module.LessonModal),{loading:SectionPending});
+const LearningOnboarding=dynamic(()=>import("./ui/learning-onboarding").then(module=>module.LearningOnboarding),{loading:SectionPending});
+const ReviewDeck=dynamic(()=>import("./ui/review-modal").then(module=>module.ReviewModal),{loading:SectionPending});
+const LearningCollection=dynamic(()=>import("./ui/learning-collection").then(module=>module.LearningCollection),{loading:SectionPending});
+const SpeakDeck=dynamic(()=>import("./ui/speak-deck").then(module=>module.SpeakDeck),{loading:SectionPending});
+const PracticePage=dynamic(()=>import("./ui/practice-page").then(module=>module.PracticePage),{loading:SectionPending});
+const TutorPage=dynamic(()=>import("./ui/tutor-page").then(module=>module.TutorPage),{loading:SectionPending});
+const AccountModal=dynamic(()=>import("./ui/account-modal").then(module=>module.AccountModal),{loading:SectionPending});
+
 export default function Home() {
   useEffect(()=>{
     void prefetchLocalKorean("안녕하세요","chris").then(()=>prefetchLocalKorean("안녕하세요","jessica"));
@@ -160,7 +171,7 @@ export default function Home() {
   const [account, setAccount] = useState<LearnerAccount | null>(null);
   const guest=account?.id === "device-only";
   const [ready, setReady] = useState(false);
-  const [loadingSection, setLoadingSection] = useState<Tab | null>(null);
+
 
   useEffect(() => {
     async function restoreProgress() {
@@ -288,8 +299,7 @@ export default function Home() {
     if (next === tab) return;
     setTab(next);
     window.scrollTo({top:0,behavior:"instant"});
-    setLoadingSection(next);
-    window.setTimeout(() => setLoadingSection((current) => current === next ? null : current), 240);
+
   }
 
   function finishLesson(
@@ -690,12 +700,7 @@ export default function Home() {
           {tab === "tutor" && !guest && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} completedLessonIds={progress.completedLessonIds} />}
           </div>
 
-          {loadingSection && (
-            <div className="section-loading-screen" role="status" aria-live="polite" aria-busy="true">
-              <SoriMascot className="section-loading-mascot" />
-              <span>Opening {tabs.find((item) => item.id === loadingSection)?.label ?? "your next step"}…</span>
-            </div>
-          )}
+
 
           {guest && <aside className="guest-learning-note"><p>Guest practice · Progress stays in this browser. Clearing site data or private browsing can erase it.</p><button className="button button-quiet" onClick={()=>{setGuestAuthOpen(true);setAccountMode("create");setAccountOpen(true);}}>Optional account for syncing</button></aside>}
           <FeedbackReport area={tab} publishing={freePublishing}/>

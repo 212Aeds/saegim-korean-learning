@@ -16,4 +16,5 @@ if(process.exitCode===0){
  fs.writeFileSync(path.join(output,'sitemap.xml'),files.sitemap);
  fs.writeFileSync(path.join(output,'robots.txt'),files.robots);
  console.log('Prepared hosted sitemap.xml and robots.txt. Search indexing is not guaranteed.');
+ require('./measure-startup.cjs');
 }

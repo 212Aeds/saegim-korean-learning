@@ -30,7 +30,8 @@
     "audio:prepare": "node scripts/prepare-lesson-audio.cjs",
     "audio:check": "node scripts/check-lesson-audio.cjs",
     "site:configure": "node scripts/configure-public-site.cjs",
-    "build:hosted": "node scripts/build-hosted-site.cjs"
+    "build:hosted": "node scripts/build-hosted-site.cjs",
+    "perf:startup": "node scripts/measure-startup.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
