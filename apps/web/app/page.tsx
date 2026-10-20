@@ -442,6 +442,7 @@ export default function Home() {
           freeMode={freePublishing}
           onStartGuest={()=>{restoreVersion.current++;try {const saved=JSON.parse(window.localStorage.getItem(deviceProgressKey)??"null");setProgress(saved?normalizeProgress(saved):initialProgress);}catch{setProgress(initialProgress);}setAccount({id:"device-only",email:"",displayName:"Learner",learningProfile:{...defaultLearningProfile,onboardingCompleted:false}});}}
           onCreateAccount={() => {
+            restoreVersion.current++;
             if (freePublishing) {
               try { const saved=JSON.parse(window.localStorage.getItem(deviceProfileKey)??"null");
                 if (saved?.id === "device-only" && saved.learningProfile?.onboardingCompleted) { setAccount(saved); return; }
@@ -452,6 +453,7 @@ export default function Home() {
             setAccountOpen(true);
           }}
           onSignIn={() => {
+            restoreVersion.current++;
             setAccountMode("login");
             setAccountOpen(true);
           }}
