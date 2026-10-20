@@ -1,5 +1,7 @@
 # Saegim
 
+For a plain-language tour of the code, product choices, and testing evidence, read [How Saegim works](docs/how-saegim-works.md).
+
 The full app with local AI and speech is available through `npm run dev:local`.
 See [local full-app setup](docs/local-full-app.md) for the model downloads,
 restart commands, and the separate device-only publishing build.
@@ -26,7 +28,7 @@ an explicit `PAID_FEATURES_ENABLED=true`; the publishing client additionally for
 features off. Keep paid features disabled for the cost-free release. Existing cloud accounts
 and Neon progress are preserved in the separate development version.
 
-Sori is a free, mobile-first Korean-learning app. Korean studies require an account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 20 lessons, a 1,050-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
+Saegim is a free-first, mobile-friendly Korean-learning beta. The hosted version supports guest lessons, review, listening and written practice without an email; optional accounts add cloud sync and capped AI/speech recognition. It currently includes 150 lessons. See [hosted configuration](docs/cloudflare-hosting.md) and the dated verification notes for the deployment history; the separate local and device-only builds have different capabilities.
 
 ## Run locally
 
@@ -45,7 +47,7 @@ For the included local database, run `npm run db:up` before the API. Docker Comp
 docker compose exec -T db psql -U sori -d sori -f /docker-entrypoint-initdb.d/003-content.sql
 ```
 
-The API listens on port `4004`, requires `DATABASE_URL`, and verifies its database connection at startup. The frontend gates study screens on an authenticated account and needs `NEXT_PUBLIC_API_URL` configured. Without a reachable account service, sign-in is unavailable and study content stays locked.
+The API listens on port `4004`, requires `DATABASE_URL`, and verifies its database connection at startup. The hosted frontend allows guest study with device storage while account restoration runs in the background. Account sync and hosted AI require a reachable account API configured through `NEXT_PUBLIC_API_URL`.
 
 ## Neon
 
