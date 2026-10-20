@@ -8,7 +8,7 @@ function discoveryFiles(origin,slugs){
  origin=publicOrigin(origin);
  const routes=['/','/about/','/privacy/','/learn/',...slugs.map(slug=>`/learn/${slug}/`)];
  if(slugs.some(slug=>!/^[a-z]+(?:-[a-z]+)*$/.test(slug)))throw Error('Invalid guide slug.');
- return {sitemap:'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+routes.map(route=>`  <url><loc>${origin}${route}</loc></url>`).join('\n')+'\n</urlset>\n',robots:`User-agent: *\nAllow: /\nDisallow: /v1/\nSitemap: ${origin}/sitemap.xml\n`};
+ return {sitemap:'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+routes.map(route=>`  <url><loc>${origin}${route}</loc></url>`).join('\n')+'\n</urlset>\n',robots:`User-agent: *\nAllow: /\nDisallow: /v1/\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`};
 }
 module.exports={publicOrigin,discoveryFiles};
 if(require.main===module){try{

@@ -17,5 +17,5 @@ test('search setup accepts only public HTTPS origins and lists real guide routes
  for(const bad of ['http://saegim.example.org','https://localhost','https://127.0.0.1','https://192.168.1.5','https://user:password@saegim.example.org','https://saegim.example.org/private','https://saegim.example.org/?key=secret'])assert.throws(()=>publicOrigin(bad));
  const {sitemap,robots}=discoveryFiles('https://saegim.example.org',publicGuides.map(g=>g.slug));
  for(const guide of publicGuides)assert.ok(sitemap.includes(`/learn/${guide.slug}/`));
- assert.equal((sitemap.match(/<loc>/g)||[]).length,7);assert.ok(!sitemap.includes('localhost'));assert.match(robots,/Sitemap: https:\/\/saegim.example.org\/sitemap.xml/);
+ assert.equal((sitemap.match(/<loc>/g)||[]).length,7);assert.ok(!sitemap.includes('localhost'));assert.match(robots,/Disallow: \/api\//);assert.match(robots,/Sitemap: https:\/\/saegim.example.org\/sitemap.xml/);
 });

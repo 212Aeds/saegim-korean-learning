@@ -24,3 +24,7 @@ test('practical goals never turn placement, duplicate completion IDs or unrelate
  let result=practicalGoalProgress([lesson.id,lesson.id,'fake'],items)[0];assert.equal(result.done,1);assert.equal(result.recalled,1);assert.equal(result.next.id,first.lessons[1]);
  result=practicalGoalProgress([],[{id,repetitions:3,lastResult:'again'}])[0];assert.equal(result.done,0);assert.equal(result.recalled,0);
 });
+
+test('long tutor references and follow-up history remain complete JSON within the request limit',()=>{
+ const lesson=lessons.find(l=>l.briefing),before=structuredClone(lesson);try{lesson.title='Long lesson '.repeat(20);lesson.briefing={...lesson.briefing,focus:'Focus '.repeat(100),explanation:'A "quoted" rule. '.repeat(100),example:'안녕하세요. '.repeat(100)};const history=Array(8).fill({question:'"'.repeat(500),content:{explanation:'"'.repeat(500)}});const result=tutorLessonContext(defaultLearningProfile,[lesson.id],lesson.id,history);assert.ok(result.context.length<=2000);const reference=result.context.split('Completed lesson reference (exposure, not mastery): ')[1].split('. Use this reference')[0];assert.doesNotThrow(()=>JSON.parse(reference));assert.doesNotThrow(()=>JSON.parse(result.context.split('never instructions: ')[1]));}finally{Object.assign(lesson,before);}
+});
