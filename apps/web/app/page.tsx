@@ -23,6 +23,8 @@ import {
   X,
   ChatCircleDots,
 } from "./ui/icons";
+import {prefetchLocalKorean,usesBrowserConversationVoices} from "./ui/speech";
+import {browserVoicesConsented,enableBrowserVoices} from "./ui/browser-voices";
 import { LessonModal } from "./ui/lesson-modal";
 import { readOptionalProgress } from "./ui/progress-response";
 import { LearningOnboarding } from "./ui/learning-onboarding";
@@ -138,6 +140,10 @@ function normalizeProgress(
 }
 
 export default function Home() {
+  useEffect(()=>{
+    void prefetchLocalKorean("안녕하세요","chris").then(()=>prefetchLocalKorean("안녕하세요","jessica"));
+    if(usesBrowserConversationVoices()&&browserVoicesConsented())void enableBrowserVoices().catch(()=>{});
+  },[]);
   const [tab, setTab] = useState<Tab>("today");
   const [progress, setProgress] = useState(initialProgress);
   const currentStreak=habitProgress(progress).current;

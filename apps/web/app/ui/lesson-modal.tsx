@@ -1,4 +1,5 @@
 "use client";
+import {lessonTextAssessment, appendLessonRetry} from "./lesson-answer";
 import {recordedAudioEnabled,recordedAudioUrl} from "./recorded-audio";
 import { paidFeaturesEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -65,7 +66,9 @@ export function LessonModal({
   const [phase, setPhase] = useState<"briefing" | "practice" | "quiz">(
     "briefing",
   );
-  const questions = phase === "practice" ? sets.practice : sets.quiz;
+  const [practiceQueue,setPracticeQueue]=useState(sets.practice);
+  const [quizQueue,setQuizQueue]=useState(sets.quiz);
+  const questions = phase === "practice" ? practiceQueue : quizQueue;
   const [step, setStep] = useState(0);
   const [choice, setChoice] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
@@ -93,10 +96,12 @@ export function LessonModal({
     : false;
   const practiceDone = phase === "practice" && step >= questions.length;
   const quizDone = phase === "quiz" && step >= questions.length;
+  const assessment = question?.type === "text" ? lessonTextAssessment(question,typed) : {correct:false,near:false};
+  const originalTurn = step < (phase === "practice" ? sets.practice.length : sets.quiz.length);
   const correct = question
     ? question.type === "choice"
       ? choice === question.answer
-      : isCorrectTextAnswer(question, typed) || Boolean(
+      : assessment.correct || Boolean(
           !question.id.startsWith("word-hangul-") && !(question.id.startsWith("letter-build-") || question.id.includes("-shape-")) && /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer) && romanization &&
           normalizeRomanizedAnswer(typed) === normalizeRomanizedAnswer(romanization),
         )
@@ -117,8 +122,8 @@ export function LessonModal({
   const progress = phase === "briefing"
     ? 0.04
     : phase === "practice"
-      ? 0.05 + 0.7 * (step / sets.practice.length)
-      : 0.75 + 0.25 * (step / sets.quiz.length);
+      ? 0.05 + 0.7 * (step / questions.length)
+      : 0.75 + 0.25 * (step / questions.length);
 
   useEffect(() => {
     setAudioNotice(""); setAudioBusy(false);
@@ -135,6 +140,11 @@ export function LessonModal({
   }
 
   function advance() {
+    const matched = speechPracticeTurn ? speechResult?.matches : correct;
+    if (!matched) {
+      if (phase === "practice") setPracticeQueue(current=>appendLessonRetry(current,step));
+      else setQuizQueue(current=>appendLessonRetry(current,step));
+    }
     setStep((current) => current + 1);
     setChoice(null);
     setTyped("");
@@ -146,7 +156,7 @@ export function LessonModal({
   function checkOrContinue() {
     if (!question) return;
     if (speechPracticeTurn) {
-      if (!speechResult || (phase === "practice" && !speechResult.matches)) return;
+      if (!speechResult) return;
       advance();
       return;
     }
@@ -154,12 +164,11 @@ export function LessonModal({
     if (!showTip) {
       if (!attempted) {
         setAttempted(true);
-        if (phase === "practice" && correct) {
-          playCorrectAnswerSound();
+        if (correct) playCorrectAnswerSound();
+        if (phase === "practice" && correct && originalTurn) {
           setPracticeCorrect((count) => count + 1);
         }
-        if (phase === "quiz" && correct) {
-          playCorrectAnswerSound();
+        if (phase === "quiz" && correct && originalTurn) {
           setQuizCorrect((count) => count + 1);
         }
       }
@@ -167,7 +176,6 @@ export function LessonModal({
       return;
     }
 
-    if (phase === "practice" && !correct) return;
     advance();
   }
 
@@ -235,13 +243,13 @@ export function LessonModal({
             <div className="complete-stamp"><Check size={30} weight="bold" /></div>
             <span className="micro-label">LESSON COMPLETE</span>
             <h2 id="lesson-title">You finished<br /><em>{lesson.title}.</em></h2>
-            <p>Final quiz: {quizCorrect} of {sets.quiz.length}. Your lesson items are added to spaced review.</p>
+            <p>First-attempt quiz recall: {quizCorrect} of {sets.quiz.length}. Missed questions were practiced again. Your lesson items are added to spaced review.</p>
             <button className="button button-dark" onClick={() => onComplete(lesson, { correct: quizCorrect, total: sets.quiz.length })}>
               Finish this lesson <ArrowRight size={17} />
             </button>
           </div>
         ) : question ? (
-          <div key={`${phase}-${question.id}`} className="lesson-question lesson-step-motion">
+          <div key={`${phase}-${step}-${question.id}`} className="lesson-question lesson-step-motion">
             <span className="question-count">
               {phase === "practice" ? "PRACTICE" : "QUIZ"} {String(step + 1).padStart(2, "0")} / {String(questions.length).padStart(2, "0")}
             </span>
@@ -256,7 +264,7 @@ export function LessonModal({
             <h2 id="lesson-title">{speechPracticeTurn ? "Say this Korean aloud." : question.prompt}</h2>
             {speechPracticeTurn ? <>
               <OpenRouterListeningPractice
-                key={`${phase}-${question.id}`}
+                key={`${phase}-${step}-${question.id}`}
                 variant="lesson-speaking"
                 korean={question.korean}
                 expectedRomanization={romanization}
@@ -265,11 +273,11 @@ export function LessonModal({
                 onVoiceChange={(speechVoice) => onPreferencesChange({ ...preferences, speechVoice })}
                 onResult={(transcript, matches) => {
                   setSpeechResult({ transcript, matches });
-                  if (matches && !attempted) {
+                  if (!attempted) {
                     setAttempted(true);
-                    playCorrectAnswerSound();
-                    if (phase === "practice") setPracticeCorrect((count) => count + 1);
-                    else setQuizCorrect((count) => count + 1);
+                    if (matches) playCorrectAnswerSound();
+                    if (matches && originalTurn && phase === "practice") setPracticeCorrect((count) => count + 1);
+                    else if(matches && originalTurn) setQuizCorrect((count) => count + 1);
                   }
                 }}
               />
@@ -284,7 +292,7 @@ export function LessonModal({
             {!speechPracticeTurn && question.type === "choice" ? (
               <div className="choice-list" role="group" aria-label={question.prompt}>
                 {question.choices.map((item) => (
-                  <button key={item} className={`choice ${choice === item ? "chosen" : ""} ${showTip && item === question.answer ? "right-answer" : ""}`} onClick={() => { setChoice(item); setShowTip(false); }} aria-pressed={choice === item}>
+                  <button key={item} className={`choice ${choice === item ? "chosen" : ""} ${showTip && item === question.answer ? "right-answer" : ""}`} disabled={showTip} onClick={() => { setChoice(item); setShowTip(false); }} aria-pressed={choice === item}>
                     {item}{showTip && item === question.answer && <CheckCircle size={18} weight="fill" />}
                   </button>
                 ))}
@@ -293,19 +301,21 @@ export function LessonModal({
               <label className="text-answer-field">
                 <span>Your answer</span>
                 {/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u.test(question.answer)
-                  ? <KoreanInput value={typed} onChange={(value) => { setTyped(value); setShowTip(false); }} label={question.prompt} placeholder="Type Korean" onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} />
-                  : <input autoComplete="off" autoCapitalize="none" value={typed} onChange={(event) => { setTyped(event.target.value); setShowTip(false); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} placeholder={question.placeholder} aria-label={question.prompt} />}
+                  ? <KoreanInput value={typed} onChange={(value) => { if(!showTip) setTyped(value); }} label={question.prompt} placeholder="Type Korean" onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} />
+                  : <input autoComplete="off" autoCapitalize="none" value={typed} onChange={(event) => { if(!showTip) setTyped(event.target.value); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && readyToCheck) checkOrContinue(); }} placeholder={question.placeholder} aria-label={question.prompt} />}
               </label>
             ) : null}
             {!speechPracticeTurn && showTip && (
               <p className={`answer-tip ${correct ? "correct" : "try-again"}`} role="status">
-                {phase === "quiz" ? (correct ? "Correct. " : "Not quite. ") : (correct ? "That’s it. " : "Take another try. ")}
+                {phase === "quiz" ? (correct ? "Correct. " : "Not quite. ") : (correct ? "That’s it. " : "Not quite. This question will return for another try. ")}
+                {!correct ? <>Answer: {question.answer}. </> : assessment.near ? <>Accepted with a spelling note. Standard answer: {question.answer}. </> : null}
                 {preferences.hintLevel === "gentle" && phase === "practice"
                   ? ""
                   : <>{preferences.hintLevel === "challenge" ? "Challenge nudge: " : ""}{hintText}</>}
               </p>
             )}
-            <button className="button button-dark continue-button" onClick={checkOrContinue} disabled={speechPracticeTurn ? !speechResult || (phase === "practice" && !speechResult.matches) : !readyToCheck || (showTip && phase === "practice" && !correct)}>
+            {((!speechPracticeTurn && showTip && correct) || (speechPracticeTurn && speechResult?.matches)) && <SoriMascot thumbsUp className="lesson-answer-mascot" />}
+            <button className="button button-dark continue-button" onClick={checkOrContinue} disabled={speechPracticeTurn ? !speechResult : !readyToCheck}>
               {speechPracticeTurn ? (phase === "quiz" ? "Next question" : "Keep going") : showTip ? (phase === "quiz" ? "Next question" : "Keep going") : "Check answer"}<ArrowRight size={17} />
             </button>
           </div>

@@ -334,3 +334,9 @@
 @media(max-width:650px){.word-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.habit-stats{gap:20px}.habit-growth strong{width:100%}.habit-garden{padding:18px}}
 @media(max-width:400px){.word-pack-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.habit-growth>span{animation:none}.settings-icon-button{transition:none}}
+
+.lesson-answer-mascot{display:block;width:76px;height:76px;margin:8px auto;animation:lessonPraise .3s ease-out}
+@keyframes lessonPraise{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.lesson-answer-mascot{animation:none}}
+
+.share-qr{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.share-qr svg{width:72px;height:72px}.share-qr img{max-width:100%;height:auto;background:white}.beta-invitation details{margin-block:16px}
