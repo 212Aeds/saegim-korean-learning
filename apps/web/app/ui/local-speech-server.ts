@@ -31,18 +31,22 @@ export function localSpeechAvailable(force=false): Promise<boolean> {
   return task;
 }
 export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal): Promise<string> {
+  signal?.throwIfAborted();
   if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) throw Error("Speech is not configured.");
   const raw=await blob.arrayBuffer();
+  signal?.throwIfAborted();
   let wav: Blob;
   if(isMono16kWav(raw)) wav=new Blob([raw],{type:"audio/wav"});
   else {
   const context = new AudioContext();
   try {
     const decoded = await context.decodeAudioData(raw);
+    signal?.throwIfAborted();
     const rendering = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
     const source = rendering.createBufferSource(); source.buffer = decoded;
     source.connect(rendering.destination); source.start();
     const mono = (await rendering.startRendering()).getChannelData(0);
+    signal?.throwIfAborted();
     const buffer = new ArrayBuffer(44 + mono.length * 2), view = new DataView(buffer);
     const ascii = (offset: number, value: string) => { for (let i=0; i<value.length; i++) view.setUint8(offset+i,value.charCodeAt(i)); };
     ascii(0,"RIFF"); view.setUint32(4,36+mono.length*2,true); ascii(8,"WAVE"); ascii(12,"fmt ");
@@ -53,6 +57,7 @@ export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal):
     wav = new Blob([buffer],{type:"audio/wav"});
   } finally { await context.close(); }
   }
+  signal?.throwIfAborted();
   const form = new FormData(); form.append("audio", wav, "recording.wav");
   const response = await fetch(`${localSpeechUrl || hostedApiUrl}/v1/speech/transcribe`, {
     method:"POST", credentials:localSpeechUrl ? "omit" : "include", headers:localSpeechUrl ? {} : {"Content-Type":"audio/wav","X-Saegim-Speech-Consent":"true"}, body:localSpeechUrl ? form : wav, signal:signal ? AbortSignal.any([signal,AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000), cache:"no-store",

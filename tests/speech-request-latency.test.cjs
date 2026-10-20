@@ -24,3 +24,16 @@ test('preparing a new recorded clip does not wait for an unrelated stalled downl
  await second;release(response());await first;
  }finally{if(release)release(response());global.fetch=original;if(windowBefore===undefined)delete global.window;else global.window=windowBefore;}
 });
+
+test('canceled transcription skips reading audio and uploading; cancel during file read skips decoding',async()=>{
+ const {transcribeOnLocalServer}=require('../apps/web/app/ui/local-speech-server.ts');
+ const original=global.fetch;let reads=0,requests=0;
+ try{global.fetch=async()=>{requests++;throw Error('Unexpected upload');};
+ const stopped=new AbortController();stopped.abort();
+ await assert.rejects(transcribeOnLocalServer({arrayBuffer:async()=>{reads++;return new ArrayBuffer(0);}},stopped.signal),{name:'AbortError'});
+ assert.equal(reads,0);assert.equal(requests,0);
+ const duringRead=new AbortController();
+ await assert.rejects(transcribeOnLocalServer({arrayBuffer:async()=>{reads++;duringRead.abort();return new ArrayBuffer(0);}},duringRead.signal),{name:'AbortError'});
+ assert.equal(reads,1);assert.equal(requests,0);
+ }finally{global.fetch=original;}
+});
