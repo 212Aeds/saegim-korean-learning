@@ -26,3 +26,7 @@ My provisional preference is Malssomi for memorability, subject to native-langua
 Word roots: National Institute of Korean Language dictionary, 말 https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=27260 and 소리 https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=62379 . Verify the remaining proposed roots and a natural Hangul brand spelling with a Korean-language reviewer before selecting a final name.
 
 Registry method: official Verisign RDAP help https://www.verisign.com/news-insights/registration-data-access-protocol/help/ . Legal/store distinction: https://www.uspto.gov/trademarks/search/comprehensive-clearance-search-similar-trademarks and https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/ . Before launch, check relevant markets, similar-sounding marks, related education/software services and existing commercial use. A domain or store listing alone does not establish trademark rights.
+
+## Direct USPTO follow-up
+
+The official https://tmsearch.uspto.gov/ Wordmark search returned “No results found” for each of Malssomi, Malgieum and Saeumori on 19 October 2026, with live and dead statuses enabled and no class restriction. This is a name-string screen only. It does not cover phonetic variants, translations, foreign registries, unregistered rights or a legal likelihood-of-confusion analysis. It is not clearance.
