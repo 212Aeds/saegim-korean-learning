@@ -6,7 +6,7 @@ import { playCorrectAnswerSound, unlockPracticeSounds } from "./feedback-sound";
 import { preferredRecordingPause, saveRecordingPause } from "./recording-preferences";
 import { recordConversationTurn } from "./conversation-recording";
 import { ListeningControls } from "./listening-controls";
-import { matchesPracticeAnswer } from "./speech-check";
+import {speechAttempt} from "./speech-attempt";
 import { SpeechFeedback } from "./speech-feedback";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -34,6 +34,9 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   const [notice,setNotice]=useState("Getting speech practice ready. You can listen or write while you wait.");
   const [written,setWritten]=useState(""), [heard,setHeard]=useState("");
   const [match,setMatch]=useState<boolean|null>(null), [level,setLevel]=useState(0), [seconds,setSeconds]=useState(0);
+  const [needsConfirmation,setNeedsConfirmation]=useState(false);
+  const pendingMismatch=useRef<string|null>(null);
+  const writtenField=useRef<HTMLDetailsElement|null>(null);
   const version=useRef(0), busy=useRef(false), mounted=useRef(true);
   const controller=useRef<AbortController|null>(null), finish=useRef<(()=>void)|null>(null);
   const active=state!=="ready";
@@ -52,7 +55,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   },[]);
   useEffect(()=>{
     setNotice("Listen once, then tap Speak. A short pause finishes your recording.");
-    setWritten("");setHeard("");setMatch(null);setLevel(0);setSeconds(0);setState("ready");busy.current=false;
+    setWritten("");setHeard("");setMatch(null);setNeedsConfirmation(false);pendingMismatch.current=null;setLevel(0);setSeconds(0);setState("ready");busy.current=false;
     return ()=>{version.current++;controller.current?.abort();finish.current=null;stopKoreanPlayback();};
   },[korean]);
   useEffect(()=>{
@@ -72,10 +75,11 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     if(!mounted.current)return;
     setReady(available);setConnecting(false);setNotice(available?"Ready. Tap Speak when you’re ready.":"Speech practice is unavailable. You can still listen or write your answer.");
   }
-  function check(text:string) {
+  function check(text:string,source:"speech"|"written"="written") {
     const answer=text.trim();if(!answer)return;
-    const correct=matchesPracticeAnswer(korean,answer,expectedRomanization);
-    setHeard(answer);setMatch(correct);onResult?.(answer,correct);if(correct&&!onResult)playCorrectAnswerSound();
+    const result=speechAttempt(korean,answer,expectedRomanization,source),correct=result.matches;
+    pendingMismatch.current=result.needsConfirmation?answer:null;setNeedsConfirmation(result.needsConfirmation);
+    setHeard(answer);setMatch(correct);if(result.submit)onResult?.(answer,correct);if(correct&&!onResult)playCorrectAnswerSound();
     setNotice(correct?"Nice work! That matches the target wording.":"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
   }
   async function listen() {
@@ -102,7 +106,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       finish.current=null;setState("checking");setLevel(0);setNotice("Checking your Korean… You can cancel while you wait.");
       const text=await transcribeOnLocalServer(new Blob([wav],{type:"audio/wav"}),current.signal);
       if(attempt!==version.current||current.signal.aborted)return;
-      if(text.trim())check(text);else setNotice("No words were detected. Try again closer to your microphone, or write your answer.");
+      if(text.trim())check(text,"speech");else setNotice("No words were detected. Try again closer to your microphone, or write your answer.");
     }catch(error){if(attempt===version.current && !current.signal.aborted)setNotice(microphoneMessage(error));}
     finally{if(wav)new Uint8Array(wav).fill(0);if(attempt===version.current){controller.current=null;finish.current=null;busy.current=false;setState("ready");setLevel(0);}}
   }
@@ -123,7 +127,9 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}
-    <details className="speaking-write"><summary>Prefer to write? Try Korean or romanization</summary><form onSubmit={event=>{event.preventDefault();if(!busy.current)check(written);}}>
+    {needsConfirmation&&<div className="speech-recovery"><p>Not counted as a wrong answer yet. If the transcript missed your words, retry or write your answer.</p><button type="button" className="button button-soft" disabled={active} onClick={()=>{setWritten(heard);if(writtenField.current){writtenField.current.open=true;writtenField.current.querySelector("textarea")?.focus();}}}>Edit or write my answer</button><button type="button" className="button button-quiet" disabled={active} onClick={()=>{const answer=pendingMismatch.current;if(!answer)return;pendingMismatch.current=null;setNeedsConfirmation(false);onResult?.(answer,false);setNotice("Transcript submitted as your answer. Review the target, then try again.");}}>Submit this transcript</button></div>}
+
+    <details ref={writtenField} className="speaking-write"><summary>Prefer to write? Try Korean or romanization</summary><form onSubmit={event=>{event.preventDefault();if(!busy.current)check(written);}}>
       <KoreanInput value={written} onChange={setWritten} label="Type Korean or romanization" placeholder="Type Korean or romanization…" maxLength={240} openOnFocus={false}/>
       <button className="button button-soft" disabled={!written.trim()||active}>Check phrase</button>
     </form></details>
