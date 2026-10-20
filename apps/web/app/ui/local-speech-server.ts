@@ -11,13 +11,24 @@ export function isMono16kWav(buffer:ArrayBuffer) {
     && view.getUint16(22,true)===1 && view.getUint32(24,true)===16000
     && view.getUint16(34,true)===16 && view.getUint32(40,true)===buffer.byteLength-44;
 }
-export async function localSpeechAvailable(): Promise<boolean> {
-  if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) return false;
-  try {
-    const response = await fetch(localSpeechUrl ? `${localSpeechUrl}/health` : `${hostedApiUrl}/v1/speech/status`, {credentials:localSpeechUrl ? "omit" : "include",signal: AbortSignal.timeout(localSpeechUrl ? 10000 : 75000), cache:"no-store"});
-    const body = await response.json();
-    return response.ok && (localSpeechUrl ? body.status === "ok" && body.paidFallback === false : body.transcription === true);
-  } catch { return false; }
+let availabilityUntil=0;
+let availabilityRequest:Promise<boolean>|undefined;
+export function localSpeechAvailable(force=false): Promise<boolean> {
+  if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) return Promise.resolve(false);
+  if(!force && Date.now()<availabilityUntil)return Promise.resolve(true);
+  if(availabilityRequest)return availabilityRequest;
+  const task=(async()=>{
+    try {
+      const response=await fetch(localSpeechUrl ? `${localSpeechUrl}/health` : `${hostedApiUrl}/v1/speech/status`,{credentials:localSpeechUrl ? "omit":"include",signal:AbortSignal.timeout(localSpeechUrl ? 10000:75000),cache:"no-store"});
+      const body=await response.json();
+      const available=response.ok && (localSpeechUrl ? body.status==="ok" && body.paidFallback===false : body.transcription===true);
+      availabilityUntil=available ? Date.now()+15000 : 0;
+      return available;
+    }catch{availabilityUntil=0;return false;}
+  })();
+  availabilityRequest=task;
+  void task.finally(()=>{if(availabilityRequest===task)availabilityRequest=undefined;});
+  return task;
 }
 export async function transcribeOnLocalServer(blob: Blob, signal?: AbortSignal): Promise<string> {
   if (!localSpeechUrl && !(hostedAiEnabled && hostedApiUrl)) throw Error("Speech is not configured.");

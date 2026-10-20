@@ -71,7 +71,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
   },[state]);
   async function reconnect() {
     setConnecting(true);
-    const available=await localSpeechAvailable();
+    const available=await localSpeechAvailable(true);
     if(!mounted.current)return;
     setReady(available);setConnecting(false);setNotice(available?"Ready. Tap Speak when you’re ready.":"Speech practice is unavailable. You can still listen or write your answer.");
   }

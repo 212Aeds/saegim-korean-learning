@@ -278,7 +278,8 @@ export async function prefetchLocalKorean(text: string, voice = selectedElevenLa
   const version = ++preparationVersion;
   // Rapid navigation keeps only the latest background preparation.
   // An explicit Listen request still shares its in-flight clip immediately.
-  await Promise.allSettled([...localAudioPreparing.values()]);
+  // Recorded files are independent downloads; a stalled old clip must not hold the next card.
+  if (!recordedAudioEnabled || !recordedAudioUrl(text,voice)) await Promise.allSettled([...localAudioPreparing.values()]);
   if (version !== preparationVersion) return;
   try { await localAudio(text, voice); } catch { /* The Listen button can retry. */ }
 }
