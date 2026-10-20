@@ -1,3 +1,4 @@
+import {FamilyLearningRoute} from "./family-learning-route";
 import { lessons } from "../curriculum";
 import { learningPathways, pathwayProgress, isLessonUnlocked, prerequisiteLabel } from "../learning-pathways";
 import { chapterProgress } from "../chapter-progress";
@@ -9,6 +10,7 @@ export function LearningCollection({ completed, profile=defaultLearningProfile, 
   const nextMilestone = [5, 10, 25, 50, 75, 100, lessons.length].find((count) => count > learned.size);
   const chapters=chapterProgress([...learned]), completeChapters=chapters.filter(chapter=>chapter.complete).length;
   return <section className="learning-collection" aria-label="Your learning collection">
+    {profile.reasons.includes("family")&&<FamilyLearningRoute completed={completed} profile={profile} onLesson={onLesson}/>}
     <div className="collection-heading"><div><span className="micro-label">YOUR LEARNING COLLECTION</span><h3>Small steps. Something to keep.</h3></div><strong>{learned.size}<small>lessons completed</small></strong></div>
     <p>{nextMilestone ? `${nextMilestone - learned.size} more lessons to your ${nextMilestone}-lesson milestone.` : "You’ve completed the current course collection. Keep it fresh with review and conversation."} Placement opens a starting point; only completed lessons fill this collection.</p>
     <div className="collection-pathways">{learningPathways.map((pathway) => { const stats = pathwayProgress(pathway.id, [...learned]); return <div key={pathway.id}><span>{pathway.title}</span><progress max={stats.total} value={stats.completed} aria-label={`${pathway.title}: ${stats.completed} of ${stats.total} completed`} /><small>{stats.completed}/{stats.total}</small></div>; })}</div>

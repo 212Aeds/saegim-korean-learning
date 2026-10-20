@@ -1,0 +1,26 @@
+{
+  "checkedDate": "2026-10-19",
+  "results": [
+    {
+      "domain": "malssak.com",
+      "rdapStatus": 200,
+      "url": "https://rdap.verisign.com/com/v1/domain/malssak.com"
+    },
+    {
+      "domain": "malssomi.com",
+      "rdapStatus": 404,
+      "url": "https://rdap.verisign.com/com/v1/domain/malssomi.com"
+    },
+    {
+      "domain": "malgieum.com",
+      "rdapStatus": 404,
+      "url": "https://rdap.verisign.com/com/v1/domain/malgieum.com"
+    },
+    {
+      "domain": "saeumori.com",
+      "rdapStatus": 404,
+      "url": "https://rdap.verisign.com/com/v1/domain/saeumori.com"
+    }
+  ],
+  "note": "404 means no registry object returned at check time; not trademark clearance or a guarantee of registration availability. No purchase attempted."
+}

@@ -54,10 +54,11 @@ export function LandingPage({
             Start with the letters. Find your words. Build sentences you can use.
             A welcoming place to practice Korean, at your own pace.
           </p>
-          <button className="button button-dark landing-cta" onClick={onCreateAccount}>
+          <a className="button button-dark landing-cta" href="#try-korean">Try a lesson — no account needed <ArrowRight size={17}/></a>
+          <button className="button button-quiet" onClick={onCreateAccount}>
             {freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
-          <a className="landing-preview-link" href="#try-korean">Try a lesson preview first <span aria-hidden="true">↓</span></a>
+
           <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "A free account keeps your lessons and reviews together."}</span>
         </div>
         <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">

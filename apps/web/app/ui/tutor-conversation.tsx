@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
 import { browserVoiceState, browserVoicesConsented, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
+import {conversationLearning} from "./conversation-learning";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { transcriptRomanization } from "./transcript-romanization";
@@ -38,7 +39,7 @@ function PartnerAvatar({ voice }: { voice: ElevenLabsVoice }) {
     </span>
   );
 }
-export function TutorConversation({ profile }: { profile: LearningProfile }) {
+export function TutorConversation({ profile, completedLessonIds=[] }: { profile: LearningProfile; completedLessonIds?:string[] }) {
   const [turns, setTurns] = useState<Turn[]>([]),
     [draft, setDraft] = useState(""),
     [thinking, setThinking] = useState(false),
@@ -48,6 +49,8 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
     [calling, setCalling] = useState(false),
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
+  const learning=conversationLearning(completedLessonIds);
+  const [useLessonWords,setUseLessonWords]=useState(true);
   const [audioStatus,setAudioStatus]=useState("");
   const [pendingMessage, setPendingMessage] = useState("");
   const [pace,setPace] = useState(1);
@@ -146,6 +149,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           ),
           level: profile.level,
           scenario,
+          practicedWords:useLessonWords?learning.words:[],
           consent: true,
         }),
         signal: controller.signal,
@@ -406,6 +410,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
         {playing && <p role="status">{audioStatus}</p>}
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>
+      {learning.words.length>0&&<details className="conversation-learning"><summary>Practice words from your lessons</summary><p>{learning.titles.join(" · ")}</p><p lang="ko">{learning.words.join(" · ")}</p><label><input type="checkbox" checked={useLessonWords} disabled={calling||thinking||playing} onChange={e=>setUseLessonWords(e.target.checked)}/> Ask your partner to reuse these words</label><small>Completed lessons show exposure, not mastery. AI may introduce a new word or make a mistake.</small></details>}
       <section className="conversation-guide" aria-label="Conversation practice for your level">
         <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>
         <p className="conversation-goal"><strong>Try this today</strong>{guide.goal}</p>
@@ -507,6 +512,7 @@ export function TutorConversation({ profile }: { profile: LearningProfile }) {
           </p>
         )}
       </div>
+      {turns.some(turn=>turn.role==="assistant")&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Use Listen beside a reply to hear it again.</small></div>}
       <details className="conversation-phrase-help">
         <summary>Need a phrase to get started?</summary>
         <p lang="ko">{situation.phrase}</p><p className="conversation-roman">{transcriptRomanization(situation.phrase)}</p><p>{situation.meaning}</p>

@@ -655,7 +655,7 @@ export default function Home() {
             />
           )}
           {tab === "practice" && <PracticePage key={account.learningProfile?.level ?? "new"} progress={progress} profile={account.learningProfile ?? defaultLearningProfile} preferences={progress.learningPreferences} onSessionComplete={() => setProgress((current) => recordActivity(current))} />}
-          {tab === "tutor" && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} />}
+          {tab === "tutor" && tutorEnabled && <TutorPage learningProfile={account.learningProfile ?? defaultLearningProfile} completedLessonIds={progress.completedLessonIds} />}
           </div>
 
           {loadingSection && (

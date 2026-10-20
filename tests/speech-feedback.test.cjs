@@ -9,7 +9,7 @@ test('match feedback places Korean, romanization, and a distinct result in readi
  assert.ok(html.indexOf('>neo</p>')<html.indexOf('>Match</strong>'));
  assert.match(html,/class="speech-result"/);assert.match(html,/Thumbs up/);
  const retry=renderToStaticMarkup(React.createElement(SpeechFeedback,{transcript:'네',matches:false}));
- assert.match(retry,/>ne<\/p>/);assert.match(retry,/>Try again<\/strong>/);assert.ok(!retry.includes('Thumbs up'));
+ assert.match(retry,/>ne<\/p>/);assert.match(retry,/>Try again<\/strong>/);assert.ok(!retry.includes('Thumbs up'));assert.match(retry,/does not measure pronunciation/);
 });
 test('romanization normalizes transcript spacing before sound rules',()=>{
  assert.equal(transcriptRomanization('  오늘은\n어떤\t이야기?  '),'oneureun eotteon iyagi?');

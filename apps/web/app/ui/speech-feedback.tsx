@@ -8,7 +8,7 @@ export function SpeechFeedback({transcript,matches}: {transcript:string;matches:
     {romanization && romanization!==transcript.trim() && <p className="transcript-romanization" lang="ko-Latn">{romanization}</p>}
     {matches!==null && <div className="speech-result">
       <SoriMascot className="speech-result-mascot" thumbsUp={matches} />
-      <div><strong>{matches?"Match":"Try again"}</strong><p>{matches?"잘했어요! Nice work.":"Take a breath and give it another try."}</p></div>
+      <div><strong>{matches?"Match":"Try again"}</strong><p>{matches?"잘했어요! Nice work.":"The transcript differs. Recognition can miss words; this does not measure pronunciation. Try again or write your answer."}</p></div>
     </div>}
   </div>;
 }

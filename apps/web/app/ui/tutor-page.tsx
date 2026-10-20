@@ -17,7 +17,7 @@ const starters = [
   "How do 에 and 에서 differ?",
 ];
 
-export function TutorPage({ learningProfile = defaultLearningProfile }: { learningProfile?: LearningProfile }) {
+export function TutorPage({ learningProfile = defaultLearningProfile, completedLessonIds=[] }: { learningProfile?: LearningProfile; completedLessonIds?:string[] }) {
   const suggestedStarters = learningProfile.level === "new" ? ["How do I build a Hangul syllable?", "What is the difference between ㅓ and ㅗ?", "How do I introduce myself politely?", "Help me remember a new Korean word."] : learningProfile.level === "intermediate" ? ["How do I connect two Korean actions with -고?", "Explain -(으)ㄹ 거예요 with examples.", "When does 은/는 express contrast?", "Give me a short everyday dialogue to practice."] : starters;
   const [question, setQuestion] = useState("");
   const [state, setState] = useState<TutorState>("idle");
@@ -133,7 +133,7 @@ export function TutorPage({ learningProfile = defaultLearningProfile }: { learni
               </button>
         </form>
       </section>
-      <TutorConversation profile={learningProfile} />
+      <TutorConversation profile={learningProfile} completedLessonIds={completedLessonIds} />
     </div>
   );
 }

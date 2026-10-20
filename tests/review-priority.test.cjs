@@ -14,3 +14,7 @@ test('review overview separates due, recovery, and repeated recall without claim
 test('rating an absent review ID cannot award practice or a streak',()=>{
  const p={...initialProgress,reviewItems:[card('known','2026-10-12')]};assert.deepEqual(rateReviewItem(p,'missing',true),p);
 });
+
+test('review avoids adjacent identical Korean fronts when a different item is available in the selected round',()=>{
+ const cards=[{...card('a','2026-10-01',0,'again'),front:'가족'},{...card('b','2026-10-02',0,'again'),front:'가족'},{...card('c','2026-10-03'),front:'밥'}];const before=structuredClone(cards);assert.deepEqual(reviewSession(cards).map(c=>c.id),['a','c','b']);assert.deepEqual(cards,before);assert.equal(reviewSession(cards,2).length,2);assert.deepEqual(reviewSession(cards,0),[]);
+});
