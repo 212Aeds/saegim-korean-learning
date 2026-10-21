@@ -292,10 +292,11 @@ export async function playElevenLabsKorean(
 ): Promise<KoreanPlayback> {
   if (typeof window === "undefined")
     return { played: false, source: "unavailable" };
+  fallbackOptions = {...fallbackOptions, consistentVoice:true, naturalOnly:true};
   stopKoreanPlayback();
   const version = playbackVersion;
   const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
-  const browserVoice=!!fallbackOptions.conversationVoice && usesBrowserConversationVoices() && !recorded;
+  const browserVoice=usesBrowserConversationVoices() && !recorded;
   if(browserVoice)primeBrowserVoicePlayback();
   if(browserVoice && browserVoiceState().phase!=="ready")return {played:false,source:"unavailable"};
   if (!paidFeaturesEnabled && !localSpeechUrl && !recorded && !browserVoice) {

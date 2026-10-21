@@ -13,6 +13,7 @@ import { WordReference } from "./word-reference";
 import { transcriptRomanization } from "./transcript-romanization";
 import { compareSpeech, silenceDecision } from "./speech-check";
 import { encodeWav, maxClipSeconds, releaseCapture, type OpenRouterCapture } from "./openrouter-audio-capture";
+import {MatchingVoiceSetup} from "./matching-voice-setup";
 import { playElevenLabsKorean, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, type ElevenLabsVoice } from "./speech";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -81,11 +82,9 @@ function PaidListeningPractice({ korean, english, expectedRomanization, variant 
     setBusy("tts"); setNotice("Creating natural Korean audio…");
     try {
       const result = await playElevenLabsKorean(korean, voice, rate);
-      setNotice(result.source === "elevenlabs"
+      setNotice(result.played
         ? `${voice === "jessica" ? "Jessica" : "Chris"} is speaking. Listen once, then say the phrase.`
-        : result.source === "device"
-          ? "Natural audio is unavailable right now; Yuna’s device voice is speaking. Then say the phrase."
-          : "Audio could not be played. Check the server connection and try again.");
+        : "The selected voice is unavailable. Set up matching voices below, or try Listen again.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Natural Korean audio could not be created.");
     } finally { setBusy(null); }
@@ -235,6 +234,7 @@ function PaidListeningPractice({ korean, english, expectedRomanization, variant 
         </>
       )}
       <WordReference word={korean} />
+      <MatchingVoiceSetup text={korean} voice={voice}/>
       {feedback && <div className={`speech-feedback ${feedback}`} role="status"><SoriMascot className="speech-feedback-mascot" thumbsUp={feedback === "match"} /><strong>{feedback === "match" ? "You got it!" : "Try again — you’re learning."}</strong></div>}
     </section>
   );

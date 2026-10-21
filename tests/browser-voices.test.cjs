@@ -37,6 +37,6 @@ test('hosted conversation playback uses the model and never substitutes a device
   assert.equal(await speech.koreanConversationAudioAvailable(),false);
   assert.equal((await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','chris',1,{conversationVoice:true,consistentVoice:true})).played,false);
   assert.equal(deviceCalls,0);await voices.enableBrowserVoices();assert.equal(await speech.koreanConversationAudioAvailable(),true);
-  let started=0;const result=await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','jessica',1,{conversationVoice:true,consistentVoice:true,waitForEnd:true,onPlaybackStart:()=>started++});assert.equal(started,1);assert.equal(result.source,'browser-model');assert.equal(result.played,true);assert.equal(deviceCalls,0);
+  let started=0;const result=await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','jessica',1,{waitForEnd:true,onPlaybackStart:()=>started++});assert.equal(started,1);assert.equal(result.source,'browser-model');assert.equal(result.played,true);assert.equal(deviceCalls,0);
  }finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,previous);}
 });

@@ -1,4 +1,5 @@
 "use client";
+import {MatchingVoiceSetup} from "./matching-voice-setup";
 import {useGuestLearning} from "./guest-learning";
 import { useEffect, useRef, useState } from "react";
 import { ListeningControls } from "./listening-controls";
@@ -46,6 +47,7 @@ export function DeviceListeningPractice({korean, expectedRomanization, selectedV
       onPaceChange={value=>{stop();setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />
     <div className="speech-actions"><button type="button" className="button button-soft" disabled={busy} onClick={()=>void listen()}>{busy ? "Listening…" : "Listen to Korean"}</button>
       <button type="button" className="button button-quiet" disabled={!busy} onClick={stop}>Stop audio</button></div>
+    <MatchingVoiceSetup text={korean} voice={voice}/>
     <form onSubmit={event=>{event.preventDefault();const matches=matchesPracticeAnswer(korean,written,expectedRomanization);setNotice(matches?"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");onResult?.(written,matches);}}>
       <KoreanInput value={written} onChange={setWritten} label={expectedRomanization ? "Write Korean or romanization" : "Write the Korean target"} maxLength={500} openOnFocus={false}/>
       <button className="button button-dark" disabled={!written.trim()}>Check written response</button>

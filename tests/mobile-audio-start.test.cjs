@@ -11,8 +11,8 @@ test('packaged Korean playback starts inside the tap without waiting for a fetch
 });
 
 
-test('a named flashcard voice never silently switches to a browser voice for a missing clip',async()=>{
+test('default listening never silently switches to a device voice for a missing clip',async()=>{
  const old=global.window;let attempts=0;
  global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null},speechSynthesis:{cancel(){},getVoices(){attempts++;return []}}};
- try{const result=await playElevenLabsKorean('This missing clip must not be synthesized','chris',1,{consistentVoice:true});assert.equal(result.played,false);assert.equal(result.source,'unavailable');assert.equal(attempts,0);}finally{stopKoreanPlayback();global.window=old;}
+ try{const result=await playElevenLabsKorean('This missing clip must not be synthesized','chris',1);assert.equal(result.played,false);assert.equal(result.source,'unavailable');assert.equal(attempts,0);}finally{stopKoreanPlayback();global.window=old;}
 });
