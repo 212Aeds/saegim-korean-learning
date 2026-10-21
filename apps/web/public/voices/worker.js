@@ -1,3 +1,4 @@
+import {readVoiceAsset} from './read-asset.js';
 import * as ort from './ort/ort.webgpu.bundle.min.mjs';
 import {TextToSpeech,UnicodeProcessor,Style,writeWavFile} from './supertonic.js';
 
@@ -15,9 +16,7 @@ async function asset(name) {
   if(!bytes){
     response=await fetch(url,{credentials:'omit',referrerPolicy:'no-referrer'});
     if(!response.ok)throw Error('The voice download could not finish. Please try again.');
-    const reader=response.body.getReader(),parts=[];let size=0;
-    while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>expected.bytes){await reader.cancel();throw Error('Voice file size did not match.');}parts.push(value);loaded+=value.length;report('Downloading Chris and Jessica…');}
-    const joined=new Uint8Array(size);let offset=0;for(const part of parts){joined.set(part,offset);offset+=part.length;}bytes=joined.buffer;
+    bytes=await readVoiceAsset(response,expected.bytes,count=>{loaded+=count;report('Downloading Chris and Jessica…');});
     if(!await valid(bytes,expected))throw Error('Voice file verification failed. Please retry.');
     try{await cache?.put(url,new Response(bytes));}catch{/* Private browsing/storage limits must not prevent this visit's playback. */}
   }else{loaded+=expected.bytes;report('Loading saved voices…');}

@@ -1,3 +1,4 @@
+import {currentVoiceDevicePolicy} from "./voice-device-policy";
 export type BrowserVoiceState={phase:"idle"|"loading"|"ready"|"error";progress:number;message:string};
 let state:BrowserVoiceState={phase:"idle",progress:0,message:""};
 const clips=new Map<string,Blob>();
@@ -27,7 +28,7 @@ function connect(){
     if(worker!==connected)return;
     if(data.type==="progress"){if(state.phase==="loading")update({phase:"loading",progress:data.progress,message:data.message});return;}
     const item=pending.get(data.id);if(!item)return;pending.delete(data.id);clearTimeout(item.timer);
-    if(data.type==="error")item.reject(new Error(data.message));else item.resolve(data.wav);
+    if(data.type==="error"){item.reject(new Error(data.message));cancelBrowserVoices(data.message);}else item.resolve(data.wav);
   };
   worker.onerror=()=>{if(worker===connected)cancelBrowserVoices("Voice setup could not finish. Retry, or continue by text.");};
   return worker;
@@ -51,6 +52,7 @@ export function cancelBrowserVoices(message=""){
 }
 export function forgetBrowserVoiceConsent(){try{window.localStorage.removeItem(consentKey);}catch{}cancelBrowserVoices();}
 export function enableBrowserVoices(){
+  const policy=currentVoiceDevicePolicy();if(!policy.canLoad)return Promise.reject(new Error(policy.reason));
   primeBrowserVoicePlayback();
   if(state.phase==="ready")return Promise.resolve();
   if(initializing)return initializing;
@@ -66,3 +68,5 @@ export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica"
   if(!wav||signal.aborted)throw new DOMException("Canceled","AbortError");
   const blob=new Blob([wav],{type:"audio/wav"});clips.set(key,blob);if(clips.size>6)clips.delete(clips.keys().next().value!);return blob;
 }
+
+export function prepareBrowserVoicesAutomatically(){if(currentVoiceDevicePolicy().automatic)return enableBrowserVoices();return Promise.resolve();}

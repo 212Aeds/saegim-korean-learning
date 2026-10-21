@@ -16,6 +16,7 @@ test('matching voices share initialization and release canceled generation',asyn
   workers[0].onerror();assert.equal(workers[1].terminated,undefined);assert.equal(voices.browserVoiceState().phase,'loading');
   workers[1].reply('ready');await retry;
   const generated=voices.synthesizeBrowserVoice('반가워요.','jessica',new AbortController().signal);workers[1].reply('audio',{wav:new ArrayBuffer(48)});const firstClip=await generated;assert.equal(firstClip.type,'audio/wav');const sent=workers[1].messages.length;assert.equal(await voices.synthesizeBrowserVoice('반가워요.','jessica',new AbortController().signal),firstClip);assert.equal(workers[1].messages.length,sent);
+  const failed=voices.synthesizeBrowserVoice('새로운 문장이에요.','chris',new AbortController().signal);workers[1].reply('error',{message:'Synthetic model failure'});await assert.rejects(failed,/Synthetic model failure/);assert.equal(workers[1].terminated,true);
   workers[1].onerror();assert.equal(voices.browserVoiceState().phase,'error');assert.equal(workers[1].terminated,true);
   voices.forgetBrowserVoiceConsent();assert.equal(voices.browserVoicesConsented(),false);assert.equal(voices.browserVoiceState().phase,'idle');
  }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
