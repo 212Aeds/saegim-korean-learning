@@ -644,7 +644,7 @@ export default function Home() {
             />
           )}
           {tab === "learn" && (
-            <LearnView progress={progress} onLesson={startLesson} learningProfile={account.learningProfile ?? defaultLearningProfile} />
+            <LearnView progress={progress} onBlockPractice={()=>navigateTo("practice")} onLesson={startLesson} learningProfile={account.learningProfile ?? defaultLearningProfile} />
           )}
           {tab === "review" && (
             <ReviewView
@@ -1122,10 +1122,12 @@ function LearnView({
   learningProfile,
   progress,
   onLesson,
+  onBlockPractice,
 }: {
   learningProfile: LearningProfile;
   progress: SavedProgress;
   onLesson: (lesson?: Lesson) => void;
+  onBlockPractice:()=>void;
 }) {
   const routeOrder = new Map(learningRoute(learningProfile).map((lesson, index) => [lesson.id, index]));
   const [readyOnly, setReadyOnly] = useState(false);
@@ -1142,6 +1144,7 @@ function LearnView({
       <div className="learning-pathways">
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         <LevelFocus profile={learningProfile} />
+        {(learningProfile.level==="new"||learningProfile.level==="hangul")&&<section className="practice-intro"><h3>Give the letters a little practice.</h3><p>Build a Hangul block with tiles, then try writing it with a Korean keyboard.</p><button type="button" className="button button-soft" onClick={onBlockPractice}>Build &amp; write Hangul</button></section>}
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <details className="learning-progress-details"><summary>My progress & topic chapters<span>See what you’ve learned</span></summary><LearningCollection completed={progress.completedLessonIds} items={progress.reviewItems} profile={learningProfile} onLesson={onLesson} /></details>
         <label className="course-view-control">Browse lessons<select value={readyOnly ? "ready" : "all"} onChange={event=>setReadyOnly(event.target.value === "ready")}><option value="all">All lessons, including upcoming steps</option><option value="ready">Ready to start or revisit</option></select></label>

@@ -1,4 +1,10 @@
 {
   "url": "https://forms.gle/ZwEJV2Dnzo4yEHEX9",
-  "qrAsset": "/feedback-qr.svg"
+  "qrAsset": "/feedback-qr.svg",
+  "prefill": {
+    "url": "https://docs.google.com/forms/d/e/1FAIpQLSf0h9tgj3xc1Gd06_GRM1kkrp-vj5PDG88qxHKb20hj_N1pxg/viewform",
+    "nameEntry": "entry.668089580",
+    "reportEntry": "entry.1690404554",
+    "areaEntry": "entry.1870422208"
+  }
 }

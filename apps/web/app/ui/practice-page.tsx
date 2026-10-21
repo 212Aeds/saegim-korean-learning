@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import {recordedAudioEnabled,recordedAudioUrl} from "./recorded-audio";
 import { paidFeaturesEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -14,6 +15,7 @@ import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from ".
 import { playCorrectAnswerSound } from "./feedback-sound";
 import { FeedbackToggle } from "./feedback-toggle";
 import { SoriMascot } from "./sori-mascot";
+const HangulBlockBuilder=dynamic(()=>import("./hangul-block-builder").then(module=>module.HangulBlockBuilder),{loading:()=> <p role="status">Opening Hangul practice…</p>});
 const modes: Record<PracticeMode, { title: string; description: string }> = {
   letters: { title: "Letter shapes & sounds", description: "Recall names and write familiar letters." },
   reading: { title: "Build & read blocks", description: "Combine letters from your current learning steps." },
@@ -22,6 +24,7 @@ const modes: Record<PracticeMode, { title: string; description: string }> = {
   mixed: { title: "A little of everything", description: "Mix the material available at your level." },
 };
 export function PracticePage({ progress, profile, preferences, onSessionComplete }: { progress: SavedProgress; profile: LearningProfile; preferences: LearningPreferences; onSessionComplete: () => void }) {
+  const [blockMode,setBlockMode]=useState<"tiles"|"writing"|null>(null);
   const pool = useMemo(() => practicePool(progress, profile, "mixed"), [progress, profile]);
   const [mode, setMode] = useState<PracticeMode>(profile.level === "new" ? "letters" : (profile.level === "intermediate" || profile.level === "advanced") ? "sentences" : "words");
   const [focus,setFocus]=useState<"standard"|"recovery"|"listening">("standard");
@@ -73,6 +76,7 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
     } catch { if (attempt === playback.current) setAudioNotice("Audio could not start. Please try again."); }
     finally { if (attempt === playback.current) setAudioBusy(false); }
   }
+  if(blockMode)return <HangulBlockBuilder completed={progress.completedLessonIds} profile={profile} preferences={preferences} initialMode={blockMode} onClose={()=>setBlockMode(null)} onComplete={onSessionComplete}/>;
   if (session.length && !card) return <section className="practice-session-card lesson-step-motion">
     <span className="micro-label">PRACTICE COMPLETE</span><h2>A little steadier than before.</h2>
     <div className="review-summary"><strong>{session.length}<span>questions practiced</span></strong><strong>{firstTry}<span>right on the first try</span></strong><strong>{missed.length}<span>needed another try</span></strong></div>
@@ -98,6 +102,7 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
     </div>
   </section>;
   return <div className="practice-page"><section className="practice-intro"><span className="micro-label">SMALL ROUNDS. AS MUCH PRACTICE AS YOU WANT.</span><h2>Make familiar Korean feel easier.</h2><p>Short rounds matched to your level. Revisit familiar material or practice the next small step.</p></section>
+    {(profile.level==="new"||profile.level==="hangul")&&<section className="practice-intro"><span className="micro-label">START WITH ONE BLOCK</span><h3>Build it, then write it.</h3><p>Fit familiar letters together, or practice typing Hangul. Short rounds use your current foundations.</p><div className="flashcard-tools"><button type="button" className="button button-soft" onClick={()=>setBlockMode("tiles")}>Build a Hangul block</button><button type="button" className="button button-quiet" onClick={()=>setBlockMode("writing")}>Practice writing Hangul</button></div></section>}
     <section className="practice-smart-rounds" aria-label="Focused practice rounds"><button className={`practice-focus ${focus === "recovery" ? "is-selected" : ""}`} aria-pressed={focus === "recovery"} disabled={!recovery.length} onClick={()=>setFocus("recovery")}><strong>Practice tricky cards</strong><span>Revisit material you marked Again in Review.</span><small>{recovery.length ? `${recovery.length} eligible questions` : "No tricky cards yet. Mark Again in Review when you need more practice."}</small></button><button className={`practice-focus ${focus === "listening" ? "is-selected" : ""}`} aria-pressed={focus === "listening"} disabled={!listening.length} onClick={()=>setFocus("listening")}><strong>Train your ear</strong><span>Listen first, then choose a letter or write what you hear.</span><small>{listening.length} listening questions at your level</small></button></section><div className="practice-focus-grid">{Object.entries(modes).map(([id, item]) => {const size=id === "mixed" ? pool.length : pool.filter(card=>card.mode===id).length;return <button key={id} className={`practice-focus ${focus === "standard" && mode===id ? "is-selected" : ""}`} aria-pressed={focus === "standard" && mode===id} disabled={!size} onClick={()=>{setMode(id as PracticeMode);setFocus("standard");}}><strong>{item.title}</strong><span>{item.description}</span><small>{size ? `${size} questions available` : "Opens as you learn the foundations"}</small></button>;})}</div>
     <div className="practice-start"><FeedbackToggle /><label>Round size<select value={count} onChange={event=>setCount(Number(event.target.value))}><option value={5}>Up to 5 questions</option><option value={10}>Up to 10 questions</option><option value={20}>Up to 20 questions</option></select></label><button className="button button-dark" disabled={!available.length} onClick={()=>start()}>{focus === "recovery" ? "Start tricky-card practice" : focus === "listening" ? "Start listening round" : "Start a fresh round"}</button></div>
     <p className="practice-footnote">Repeat whenever you want. Lessons and scheduled review keep their own progress.</p>
