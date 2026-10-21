@@ -46,5 +46,6 @@ export function silenceDecision(elapsedMs: number, lastSpeechMs: number, speechD
 export function matchesPracticeAnswer(korean: string, answer: string, romanization?: string): boolean {
   if (compareSpeech(korean, answer, true).matches) return true;
   const normalized = (value: string) => value.toLowerCase().replace(/[\s\p{P}]/gu, "");
+  if(korean.normalize("NFC").trim()==="또" && answer.trim().toLowerCase()==="ddo")return true;
   return Boolean(romanization && /^[a-z\s\p{P}]+$/iu.test(answer.trim()) && normalized(answer) === normalized(romanization));
 }

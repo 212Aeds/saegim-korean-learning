@@ -10,6 +10,7 @@ import {speechAttempt} from "./speech-attempt";
 import { SpeechFeedback } from "./speech-feedback";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
+import {MatchingVoiceSetup} from "./matching-voice-setup";
 import { Microphone, SpeakerHigh, Stop } from "./icons";
 
 type PracticeState = "ready" | "starting" | "listening" | "checking" | "playing";
@@ -80,7 +81,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     const result=speechAttempt(korean,answer,expectedRomanization,source),correct=result.matches;
     pendingMismatch.current=result.needsConfirmation?answer:null;setNeedsConfirmation(result.needsConfirmation);
     setHeard(answer);setMatch(correct);if(result.submit)onResult?.(answer,correct);if(correct&&!onResult)playCorrectAnswerSound();
-    setNotice(correct?"Nice work! That matches the target wording.":"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
+    setNotice(correct?korean==="또"&&answer.toLowerCase()==="ddo"?"Accepted as a sound cue. Standard romanization: tto.":"Nice work! That matches the target wording.":"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
   }
   async function listen() {
     if(busy.current)return;
@@ -99,7 +100,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     try {
       wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{silenceMs:pauseMs,onSilence:remaining=>{if(attempt===version.current)setPauseRemaining(remaining);},onCalibrating:()=>{if(attempt===version.current)setNotice("Adjusting to background noise… Wait for Listening, then speak.");},onReady:stop=>{
         if(attempt!==version.current)return;
-        finish.current=stop;
+        finish.current=stop ? ()=>{setState("checking");setNotice("Recording finished. Checking your Korean…");stop();} : null;
         if(stop){setState("listening");setNotice("Listening. Say the phrase, then pause—or tap Stop & check.");}
       }});
       if(current.signal.aborted||attempt!==version.current)return;
@@ -115,7 +116,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>
     {variant!=="lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={active} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speaking-mic-panel" data-active={state==="listening"}>
-      <div className="speech-input-meter-label"><span>{state==="listening"?pauseRemaining!==null?`Pause · checking in ${(pauseRemaining/1000).toFixed(1)}s`:level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":"Microphone off"}</span>{state==="listening" && <strong>{seconds}s / 30s</strong>}</div>
+      <div className="speech-input-meter-label"><span>{state==="listening"?pauseRemaining!==null?`Pause · checking in ${(pauseRemaining/1000).toFixed(1)}s`:level>=3?"Sound reaching your mic":seconds<2?"Listening · speak naturally":"Listening for your voice · try moving closer":state==="starting"?"Opening microphone…":state==="checking"?"Recording finished · checking wording":heard?"Recording checked · microphone released":!ready?connecting?"Connecting speech service…":"Speech unavailable · writing is ready":"Ready to record"}</span>{state==="listening" && <strong>{seconds}s / 30s</strong>}</div>
       <meter min={0} max={100} value={level} aria-label="Microphone input level" />
       <div className="speech-practice-actions">
         {variant!=="lesson-speaking" && <button type="button" className="button button-soft" disabled={active} onClick={()=>void listen()}><SpeakerHigh size={18}/>{state==="playing"?"Playing Korean…":"Listen"}</button>}
@@ -126,6 +127,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       <label className="speech-pause-control">Pause before checking<select aria-label="Pause before checking" value={pauseMs} disabled={active} onChange={event=>{const value=Number(event.target.value);setPauseMs(value);saveRecordingPause(value);}}><option value={3000}>3 seconds · natural pace</option><option value={5000}>5 seconds · take a breath</option><option value={10000}>10 seconds · unhurried</option></select><small>Your pause starts after your last words. Keep speaking to extend it, or tap Stop &amp; check to send now.</small></label>
       <details className="microphone-help"><summary>No sound? Check your microphone</summary><p>Allow microphone access in this browser’s site settings. If headphones are connected, check which microphone your phone or computer is using. Disconnect Bluetooth to try your device’s own microphone, then tap Speak again.</p></details>
     </div>
+    <MatchingVoiceSetup text={korean} voice={voice}/>
     {heard && match!==null && <SpeechFeedback transcript={heard} matches={match}/>}
     {needsConfirmation&&<div className="speech-recovery"><p>Not counted as a wrong answer yet. If the transcript missed your words, retry or write your answer.</p><button type="button" className="button button-soft" disabled={active} onClick={()=>{setWritten(heard);if(writtenField.current){writtenField.current.open=true;writtenField.current.querySelector("textarea")?.focus();}}}>Edit or write my answer</button><button type="button" className="button button-quiet" disabled={active} onClick={()=>{const answer=pendingMismatch.current;if(!answer)return;pendingMismatch.current=null;setNeedsConfirmation(false);onResult?.(answer,false);setNotice("Transcript submitted as your answer. Review the target, then try again.");}}>Submit this transcript</button></div>}
 

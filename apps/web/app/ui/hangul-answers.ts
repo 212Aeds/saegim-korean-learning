@@ -21,4 +21,11 @@ export function consonantNameQuestion(letter: string, answer: string) {
 }
 const vowelNames: Record<string, string> = { "ㅏ":"아", "ㅓ":"어", "ㅗ":"오", "ㅜ":"우", "ㅡ":"으", "ㅣ":"이", "ㅑ":"야", "ㅕ":"여", "ㅛ":"요", "ㅠ":"유", "ㅐ":"애", "ㅔ":"에", "ㅒ":"얘", "ㅖ":"예", "ㅘ":"와", "ㅙ":"왜", "ㅚ":"외", "ㅝ":"워", "ㅞ":"웨", "ㅟ":"위", "ㅢ":"의" };
 export function hangulName(letter: string) { return consonantName(letter) ?? vowelNames[letter]; }
-export function naturalSpeechText(text: string) { return hangulName(text.trim()) ?? text; }
+export function naturalSpeechText(text: string) {
+ const letters=text.trim().split(/\s*\+\s*/u);
+ if(letters.length===2){
+  const onset=[..."ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"].indexOf(letters[0]),vowel=[..."ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"].indexOf(letters[1]);
+  if(onset>=0&&vowel>=0)return String.fromCharCode(0xac00+onset*588+vowel*28);
+ }
+ return hangulName(text.trim()) ?? text;
+}

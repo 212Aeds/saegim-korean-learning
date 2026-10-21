@@ -1,6 +1,6 @@
 const fs=require('node:fs'),ts=require('typescript'),{test}=require('node:test'),assert=require('node:assert/strict');
 require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,p);
-test('matching voices need explicit setup, share initialization, and release canceled generation',async()=>{
+test('matching voices share initialization and release canceled generation',async()=>{
  const previous={window:global.window,Worker:global.Worker};let workers=[];const storage=new Map();
  global.window={localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)}};
  global.Worker=class{constructor(url,options){assert.equal(url,'/voices/worker.js');assert.equal(options.type,'module');workers.push(this);this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){this.terminated=true;}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
@@ -35,8 +35,9 @@ test('hosted conversation playback uses the model and never substitutes a device
  const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts');
  try{
   assert.equal(await speech.koreanConversationAudioAvailable(),false);
-  assert.equal((await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','chris',1,{conversationVoice:true,consistentVoice:true})).played,false);
+  assert.equal((await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','chris',1,{conversationVoice:true,consistentVoice:true})).source,'browser-model');
   assert.equal(deviceCalls,0);await voices.enableBrowserVoices();assert.equal(await speech.koreanConversationAudioAvailable(),true);
   let started=0;const result=await speech.playElevenLabsKorean('한국어로 같이 이야기해요.','jessica',1,{waitForEnd:true,onPlaybackStart:()=>started++});assert.equal(started,1);assert.equal(result.source,'browser-model');assert.equal(result.played,true);assert.equal(deviceCalls,0);
+  voices.cancelBrowserVoices();const canceled=speech.playElevenLabsKorean('새로운 대화예요.','chris');speech.stopKoreanPlayback();assert.equal((await canceled).played,false);assert.equal(deviceCalls,0);
  }finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,previous);}
 });

@@ -12,25 +12,33 @@ const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
 const args=process.argv.slice(2),selected=[];
 for(let i=0;i<args.length;i++){
  if(args[i]==='--lesson'&&args[i+1]){const id=args[++i],lesson=lessons.find(l=>l.id===id);if(!lesson)throw Error(`Unknown lesson: ${id}`);selected.push(lesson);}
- else if(!['--all','--catalog','--flashcards'].includes(args[i]))throw Error('Use --all, --flashcards, or --lesson <lesson-id>.');
+ else if(!['--all','--catalog','--flashcards','--blocks'].includes(args[i]))throw Error('Use --all, --flashcards, --blocks, or --lesson <lesson-id>.');
 }
 if(selected.length&&args.includes('--all'))throw Error('Choose --all or selected lessons.');
 const source=(args.includes('--all')||args.includes('--flashcards'))?lessons:selected;
 const words=args.includes('--catalog') ? Object.keys(manifest).filter(key=>key.startsWith('chris|')).map(key=>key.slice(6)) : source.length ? source.flatMap(l=>[...l.words,...l.questions.map(q=>q.korean),...(l.briefing?[l.briefing.example]:[])]) : [...hangulLetters.map(l=>l.korean),'안녕하세요','감사합니다','다시 말해 주세요.','이거 얼마예요?'];
-if(args.includes('--flashcards'))words.push(...opinionSpeaking.map(card=>card[1]));
+if(args.includes('--blocks')){const {readingBlocks}=require('../apps/web/app/practice-bank.ts');words.push(...readingBlocks(hangulLetters.map(l=>l.korean)).map(block=>block.korean));}
+if(args.includes('--flashcards')){const {speakingCards}=require('../apps/web/app/speak-cards.ts');words.push(...opinionSpeaking.map(card=>card[1]),...speakingCards.map(card=>card.korean));}
 const eligible=args.includes('--flashcards')?words.filter(text=>/^[가-힣ㄱ-ㅎㅏ-ㅣ\s,.!?]+$/u.test(text)):words;
 const texts=[...new Set(eligible.map(t=>naturalSpeechText(t).normalize('NFC').trim().replace(/\s+/gu,' ')).filter(t=>t&&t.length<=300))];
 const port=process.env.SAEGIM_AUDIO_PREP_PORT||'5055';if(!['5055','5056'].includes(port))throw Error('Use the loopback speech preparation port.');
 async function main(){
  let made=0,skipped=0;
  for(const text of texts)for(const voice of ['chris','jessica']){
-  const key=`${voice}|${text}`,hash=crypto.createHash('sha256').update('supertonic3-v2|'+key).digest('hex'),name=`${hash}.wav`,file=path.join(output,name);
+  const key=`${voice}|${text}`,code=text.charCodeAt(0),block=text.length===1&&code>=0xac00&&code<=0xd7a3&&(code-0xac00)%28===0;
+  if(block){
+   const blockDir=path.join(root,'apps/web/public/audio/blocks');fs.mkdirSync(blockDir,{recursive:true});
+   const destination=path.join(blockDir,`${voice}-${code}.wav`);
+   if(!fs.existsSync(destination)&&manifest[key])fs.copyFileSync(path.join(root,'apps/web/public',manifest[key]),destination);
+   if(fs.existsSync(destination)){if(manifest[key]){delete manifest[key];fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n');}skipped++;continue;}
+  }
+  const hash=crypto.createHash('sha256').update('supertonic3-v2|'+key).digest('hex'),name=`${hash}.wav`,file=path.join(output,name);
   if(manifest[key]===`/audio/lessons/${name}`&&fs.existsSync(file)){skipped++;continue;}
   const response=await fetch(`http://127.0.0.1:${port}/v1/speech/synthesize`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,voice,quality:"recording"}),signal:AbortSignal.timeout(180000)});
   if(!response.ok||!response.headers.get('content-type')?.startsWith('audio/'))throw Error(`Audio preparation failed (${response.status})`);
   const bytes=Buffer.from(await response.arrayBuffer());
   if(bytes.length<44||bytes.length>5*1024*1024||bytes.toString('ascii',0,4)!=='RIFF')throw Error('Invalid WAV from local server');
-  fs.writeFileSync(file,bytes);manifest[key]=`/audio/lessons/${name}`;
+  if(block){fs.writeFileSync(path.join(root,'apps/web/public/audio/blocks',`${voice}-${code}.wav`),bytes);}else{fs.writeFileSync(file,bytes);manifest[key]=`/audio/lessons/${name}`;}
   fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n');
   made++;if(made%10===0)console.log(`${made} clips prepared`);
  }

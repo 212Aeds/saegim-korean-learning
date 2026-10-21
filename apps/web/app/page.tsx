@@ -25,7 +25,7 @@ import {
   ChatCircleDots,
 } from "./ui/icons";
 import {prefetchLocalKorean,usesBrowserConversationVoices} from "./ui/speech";
-import {browserVoicesConsented,enableBrowserVoices} from "./ui/browser-voices";
+import {enableBrowserVoices} from "./ui/browser-voices";
 import {GuestLearningContext} from "./ui/guest-learning";
 
 import { readOptionalProgress } from "./ui/progress-response";
@@ -154,7 +154,8 @@ const AccountModal=dynamic(()=>import("./ui/account-modal").then(module=>module.
 export default function Home() {
   useEffect(()=>{
     void prefetchLocalKorean("안녕하세요","chris").then(()=>prefetchLocalKorean("안녕하세요","jessica"));
-    if(usesBrowserConversationVoices()&&browserVoicesConsented())void enableBrowserVoices().catch(()=>{});
+    const voiceWarmup=window.setTimeout(()=>{if(usesBrowserConversationVoices())void enableBrowserVoices().catch(()=>{});},1500);
+    return ()=>window.clearTimeout(voiceWarmup);
   },[]);
   const [tab, setTab] = useState<Tab>("today");
   const [progress, setProgress] = useState(initialProgress);

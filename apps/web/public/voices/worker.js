@@ -43,7 +43,7 @@ async function initialize(){
     }
     engine=new TextToSpeech(config,new UnicodeProcessor(indexer),...sessions);
     report("Finishing voice setup…");
-    await engine.call("안녕하세요.","ko",styles.chris,16,.9,.25);
+    for(const voice of ["chris","jessica"])await engine.call("안녕하세요.","ko",styles[voice],16,.9,.25);
   }catch(error){engine=undefined;await Promise.allSettled(sessions.map(session=>session.release()));throw error;}
 }
 function finish(samples,rate){

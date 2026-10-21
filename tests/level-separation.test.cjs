@@ -1,5 +1,5 @@
 const fs=require('node:fs'),ts=require('typescript'),{test}=require('node:test'),assert=require('node:assert/strict');
-require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,p);
+require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,p);
 const {speakingCardsForProfile,normalizeSpeakingCardIds}=require('../apps/web/app/speak-cards.ts');
 const {recommendedLessons}=require('../apps/web/app/learning-profile.ts');
 const {journeyTopics}=require('../apps/web/app/journey-content.ts');
@@ -18,7 +18,7 @@ test('vocabulary lessons introduce a word before sentence-level material',()=>{
  for(const topic of journeyTopics){const lesson=lessons.find(l=>l.id===`${topic.id}-words`);assert.equal(lesson.briefing.example,topic.items[0][0]);assert.equal(lesson.briefing.translation,topic.items[0][1]);}
 });
 test('every placement has a nonempty deck and opening vocabulary has both recorded voices',()=>{
- const manifest=require('../apps/web/app/audio-manifest.json');
+ const {recordedAudioUrl}=require('../apps/web/app/ui/recorded-audio.ts');
  const {lessons}=require('../apps/web/app/curriculum.ts');
  for(const level of ['new','hangul','basic','intermediate','advanced']){
    const cards=speakingCardsForProfile({level,reasons:['family']},[]);
@@ -27,7 +27,7 @@ test('every placement has a nonempty deck and opening vocabulary has both record
  }
  for(const id of ['first-readable-words','food-words','home-words','transport-words'])
    for(const word of lessons.find(l=>l.id===id).words)
-     for(const voice of ['chris','jessica']) assert.ok(manifest[`${voice}|${word}`],`${voice}: ${word}`);
+     for(const voice of ['chris','jessica']){const url=recordedAudioUrl(word,voice);assert.ok(url,`${voice}: ${word}`);assert.ok(fs.existsSync(require('node:path').join(__dirname,'../apps/web/public',url)),url);}
 });
 
 test('opinion placement stays on connected opinion cards instead of inheriting beginner greetings',()=>{

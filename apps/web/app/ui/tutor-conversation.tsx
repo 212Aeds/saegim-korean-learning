@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
-import { browserVoiceState, browserVoicesConsented, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
+import { browserVoiceState, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
 import {conversationLearning} from "./conversation-learning";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -58,7 +58,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   const [voiceSetup,setVoiceSetup]=useState(browserVoiceState);
   const browserVoices=usesBrowserConversationVoices();
   const voiceReady=!browserVoices||voiceSetup.phase==="ready";
-  useEffect(()=>{const unsubscribe=subscribeBrowserVoices(setVoiceSetup);if(browserVoices&&browserVoicesConsented())void enableBrowserVoices().catch(()=>{});return unsubscribe;},[browserVoices]);
+  useEffect(()=>{const unsubscribe=subscribeBrowserVoices(setVoiceSetup);if(browserVoices)void enableBrowserVoices().catch(()=>{});return unsubscribe;},[browserVoices]);
   const composer=useRef<HTMLFormElement|null>(null);
   const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
@@ -119,7 +119,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         onPlaybackStart:()=>{if(mounted.current&&attempt===listeningAttempt.current)setAudioStatus("Your partner is speaking…");},
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current)
-        setNotice(browserVoices&&!voiceReady?"Set up the matching voices above to hear new replies. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
+        setNotice(browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
     } catch {
       if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
@@ -399,8 +399,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       </div>
       {browserVoices&&<section className="conversation-voice-setup" aria-label="Conversation voice setup">
         <strong>{voiceReady?"The same Chris and Jessica voices as your lessons":"Bring Chris and Jessica into your conversation"}</strong>
-        {!voiceReady&&<p>Around 430 MB of voice files are needed the first time. First setup can take a little time. Speech is generated on this device, with no paid requests. Files are saved where browser storage allows.</p>}
-        {voiceSetup.phase==="loading"?<><p role="status">{voiceSetup.message} {voiceSetup.progress}%</p><progress value={voiceSetup.progress} max={100} aria-label="Voice setup progress"/><button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent}>Cancel setup</button></>:!voiceReady?<button type="button" className="button button-dark" onClick={()=>void enableBrowserVoices().catch(()=>{})}>Set up matching voices · about 430 MB</button>:<small>Ready for this visit. Your selected partner keeps the same voice.</small>}
+        {!voiceReady&&<p>Voices prepare automatically in the background. Around 430 MB of voice files are needed on the first visit. Speech is generated on this device, with no paid requests. Files are saved where browser storage allows.</p>}
+        {voiceSetup.phase==="loading"?<><p role="status">{voiceSetup.message} {voiceSetup.progress}%</p><progress value={voiceSetup.progress} max={100} aria-label="Voice setup progress"/><button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent}>Cancel setup</button></>:!voiceReady?<button type="button" className="button button-dark" onClick={()=>void enableBrowserVoices().catch(()=>{})}>Retry voice preparation</button>:<small>Ready for this visit. Your selected partner keeps the same voice.</small>}
         {voiceSetup.phase==="error"&&<p role="status">{voiceSetup.message}</p>}
         <details><summary>Voice model &amp; license</summary><a href="/voices/MODEL-LICENSE.txt" target="_blank" rel="noopener noreferrer">Supertonic 3 · OpenRAIL-M model license</a><a href="/voices/SUPERTONIC-LICENSE.txt" target="_blank" rel="noopener noreferrer">Browser adapter · MIT license</a>{voiceReady&&<button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent} disabled={calling||playing}>Unload conversation voices</button>}</details>
       </section>}

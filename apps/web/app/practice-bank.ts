@@ -145,9 +145,9 @@ export function practicePool(
         korean: block.korean,
         prompt: "Read this block in roman letters.",
         answer: transcriptRomanization(block.korean),
-        accepted: [],
+        accepted: block.korean === "또" ? ["ddo"] : [],
         placeholder: "Romanized syllable",
-        tip: `${block.letters.join(" + ")} builds ${block.korean}. This is a reading sample, not a word definition.`,
+        tip: `${block.letters.join(" + ")} builds ${block.korean}. Standard romanization: ${transcriptRomanization(block.korean)}. This is a reading sample, not a word definition.`,
       },
     });
     cards.push({

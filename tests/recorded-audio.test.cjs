@@ -5,7 +5,7 @@ const {recordedAudioUrl}=require('../apps/web/app/ui/recorded-audio.ts');
 test('recorded letter names resolve by selected voice and point to real WAV files',()=>{
  const {hangulLetters}=require('../apps/web/app/more-lessons.ts');
  for(const letter of hangulLetters)for(const voice of ['chris','jessica']){
-  const url=recordedAudioUrl(letter.korean,voice);assert.match(url,/^\/audio\/lessons\/[a-f0-9]{64}\.wav$/);
+  const url=recordedAudioUrl(letter.korean,voice);assert.match(url,/^\/audio\/(?:lessons\/[a-f0-9]{64}|blocks\/(?:chris|jessica)-[0-9]+)\.wav$/);
   const bytes=fs.readFileSync(require('node:path').join(__dirname,'../apps/web/public',url));assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.ok(bytes.length>44);
  }
  assert.notEqual(recordedAudioUrl('ㄱ','chris'),recordedAudioUrl('ㄱ','jessica'));assert.equal(recordedAudioUrl('not a saved phrase','chris'),undefined);
@@ -39,4 +39,18 @@ test('every published speaking card and pronounceable lesson review front has bo
  for(const level of ['new','hangul','basic','intermediate','advanced'])for(const completed of [[],lessons.map(l=>l.id)])for(const card of speakingCardsForProfile({level,reasons:['family','travel','food','living']},completed))texts.add(card.korean);
  for(const text of texts)for(const voice of ['chris','jessica'])assert.ok(recordedAudioUrl(text,voice),`${voice}: ${text}`);
  assert.equal(flashcardSpeechText('ㄱ + ㅏ'),undefined);assert.equal(flashcardSpeechText('ㄱ'),'기역');
+});
+
+test('all 399 open blocks and every level of Speak have packaged audio in both voices',()=>{
+ const path=require('node:path'),root=path.join(__dirname,'../apps/web/public');
+ const {auditBlocks}=require('../scripts/check-lesson-audio.cjs');assert.equal(auditBlocks(root).clips,798);
+ const {lessons}=require('../apps/web/app/curriculum.ts'),{defaultLearningProfile}=require('../apps/web/app/learning-profile.ts');
+ const {speakingCards,speakingCardsForProfile}=require('../apps/web/app/speak-cards.ts');
+ const cards=[...speakingCards,...['new','hangul','basic','intermediate','advanced'].flatMap(level=>speakingCardsForProfile({...defaultLearningProfile,level},lessons.map(l=>l.id)))];
+ for(const card of cards)for(const voice of ['chris','jessica']){const url=recordedAudioUrl(card.korean,voice);assert.ok(url,`${voice}: ${card.korean}`);assert.ok(fs.existsSync(path.join(root,url)),url);}
+ const {practicePool}=require('../apps/web/app/practice-bank.ts'),{initialProgress}=require('../apps/web/app/progress.ts'),{flashcardSpeechText}=require('../apps/web/app/ui/recorded-audio.ts');
+ const references=[...new Set(['new','hangul','basic','intermediate','advanced'].flatMap(level=>practicePool({...initialProgress,completedLessonIds:lessons.map(l=>l.id)},{...defaultLearningProfile,level},'mixed')).map(card=>card.reference).filter(text=>flashcardSpeechText(text)))];
+ assert.ok(references.length>=900);
+ for(const text of references)for(const voice of ['chris','jessica']){const url=recordedAudioUrl(text,voice);assert.ok(url,`${voice}: ${text}`);assert.ok(fs.existsSync(path.join(root,url)),url);}
+ assert.equal(recordedAudioUrl('ㄸ + ㅗ','chris'),recordedAudioUrl('또','chris'));
 });

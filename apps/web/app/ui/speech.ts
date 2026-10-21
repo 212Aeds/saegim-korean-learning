@@ -1,4 +1,4 @@
-import { browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
+import { enableBrowserVoices, browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
 import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
 import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -298,7 +298,10 @@ export async function playElevenLabsKorean(
   const recorded = recordedAudioEnabled ? recordedAudioUrl(text,voice) : undefined;
   const browserVoice=usesBrowserConversationVoices() && !recorded;
   if(browserVoice)primeBrowserVoicePlayback();
-  if(browserVoice && browserVoiceState().phase!=="ready")return {played:false,source:"unavailable"};
+  if(browserVoice && browserVoiceState().phase!=="ready"){
+    try{await enableBrowserVoices();}catch{return {played:false,source:"unavailable"};}
+    if(version!==playbackVersion)return {played:false,source:"unavailable"};
+  }
   if (!paidFeaturesEnabled && !localSpeechUrl && !recorded && !browserVoice) {
     if(fallbackOptions.consistentVoice)return {played:false,source:"unavailable"};
     await waitForKoreanVoices();

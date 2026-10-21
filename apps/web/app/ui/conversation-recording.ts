@@ -71,7 +71,7 @@ export async function recordConversationTurn(
       let lastSpeech = 0, readyAnnounced = false;
       const activity = new MicrophoneActivity(audioContext.sampleRate);
       const pauseMs = recordingPauseMs(options.silenceMs);
-      const finish = (aborted = false, inputError?: Error) => {
+      const finish = (aborted = false, inputError?: Error, manual = false) => {
         if (settled) return;
         settled = true;
         signal.removeEventListener("abort", abort);
@@ -79,7 +79,7 @@ export async function recordConversationTurn(
         try {
           if (aborted) throw new DOMException("Stopped", "AbortError");
           if (inputError) throw inputError;
-          if (!clip.speechDetected)
+          if (!clip.speechDetected && !manual)
             throw new Error(
               "No speech detected. Try speaking closer to your microphone, then start again.",
             );
@@ -104,7 +104,7 @@ export async function recordConversationTurn(
         const {samples,rms,speaking,continuing} = activity.process(event.inputBuffer.getChannelData(0));
         const elapsed = performance.now() - started;
         if (activity.ready && !readyAnnounced) {
-          readyAnnounced=true;options.onReady?.(() => finish());
+          readyAnnounced=true;options.onReady?.(() => finish(false,undefined,true));
         }
         if (speaking) clip.speechDetected=true;
         if (clip.speechDetected && continuing) lastSpeech=elapsed;

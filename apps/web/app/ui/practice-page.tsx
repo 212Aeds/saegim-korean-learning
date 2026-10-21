@@ -46,7 +46,7 @@ export function PracticePage({ progress, profile, preferences, onSessionComplete
   const recovery = recoveryPractice(pool,progress);
   const listening = listeningPractice(pool);
   const available = focus === "recovery" ? recovery : focus === "listening" ? listening : mode === "mixed" ? pool : pool.filter((item) => item.mode === mode);
-  useEffect(()=>{if(card?.listening) void prefetchLocalKorean(card.reference,preferences.speechVoice);},[card?.question.id,preferences.speechVoice]);
+  useEffect(()=>{if(card&&card.reference!=="?") void prefetchLocalKorean(card.reference,preferences.speechVoice);},[card?.question.id,preferences.speechVoice]);
   function start(cards = available) {
     playback.current++; stopKoreanPlayback(); setAudioBusy(false); setAudioNotice("");
     setSession(practiceSession(cards, count)); setIndex(0); setAnswer(""); setChecked(false); setFirstTry(0); setMissed([]); completed.current = false;

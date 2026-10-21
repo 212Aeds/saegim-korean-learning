@@ -1,8 +1,5 @@
 "use client";
 import {lessonTextAssessment, appendLessonRetry} from "./lesson-answer";
-import {recordedAudioEnabled,recordedAudioUrl} from "./recorded-audio";
-import { paidFeaturesEnabled } from "../release";
-import { localSpeechUrl } from "./local-speech-server";
 import { ListeningControls } from "./listening-controls";
 
 import { useEffect, useRef, useState } from "react";
@@ -136,7 +133,7 @@ export function LessonModal({
     const result = await playElevenLabsKorean(text, preferences.speechVoice, rate, { consistentVoice: true, naturalOnly: true, waitForEnd: true });
     if (attempt !== playbackAttempt.current) return;
     setAudioBusy(false);
-    if (!result.played) setAudioNotice("Korean audio is unavailable on this device. Continue with writing or enable a local Korean voice in your device settings.");
+    if (!result.played) setAudioNotice("The matching voice could not start. Try Listen again, or continue with writing.");
   }
 
   function advance() {
@@ -256,7 +253,7 @@ export function LessonModal({
             <div className="letter-stage"><span lang="ko">{!speechPracticeTurn && (question.id.startsWith("word-hangul-") || (question.id.startsWith("letter-build-") || question.id.includes("-shape-"))) ? "?" : question.korean}</span></div>
             <WordReference word={question.korean} readingSample={Boolean(currentSyllable) || (lesson.category === "Hangul" && (question.korean.includes("+") || lesson.id.startsWith("hangul-read-")))} source={currentWord?.source} license={currentWord?.license} reviewStatus={currentWord?.reviewStatus} />
             {!speechPracticeTurn && <div className="lesson-audio-actions">
-              <button type="button" className="lesson-listen-button" aria-label="Hear this Korean phrase at the selected pace" disabled={audioBusy} onClick={() => void listen(question.korean)}><SpeakerHigh size={17} weight="fill" /><span>{audioBusy ? "Loading voice…" : `Listen · ${!paidFeaturesEnabled && !localSpeechUrl && !(recordedAudioEnabled && recordedAudioUrl(question.korean,preferences.speechVoice)) ? "Device voice" : preferences.speechVoice === "chris" ? "Chris" : "Jessica"} · ${preferences.speechPace.toFixed(2)}×`}</span></button>
+              <button type="button" className="lesson-listen-button" aria-label="Hear this Korean phrase at the selected pace" disabled={audioBusy} onClick={() => void listen(question.korean)}><SpeakerHigh size={17} weight="fill" /><span>{audioBusy ? "Loading voice…" : `Listen · ${preferences.speechVoice === "chris" ? "Chris" : "Jessica"} · ${preferences.speechPace.toFixed(2)}×`}</span></button>
             </div>}
             {preferences.romanization && romanization && !question.id.startsWith("word-hangul-") && !(question.id.startsWith("letter-build-") || question.id.includes("-shape-")) && (showTip || (phase !== "quiz" && !romanizationRevealsAnswer)) && (
               <p className="lesson-romanization" lang="ko-Latn">{romanization}</p>

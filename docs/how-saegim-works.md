@@ -14,7 +14,7 @@ The creator wanted to learn Korean to connect with family, and found subscriptio
 4. `apps/web/app/progress.ts` defines progress and review updates. Guest data uses separate browser keys from account progress. `ui/guest-learning.tsx` tells nested practice components which mode is active. Guests get listening/writing practice; protected AI requests still require an account.
 5. `apps/api/src` contains the Nest API. Authentication guards protect account progress, tutor and transcription routes. The database connection uses configuration stored outside committed source. Do not put credentials in browser code or examples.
 6. `apps/web/app/ui/tutor-page.tsx` sends a question with bounded recent dialogue and selected completed-lesson references. `tutor-conversation.tsx` manages chat, replay and voice-turn states. `apps/api/src/tutor` validates requests and applies the existing hosted inference policy. Model output can still be mistaken; this is not a fluent-teacher guarantee.
-7. `ui/speech.ts` prepares and plays recorded Chris/Jessica clips. `browser-voices.ts` optionally downloads the matching conversation voice model with consent and synthesizes new audio on the device. `conversation-recording.ts` captures bounded turns; `local-speech-server.ts` prepares WAV data and requests transcription. Cancellation guards stop further preparation/upload after a canceled turn. Transcription is a wording aid, not a pronunciation score.
+7. `ui/speech.ts` prepares and plays recorded Chris/Jessica clips. `browser-voices.ts` prepares the matching conversation voice model automatically after the page opens and synthesizes new audio on the device. `conversation-recording.ts` captures bounded turns; `local-speech-server.ts` prepares WAV data and requests transcription. Cancellation guards stop further preparation/upload after a canceled turn. Transcription is a wording aid, not a pronunciation score.
 
 ## Three concrete journeys
 
@@ -27,7 +27,7 @@ The creator wanted to learn Korean to connect with family, and found subscriptio
 ## Why these tradeoffs were made
 
 - Free hosting and capped hosted inference keep spending controlled, but can introduce cold starts and busy periods. Free does not mean unlimited capacity.
-- Recorded audio gives stable voices for authored material. The optional approximately 430 MB browser model extends those voices to novel conversation, at a device/storage cost. It is not an automatic first-visit download.
+- Recorded audio gives stable voices for authored material. The approximately 430 MB browser model extends those voices to novel conversation, at a device/storage cost. It prepares automatically after page render; the initial transfer and device inference still take time. Fixed reading blocks and Speak cards have hosted recordings and do not wait for that model.
 - Browser storage makes no-email learning possible without opening anonymous AI endpoints. The tradeoff is no automatic cross-device backup for guests.
 - Startup JavaScript was measured before and after deferring interfaces. `npm run perf:startup` reports exported home script sizes and enforces a 360,000-byte gzip budget. This is an asset-size metric, not proof of a particular phone load time.
 - Sharing, feedback and calendar reminders are user-controlled. Donation features remain off; email reminders are preparation only. No new attention analytics or automatic contact campaigns are enabled.

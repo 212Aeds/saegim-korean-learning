@@ -10,8 +10,8 @@ test('new learners start with the first lesson letters; new combinations require
  const vowels=eligibleHangulBlocks(['hangul-core-vowels'],defaultLearningProfile);
  assert.ok(vowels.length>1);assert.ok(vowels.every(sample=>sample.letters[0]==='ㄱ'&&'ㅏㅓㅣ'.includes(sample.letters[1])));
  const placed=eligibleHangulBlocks([],{...defaultLearningProfile,level:'hangul'});assert.ok(placed.length>1);
- const manifest=require('../apps/web/app/audio-manifest.json');
- for(const sample of placed){assert.equal(sample.letters.length,2);assert.equal(composeHangulBlock(...sample.letters),sample.korean);for(const voice of ['chris','jessica'])assert.ok(manifest[`${voice}|${sample.korean}`],`${voice}: ${sample.korean} needs recorded audio`);}
+ const {recordedAudioUrl}=require('../apps/web/app/ui/recorded-audio.ts');
+ for(const sample of placed){assert.equal(sample.letters.length,2);assert.equal(composeHangulBlock(...sample.letters),sample.korean);for(const voice of ['chris','jessica'])assert.ok(recordedAudioUrl(sample.korean,voice),`${voice}: ${sample.korean} needs recorded audio`);}
 });
 test('composition builds Hangul, rejects invalid input and does not mistake a final consonant cluster for an initial',()=>{
  assert.equal(composeHangulBlock('ㄱ','ㅏ'),'가');assert.equal(composeHangulBlock('ㄴ','ㅓ'),'너');assert.equal(composeHangulBlock('ㄱ','ㅗ'),'고');
