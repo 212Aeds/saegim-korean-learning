@@ -2,6 +2,17 @@ const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert
 require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,p);
 process.env.NEXT_PUBLIC_PRERECORDED_AUDIO='true';delete process.env.NEXT_PUBLIC_LOCAL_SPEECH_URL;process.env.NEXT_PUBLIC_PAID_FEATURES_ENABLED='false';
 const {recordedAudioUrl}=require('../apps/web/app/ui/recorded-audio.ts');
+test('audio audit rejects cut-off payloads, missing samples, and wrong formats while accepting padded metadata',()=>{
+ const {auditWav}=require('../scripts/check-lesson-audio.cjs');
+ const original=fs.readFileSync(require('node:path').join(__dirname,'../apps/web/public',recordedAudioUrl('안녕하세요','chris')));
+ assert.doesNotThrow(()=>auditWav(original));
+ assert.throws(()=>auditWav(original.subarray(0,original.length-2)),/truncated/);
+ const oversized=Buffer.from(original);oversized.writeUInt32LE(original.length,40);assert.throws(()=>auditWav(oversized),/Truncated WAV chunk/);
+ const empty=Buffer.from(original.subarray(0,44));empty.writeUInt32LE(36,4);empty.writeUInt32LE(0,40);assert.throws(()=>auditWav(empty),/Empty/);
+ const stereo=Buffer.from(original);stereo.writeUInt16LE(2,22);assert.throws(()=>auditWav(stereo),/mono PCM16/);
+ const metadata=Buffer.alloc(10);metadata.write('JUNK');metadata.writeUInt32LE(1,4);metadata[8]=42;
+ const padded=Buffer.concat([original.subarray(0,12),metadata,original.subarray(12)]);padded.writeUInt32LE(padded.length-8,4);assert.doesNotThrow(()=>auditWav(padded));
+});
 test('recorded letter names resolve by selected voice and point to real WAV files',()=>{
  const {hangulLetters}=require('../apps/web/app/more-lessons.ts');
  for(const letter of hangulLetters)for(const voice of ['chris','jessica']){

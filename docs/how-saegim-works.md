@@ -1,5 +1,7 @@
 # How Saegim works — a guided code walkthrough
 
+Audio release safeguard (October 21, 2026): the hosted build runs the audio audit before compiling. It checks declared WAV/container lengths, complete chunk boundaries, nonempty PCM16 mono samples, and both block voices. Synthetic malformed buffers prove that truncated files fail while valid padded metadata passes. This AI-assisted engineering change protects file integrity; it does not certify pronunciation or make speech recognition perfect. All 1,870 current recordings passed the audit.
+
 This explains the current implementation, not a claim that every design is final. The app was developed iteratively with AI assistance in this project thread. Being able to explain and verify a change matters more than claiming to have typed every line manually.
 
 ## Why the app exists
