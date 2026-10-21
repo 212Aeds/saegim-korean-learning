@@ -6,8 +6,8 @@ test('constrained phone initialization creates no worker and leaves the page usa
  Object.defineProperty(global,'navigator',{configurable:true,value:{userAgent:'iPhone',deviceMemory:2,connection:{type:'cellular'}}});
  global.Worker=class{constructor(){created++;throw Error('Unexpected heavy model startup');}};
  const voices=require('../apps/web/app/ui/browser-voices.ts');
- try{await voices.prepareBrowserVoicesAutomatically();assert.equal(created,0);await assert.rejects(voices.enableBrowserVoices(),/reduce crash risk/);assert.equal(created,0);assert.equal(voices.browserVoiceState().phase,'idle');}
- finally{if(nav)Object.defineProperty(global,'navigator',nav);else delete global.navigator;global.Worker=oldWorker;}
+ try{await voices.prepareBrowserVoicesAutomatically();assert.equal(created,0);assert.equal(voices.browserVoiceState().phase,'idle');await assert.rejects(voices.enableBrowserVoices(),/reduce crash risk/);assert.equal(created,0);assert.equal(voices.browserVoiceState().phase,'error');assert.match(voices.browserVoiceState().message,/Recorded Chris/);}
+ finally{voices.cancelBrowserVoices();if(nav)Object.defineProperty(global,'navigator',nav);else delete global.navigator;global.Worker=oldWorker;}
 });
 test('phone and constrained network hints never trigger a large automatic model load',()=>{
  for(const hints of [{mobile:true,memoryGB:8,gpu:true},{saveData:true},{connectionType:'cellular'},{effectiveType:'3g'},{effectiveType:'2g'}])assert.equal(voicePreparationPolicy(hints).automatic,false);

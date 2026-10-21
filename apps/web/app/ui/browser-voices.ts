@@ -52,7 +52,7 @@ export function cancelBrowserVoices(message=""){
 }
 export function forgetBrowserVoiceConsent(){try{window.localStorage.removeItem(consentKey);}catch{}cancelBrowserVoices();}
 export function enableBrowserVoices(){
-  const policy=currentVoiceDevicePolicy();if(!policy.canLoad)return Promise.reject(new Error(policy.reason));
+  const policy=currentVoiceDevicePolicy();if(!policy.canLoad){update({phase:"error",progress:0,message:policy.reason});return Promise.reject(new Error(policy.reason));}
   primeBrowserVoicePlayback();
   if(state.phase==="ready")return Promise.resolve();
   if(initializing)return initializing;
