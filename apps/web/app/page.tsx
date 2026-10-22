@@ -220,13 +220,13 @@ export default function Home() {
               (await accountResponse.json()) as LearnerAccount | null;
             if (user?.id) {
               if(version!==restoreVersion.current)return;
-              const progressResponse = await fetch(`${apiUrl}/v1/progress/me`, {
+              const {learningProgress,...accountDetails}=user;
+              const progressResponse = learningProgress !== undefined ? null : await fetch(`${apiUrl}/v1/progress/me`, {
                 credentials: "include",
               });
-              if (!progressResponse.ok) throw new Error("Account progress unavailable");
-              if (progressResponse.ok) {
-                const remote =
-                  await readOptionalProgress(progressResponse);
+              if (progressResponse && !progressResponse.ok) throw new Error("Account progress unavailable");
+              {
+                const remote = learningProgress !== undefined ? learningProgress as Partial<SavedProgress> | null : await readOptionalProgress(progressResponse!);
                 if (remote) current = normalizeProgress(remote);
                 else {
                   current = {...initialProgress, dailyGoalMinutes: user.learningProfile?.dailyMinutes ?? initialProgress.dailyGoalMinutes};
@@ -240,7 +240,7 @@ export default function Home() {
                 }
               }
               if(version!==restoreVersion.current)return;
-              setAccount(user);
+              setAccount(accountDetails);
             }
           }
         } catch {

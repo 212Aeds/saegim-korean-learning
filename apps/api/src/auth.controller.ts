@@ -221,8 +221,10 @@ export class AuthController {
   }
 
   @Get("auth/me")
-  async currentAccount(@Req() request: Request): Promise<Account | null> {
-    return (await this.getAccount(request))?.account ?? null;
+  @Header("Cache-Control", "private, no-store")
+  async currentAccount(@Req() request: Request): Promise<(Account & {learningProgress: unknown}) | null> {
+    const account=(await this.getAccount(request))?.account;
+    return account ? {...account,learningProgress:await this.readProgress(account.id)} : null;
   }
 
   @Patch("account/me")

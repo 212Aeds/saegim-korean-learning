@@ -12,3 +12,11 @@ test('successful login includes only that verified account progress without a se
 test('account dialog is prepared before click and bundled progress is stripped from account state',()=>{
  const page=fs.readFileSync('apps/web/app/page.tsx','utf8');assert.match(page,/void loadAccountModal\(\)\.catch/);assert.match(page,/learningProgress !== undefined \? null : await fetch/);assert.match(page,/const \{learningProgress, \.\.\.accountDetails\}=user/);assert.match(page,/setAccount\(accountDetails\)/);
 });
+
+test('session restoration bundles progress only after identifying the signed-in account',async()=>{
+ const controller=new AuthController({query:async()=>{throw Error('Unexpected database access');}});let reads=0;
+ controller.getAccount=async()=>null;controller.readProgress=async id=>{reads++;assert.equal(id,'synthetic-id');return {completed:2};};
+ assert.equal(await controller.currentAccount({}),null);assert.equal(reads,0);
+ controller.getAccount=async()=>({account:{id:'synthetic-id',email:'test@example.org',displayName:'Test'}});
+ const restored=await controller.currentAccount({});assert.deepEqual(restored.learningProgress,{completed:2});assert.equal(reads,1);
+});

@@ -42,3 +42,38 @@ test('hosted conversation playback uses the model and never substitutes a device
   voices.cancelBrowserVoices();const canceled=speech.playElevenLabsKorean('새로운 대화예요.','chris');speech.stopKoreanPlayback();assert.equal((await canceled).played,false);assert.equal(deviceCalls,0);
  }finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,previous);}
 });
+
+test('conversation audio preparation and Listen share one synthesis and retry after cancellation',async()=>{
+ const previous={window:global.window,Worker:global.Worker};let worker;
+ global.window={localStorage:{getItem:()=>null,setItem:()=>{}}};
+ global.Worker=class{constructor(){worker=this;this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
+ const voices=require('../apps/web/app/ui/browser-voices.ts');
+ try{
+  const init=voices.enableBrowserVoices();worker.reply('ready');await init;
+  const first=voices.synthesizeBrowserVoice('같이 이야기해요.','jessica',new AbortController().signal);
+  const second=voices.synthesizeBrowserVoice('같이 이야기해요.','jessica',new AbortController().signal);
+  assert.equal(worker.messages.filter(m=>m.type==='synthesize').length,1);
+  worker.reply('audio',{wav:new ArrayBuffer(80)});assert.equal(await first,await second);
+  const abort=new AbortController();const preparing=voices.synthesizeBrowserVoice('다른 대화예요.','chris',abort.signal);
+  const joined=voices.synthesizeBrowserVoice('다른 대화예요.','chris',new AbortController().signal);
+  abort.abort();await assert.rejects(preparing);await assert.rejects(joined);
+  const retry=voices.enableBrowserVoices();worker.reply('ready');await retry;
+  const clip=voices.synthesizeBrowserVoice('다른 대화예요.','chris',new AbortController().signal);worker.reply('audio',{wav:new ArrayBuffer(80)});assert.ok(await clip);
+ }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
+});
+
+test('visible conversation prefetch never initializes a model and a later Listen reuses its clip',async()=>{
+ const previous={window:global.window,Worker:global.Worker};let worker;
+ global.window={localStorage:{getItem:()=>null,setItem:()=>{}}};
+ global.Worker=class{constructor(){worker=this;this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
+ const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts');
+ try{
+  await speech.prefetchConversationKorean('처음 보는 대화 문장이에요.','jessica');assert.equal(worker,undefined);
+  const init=voices.enableBrowserVoices();worker.reply('ready');await init;
+  const prepared=speech.prefetchConversationKorean('처음 보는 대화 문장이에요.','jessica');
+  const listening=voices.synthesizeBrowserVoice('처음 보는 대화 문장이에요.','jessica',new AbortController().signal);
+  assert.equal(worker.messages.filter(m=>m.type==='synthesize').length,1);
+  worker.reply('audio',{wav:new ArrayBuffer(80)});await prepared;const clip=await listening;
+  assert.equal(voices.cachedBrowserVoice('처음 보는 대화 문장이에요.','jessica'),clip);
+ }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
+});

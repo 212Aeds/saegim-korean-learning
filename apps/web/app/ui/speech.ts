@@ -285,6 +285,15 @@ export async function prefetchLocalKorean(text: string, voice = selectedElevenLa
   try { await localAudio(text, voice); } catch { /* The Listen button can retry. */ }
 }
 
+// Prepare only a visible conversation line with an already initialized model.
+// Listen shares the same in-flight synthesis; this never starts model setup or a paid call.
+export async function prefetchConversationKorean(text: string, voice: ElevenLabsVoice) {
+  if (recordedAudioEnabled && recordedAudioUrl(text,voice) || localSpeechUrl) return prefetchLocalKorean(text,voice);
+  if (!usesBrowserConversationVoices() || browserVoiceState().phase !== "ready") return;
+  try { await synthesizeBrowserVoice(naturalSpeechText(text),voice,new AbortController().signal); }
+  catch { /* Explicit Listen can retry after preparation fails. */ }
+}
+
 export async function playElevenLabsKorean(
   text: string,
   voice: ElevenLabsVoice = selectedElevenLabsVoice(),

@@ -1,5 +1,6 @@
 "use client";
 import {guidedConversationStep,guidedChoiceMatches} from "./guided-conversation";
+import {isUsefulReplySuggestion} from "./reply-suggestion";
 import {conversationRequestError} from "./conversation-request-error";
 import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
@@ -23,6 +24,7 @@ import {
   saveElevenLabsVoice,
   stopKoreanPlayback,
   prefetchLocalKorean,
+  prefetchConversationKorean,
   koreanConversationAudioAvailable,
   usesBrowserConversationVoices,
   type ElevenLabsVoice,
@@ -169,8 +171,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       const response=await fetch(`${apiUrl}/v1/tutor/conversation`,{method:"POST",credentials:"include",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reply-help",messages:conversationHistory(history.current,"Suggest my ANSWER to the last question, as the learner. Do not repeat or translate the question. Choose a plausible detail (a food, place, time or preference) and give one short Korean statement answering it. No question marks. I will edit the example."),level:profile.level,scenario,consent:true})});
       if(!response.ok)throw Error(response.status===401?"Sign in again to get a reply idea. Your conversation is still here.":response.status===429?"The daily AI allowance has been reached. Your conversation and draft are still here.":"A reply idea could not load. Try again.");
       const idea=await response.json() as Reply;
-      if(![idea.korean,idea.english,idea.feedback].every(value=>typeof value==="string"&&value.length>0&&value.length<=500)||!/[가-힣]/u.test(idea.korean))throw Error("The suggestion was incomplete. Try again.");
-      if(!controller.signal.aborted)setReplyIdea(idea);
+      if(!isUsefulReplySuggestion(idea,latestPartner.content))throw Error("That suggestion did not answer the question. Try another reply idea, or write your own answer.");
+      if(!controller.signal.aborted){setReplyIdea(idea);void prefetchConversationKorean(idea.korean,voice);}
     }catch(error){if(mounted.current&&hintAbort.current===controller)setHelpError(controller.signal.aborted?"The suggestion took too long. Try again.":error instanceof Error?error.message:"A reply idea could not load.");}
     finally{window.clearTimeout(timer);if(hintAbort.current===controller){hintAbort.current=null;if(mounted.current)setHelping(false);}}
   }
@@ -222,7 +224,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         { role: "user", content: text },
         { role: "assistant", content: reply.korean, reply, partner: voice },
       ];
-      void prefetchLocalKorean(reply.korean,voice);
+      void prefetchConversationKorean(reply.korean,voice);
       setTurns(history.current);
       return reply;
     } finally {
@@ -720,4 +722,3 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     </section>
   );
 }
-

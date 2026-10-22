@@ -3,6 +3,7 @@ import {currentVoiceDevicePolicy} from "./voice-device-policy";
 export type BrowserVoiceState={phase:"idle"|"loading"|"ready"|"error";progress:number;message:string};
 let state:BrowserVoiceState={phase:"idle",progress:0,message:""};
 const clips=new Map<string,Blob>();
+const synthesizing=new Map<string,Promise<Blob>>();
 const listeners=new Set<(value:BrowserVoiceState)=>void>();
 const pending=new Map<number,{resolve:(value:ArrayBuffer|undefined)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
 let worker:Worker|undefined,sequence=0,initializing:Promise<void>|undefined;
@@ -47,7 +48,7 @@ function request(type:"initialize"|"synthesize",fields:Record<string,unknown>={}
   });
 }
 export function cancelBrowserVoices(message=""){
-  worker?.terminate();worker=undefined;initializing=undefined;clips.clear();
+  worker?.terminate();worker=undefined;initializing=undefined;clips.clear();synthesizing.clear();
   for(const item of pending.values()){clearTimeout(item.timer);item.reject(new DOMException("Canceled","AbortError"));}pending.clear();
   update({phase:message?"error":"idle",progress:0,message});
 }
@@ -65,11 +66,20 @@ export function enableBrowserVoices(){
 }
 export function cachedBrowserVoice(text:string,voice:"chris"|"jessica"){return clips.get(voice+"|"+text);}
 export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica",signal:AbortSignal){
+  if(signal.aborted)throw new DOMException("Canceled","AbortError");
   if(state.phase!=="ready")throw Error("Set up Chris and Jessica first.");
   const key=voice+"|"+text;const saved=clips.get(key);if(saved&&!signal.aborted)return saved;
-  const wav=await request("synthesize",{text,voice},signal);
-  if(!wav||signal.aborted)throw new DOMException("Canceled","AbortError");
-  const blob=new Blob([wav],{type:"audio/wav"});clips.set(key,blob);if(clips.size>6)clips.delete(clips.keys().next().value!);return blob;
+  let task=synthesizing.get(key);
+  if(!task){
+    task=request("synthesize",{text,voice},signal).then(wav=>{
+      if(!wav||signal.aborted)throw new DOMException("Canceled","AbortError");
+      const blob=new Blob([wav],{type:"audio/wav"});clips.set(key,blob);if(clips.size>6)clips.delete(clips.keys().next().value!);return blob;
+    });
+    synthesizing.set(key,task);
+  }
+  const abort=()=>cancelBrowserVoices();
+  signal.addEventListener("abort",abort,{once:true});
+  try{return await task;}finally{signal.removeEventListener("abort",abort);if(synthesizing.get(key)===task)synthesizing.delete(key);}
 }
 
 export function prepareBrowserVoicesAutomatically(){if(currentVoiceDevicePolicy().automatic)return enableBrowserVoices();return Promise.resolve();}
