@@ -1,40 +1,89 @@
 # Saegim
 
-Saegim is a free, mobile-first Korean-learning app. Korean studies allow a guest or signed in account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 57+ lessons, a 5,000+-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
+**Personal Project · Korean Language Learning**
+
+Saegim is a free, mobile-first Korean-learning app built around structured lessons, vocabulary review, speaking practice, and long-term progress. The project grew from my earlier [KoreanDaily](https://github.com/212Aeds/KoreanDaily) prototype into a larger full-stack application designed to make studying Korean more organized and consistent.
+
+The current beginner path includes 57+ lessons, a 5,000+ entry Korean-English dictionary, three-step spaced vocabulary review, and a 100-card speaking deck. Learners can study as a guest or use a signed-in account for persistent progress.
+
+## The learning flow
+
+1. Follow the structured beginner curriculum and work through Korean lessons.
+2. Learn vocabulary connected to lesson content instead of relying only on isolated word lists.
+3. Review previously learned words through a three-step spaced review system.
+4. Practice speaking with Korean prompts and device-based Korean text-to-speech.
+5. Use an account to keep learning progress available across study sessions.
+
+The goal is to connect lessons, vocabulary, review, and speaking practice into one learning path rather than treating them as separate tools.
+
+## How the parts work together
+
+```mermaid
+flowchart LR
+    A[Structured lessons] --> B[Learn vocabulary]
+    B --> C[Spaced review]
+    C --> D[Speaking practice]
+    D --> E[Progress tracking]
+    E --> A
+```
+
+Lesson content introduces Korean concepts and vocabulary, the review system brings material back after studying, and speaking cards provide another way to practice familiar Korean. Account progress connects these parts so learners can continue where they left off.
+
+## What works today
+
+- Follow a beginner Korean curriculum with 57+ lessons.
+- Study curated vocabulary connected to lesson content.
+- Search a 5,000+ entry Korean-English reference dictionary.
+- Review vocabulary through a three-step spaced review system.
+- Practice with a 100-card Korean speaking deck.
+- Listen using Korean voices available through the learner's device.
+- Adjust speaking voice and pace.
+- Study as a guest or create an account for persistent learning progress.
+- Export or delete account data.
+
+Saegim is still an active personal project. The dictionary is intended as a broad reference bank and has not been individually reviewed by a Korean-fluent editor. Speaking quality also depends on the voices provided by the user's browser and operating system.
+
+There is currently no AI conversation, pronunciation scoring, social system, or subscription.
+
+## Tech stack
+
+Next.js, TypeScript, NestJS, PostgreSQL, Neon, and Docker.
+
+The project is organized as a monorepo with separate web and API applications.
 
 ## Run locally
 
 Requires Node.js 20.9 or newer.
 
-1. Install dependencies: `npm install`
-2. Copy `.env.example` to `.env` and set `DATABASE_URL` plus the allowed frontend origins in `WEB_ORIGINS`.
-3. Copy `apps/web/.env.example` to `apps/web/.env.local`; set `NEXT_PUBLIC_API_URL=http://localhost:4000` for local API development.
-4. Start PostgreSQL and apply the SQL files in `apps/api/db/` in numeric order.
-5. Seed the dictionary with `npm run db:seed:words`.
-6. Run `npm run dev` and open `http://localhost:3000`.
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env` and configure `DATABASE_URL` and `WEB_ORIGINS`.
+3. Copy `apps/web/.env.example` to `apps/web/.env.local` and configure the frontend API URL.
+4. Start the included local PostgreSQL database with `npm run db:up`.
+5. Apply the SQL migrations in `apps/api/db/` in numeric order when needed.
+6. Seed the dictionary with `npm run db:seed:words`.
+7. Start the project with `npm run dev`.
 
-For the included local database, run `npm run db:up` before the API. Docker Compose applies the migrations automatically for a fresh volume. For an existing volume, apply the next unapplied migration manually, for example:
+Build both applications with:
 
-```sh
-docker compose exec -T db psql -U sori -d sori -f /docker-entrypoint-initdb.d/003-content.sql
+```bash
+npm run build
 ```
 
-The API listens on port `4000`, requires `DATABASE_URL`, and verifies its database connection at startup. The frontend gates study screens on an authenticated account and needs `NEXT_PUBLIC_API_URL` configured. Without a reachable account service, sign-in is unavailable and study content stays locked.
+Start production processes with `npm run start:web` and `npm run start:api` after configuring production environment variables.
 
-## Neon
+## Repository map
 
-This workspace is linked to Neon project `withered-morning-17483094`, branch `production`. `neon.ts` declares Postgres only; `neon deploy` currently reports no policy changes. Neon CLI writes branch connection variables to the ignored root `.env.local`; the API loads that file for local development and deployment commands. Apply all SQL migrations in order, then run `npm run db:seed:words` to populate the 5,000+-entry dictionary. Neon CLI context and credentials are local setup data; keep them out of source control.
+- `apps/web/` — Next.js learning interface
+- `apps/web/app/curriculum.ts` — core lesson curriculum
+- `apps/web/app/more-lessons.ts` — additional lesson content
+- `apps/web/app/progress.ts` — learner progress logic
+- `apps/web/app/speak-cards.ts` — speaking practice content
+- `apps/web/app/word-bank.ts` — vocabulary used by the learning experience
+- `apps/api/` — NestJS backend and account API
+- `apps/api/db/` — PostgreSQL migrations and dictionary data
 
-## Learning content and source
+## Dictionary source
 
-The 5,000+-entry dictionary adaptation is generated from [cc-kedict](https://github.com/mhagiwara/cc-kedict), under CC BY-SA 3.0. See [the attribution and reuse notes](apps/api/db/seeds/ATTRIBUTION.md). The corpus has not been individually reviewed by a Korean-fluent editor, so it is a broad reference bank rather than a validated beginner frequency list. Lesson vocabulary is curated separately in the web app.
+The 5,000+ entry Korean-English dictionary is adapted from [cc-kedict](https://github.com/mhagiwara/cc-kedict) under CC BY-SA 3.0. Attribution and reuse information is available in `apps/api/db/seeds/ATTRIBUTION.md`.
 
-## Account and operations
-
-Accounts use salted scrypt password hashes, random 30-day HttpOnly sessions, CORS credentials, and shared PostgreSQL throttling. The API stores the session token only as a hash and scopes progress to the signed-in account. Learners can export or delete account data. Email verification and password-reset email are not implemented; account recovery needs to be added before broad public launch.
-
-## Build
-
-Run `npm run build` to compile both the Next.js app and NestJS API. Start production processes with `npm run start:web` and `npm run start:api` after setting production environment variables.
-
-Speaking uses the best Korean voice available from the learner's device, with voice and pace controls; quality depends on browser and operating-system voices. There is no AI conversation, pronunciation scoring, social feature, or subscription.
+Lesson vocabulary is curated separately from the larger reference dictionary.
