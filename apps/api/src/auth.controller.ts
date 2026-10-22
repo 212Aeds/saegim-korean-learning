@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpException,
   HttpStatus,
   Patch,
@@ -162,11 +163,12 @@ export class AuthController {
   }
 
   @Post("auth/login")
+  @Header("Cache-Control", "private, no-store")
   async login(
     @Body() body: unknown,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<Account> {
+  ): Promise<Account & { learningProgress: unknown }> {
     const input = loginSchema.safeParse(body);
     if (!input.success) {
       throw new HttpException(
@@ -215,7 +217,7 @@ export class AuthController {
       [this.rateKey("login", `${input.data.email}:${address}`)],
     );
     await this.createSession(account.id, request, response);
-    return account;
+    return { ...account, learningProgress: await this.readProgress(account.id) };
   }
 
   @Get("auth/me")
@@ -274,6 +276,10 @@ export class AuthController {
   @Get("progress/me")
   async getMyProgress(@Req() request: AuthenticatedRequest) {
     const account = await this.requireAccount(request);
+    return this.readProgress(account.id);
+  }
+
+  private async readProgress(accountId: string) {
     try {
       const result = await this.database.query(
         `SELECT completed_lessons, completed_lesson_ids, words_learned,
@@ -282,7 +288,7 @@ export class AuthController {
                 reviews_done, quiz_attempts, quiz_correct, streak,
                 last_activity, activity_dates, review_items
          FROM learner_progress WHERE account_id = $1`,
-        [account.id],
+        [accountId],
       );
       if (!result.rowCount) return null;
       const row = result.rows[0];

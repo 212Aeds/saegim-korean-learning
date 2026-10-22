@@ -1,4 +1,5 @@
 "use client";
+import {guidedConversationStep,guidedChoiceMatches} from "./guided-conversation";
 import {conversationRequestError} from "./conversation-request-error";
 import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
@@ -52,6 +53,9 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     [calling, setCalling] = useState(false),
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
+  const [guided,setGuided]=useState<{starter:number;step:number}|null>(null);
+  const lastStarter=useRef(0);
+  const guidedStep=guided?guidedConversationStep(profile.level,guided.starter,guided.step):null;
   const learning=conversationLearning(completedLessonIds);
   const [useLessonWords,setUseLessonWords]=useState(true);
   const [audioStatus,setAudioStatus]=useState("");
@@ -157,7 +161,9 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   const starterMeaning=latestPartner?replyIdea?.english:situation.meaning;
   useEffect(()=>{hintAbort.current?.abort();hintAbort.current=null;setHelping(false);setReplyIdea(null);setHelpError("");setPhraseAdded(false);return ()=>hintAbort.current?.abort();},[turns.length,scenario]);
   async function suggestReply(){
-    if(!latestPartner||helping||!apiUrl||calling||thinking)return;
+    if(!latestPartner||helping||calling||thinking)return;
+    if(guidedStep){const option=guidedStep.choices[0];if(option)setReplyIdea({...option,feedback:"An app-authored reply option."});else setHelpError("This guided exchange is complete. Start another topic.");return;}
+    if(!apiUrl)return;
     const controller=new AbortController();hintAbort.current=controller;setHelping(true);setHelpError("");
     const timer=window.setTimeout(()=>controller.abort(),65000);
     try{
@@ -197,8 +203,17 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         }),
         signal: controller.signal,
       });
-      if (!response.ok) throw new Error(conversationRequestError(response.status));
-      const reply = (await response.json()) as Reply;
+      let reply: Reply;
+      if(response.status===429||response.status===503){
+        if(signal)throw new Error("AI voice conversation is unavailable. Start a new conversation and choose a guided starter to keep practising.");
+        const opening=guidedConversationStep(profile.level,lastStarter.current,0);
+        setGuided({starter:lastStarter.current,step:0});
+        setNotice("AI is unavailable right now. Continue with app-authored guided practice below; it does not answer or evaluate your last message.");
+        reply=opening.reply;
+      }else{
+        if (!response.ok) throw new Error(conversationRequestError(response.status));
+        reply=(await response.json()) as Reply;
+      }
       if (
         !reply || typeof reply !== "object" ||
         ![reply.korean, reply.english, reply.feedback].every(
@@ -236,19 +251,36 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     setSpeakReplies(enabled);
     if(!enabled)return;
     setNotice("");
-    if(browserVoices){
+    if(browserVoices&&!guided){
       primeBrowserVoicePlayback();
       try{await enableBrowserVoices();}
       catch{if(mounted.current){setNotice("Read-aloud is on, but voice preparation could not finish. Tap Retry voice preparation.");}}
     }
   }
+  async function beginGuided(topic:string,index:number){
+    if(request.current||calling)return;
+    listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);setAudioAvailable(false);
+    lastStarter.current=index;const opening=guidedConversationStep(profile.level,index,0);
+    setGuided({starter:index,step:0});setDraft("");setNotice("");
+    history.current=[{role:"user",content:topic},{role:"assistant",content:opening.reply.korean,reply:opening.reply,partner:voice}];
+    setTurns(history.current);void prefetchLocalKorean(opening.reply.korean,voice);
+    if(speakReplies)await listen(opening.reply.korean);
+  }
   async function sendMessage(message: string) {
     const text = message.trim().replace(/\s+/gu, " ").slice(0, 600);
     if (!text || request.current || calling) return;
     if(playing){listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);setAudioAvailable(false);}
-    if(browserVoices&&speakReplies){primeBrowserVoicePlayback();void enableBrowserVoices().catch(()=>{});}
+    if(browserVoices&&speakReplies&&!guided){primeBrowserVoicePlayback();void enableBrowserVoices().catch(()=>{});}
     setDraft(text);
     setNotice("");
+    if(guided&&guidedStep){
+      const choice=guidedStep.choices.find(item=>guidedChoiceMatches(item.korean,item.english,text));
+      if(!choice){setNotice(guidedStep.choices.length?"Guided practice uses the example replies below. Choose one, or switch to AI to write freely.":"This guided exchange is complete. Start a new conversation or switch to AI.");return;}
+      const next=guidedConversationStep(profile.level,guided.starter,guided.step+1);
+      history.current=[...history.current,{role:"user",content:choice.korean},{role:"assistant",content:next.reply.korean,reply:next.reply,partner:voice}];
+      setTurns(history.current);setGuided({...guided,step:guided.step+1});setDraft("");
+      if(speakReplies)await listen(next.reply.korean);return;
+    }
     try {
       const reply = await replyTo(text);
       setDraft((current) => (current === text ? "" : current));
@@ -461,7 +493,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         <div><span className="micro-label">YOUR CURRENT STARTING POINT</span><h3>{guide.title}</h3><p>{guide.detail}</p></div>
         <p className="conversation-goal"><strong>Try this today</strong>{guide.goal}</p>
         <details className="conversation-scenario-browser"><summary>Practice situation: {situation.title}</summary><div className="conversation-situations" role="group" aria-label="Choose a practice situation">
-          {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || playing} onClick={() => { history.current=[];setTurns([]);setNotice("");setScenario(item.id);setDraft(item.prompt); }}>{item.title}</button>)}
+          {conversationSituations.map((item) => <button type="button" key={item.id} aria-pressed={scenario === item.id} disabled={calling || thinking || playing} onClick={() => { history.current=[];setTurns([]);setGuided(null);setNotice("");setScenario(item.id);setDraft(item.prompt); }}>{item.title}</button>)}
         </div></details>
         {turns.length > 0 && <small>Choosing a situation starts a fresh conversation. You can also describe any topic in your message.</small>}
         <div className="conversation-session-meter"><span><strong>{koreanTurns}</strong> / {guide.turns} Korean replies in this visit</span><progress max={guide.turns} value={Math.min(koreanTurns, guide.turns)} aria-label="Korean replies practiced in this conversation" /></div>
@@ -479,7 +511,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           <div className="conversation-empty">
             <PartnerAvatar voice={voice} />
             <strong>What would you like to talk about?</strong>
-            <p>Start in Korean or describe a situation in English.</p>
+            <p>Choose a guided exchange to start instantly, or type below for open-ended AI practice.</p>
             <div className="conversation-starters">
               {guide.starters.map((topic) => (
                 <button
@@ -487,7 +519,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                   className="button button-soft"
                   disabled={calling || thinking}
                   type="button"
-                  onClick={() => void sendMessage(topic)}
+                  onClick={() => void beginGuided(topic,guide.starters.indexOf(topic))}
                 >
                   {topic} <span aria-hidden="true">↗</span>
                 </button>
@@ -558,10 +590,17 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           </p>
         )}
       </div>
-      {turns.some(turn=>turn.role==="assistant")&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Use Listen beside a reply to hear it again.</small></div>}
+      {guided&&guidedStep&&<section className="conversation-help" aria-label="Guided conversation replies">
+        <strong>Guided practice · no AI requests</strong>
+        <p>{guidedStep.reply.feedback}</p>
+        <div className="flashcard-tools">{guidedStep.choices.map(choice=><button type="button" className="button button-soft" key={choice.korean} disabled={calling||thinking} onClick={()=>void sendMessage(choice.korean)}><span lang="ko">{choice.korean}</span> · {choice.english}</button>)}</div>
+        {guidedStep.choices.length>0&&<details><summary>Reply meanings and references</summary>{guidedStep.choices.map(choice=><div key={choice.korean}><p lang="ko">{choice.korean}</p><p>{transcriptRomanization(choice.korean)} · {choice.english}</p><WordReference word={choice.korean}/></div>)}</details>}
+        <button type="button" className="button button-quiet" disabled={calling||thinking} onClick={()=>{setGuided(null);setNotice("AI conversation selected. Type your own reply below; the free AI allowance applies.");}}>Use AI for open-ended chat</button>
+      </section>}
+      {turns.some(turn=>turn.role==="assistant")&&!guided&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Use Listen beside a reply to hear it again.</small></div>}
       <details className="conversation-phrase-help">
         <summary>Need a phrase to get started?</summary>
-        {latestPartner&&<><p>Get an editable example for your partner’s latest question.</p><button type="button" className="button button-soft" disabled={helping||calling||thinking} onClick={()=>void suggestReply()}>{helping?"Finding a reply idea…":replyIdea?"Try another reply idea":"Suggest a reply to this question"}</button><small>Uses the usual free tutor allowance. Edit the example to match what you mean.</small></>}
+        {latestPartner&&<><p>Get an editable example for your partner’s latest question.</p><button type="button" className="button button-soft" disabled={helping||calling||thinking} onClick={()=>void suggestReply()}>{helping?"Finding a reply idea…":replyIdea?"Try another reply idea":"Suggest a reply to this question"}</button><small>{guided?"Guided examples use no AI requests. Choose an example below or switch to AI to write freely.":"Uses the usual free tutor allowance. Edit the example to match what you mean."}</small></>}
         {helpError&&<p role="status">{helpError}</p>}
         {starter&&<><p lang="ko">{starter}</p><p className="conversation-roman">{transcriptRomanization(starter)}</p><p>{starterMeaning}</p>
         <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling||thinking} aria-pressed={phraseAdded} onClick={()=>{setDraft(starter);setPhraseAdded(true);requestAnimationFrame(()=>{composer.current?.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});composer.current?.querySelector("textarea")?.focus({preventScroll:true});});}}>{phraseAdded?"Phrase added ↓":"Use this phrase"}</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing} onClick={()=>void listen(starter)}>{playing?"Preparing / speaking…":"Listen"}</button></div><WordReference word={starter}/></>}
@@ -584,10 +623,10 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         ) : (
           <button
             className="button button-dark"
-            disabled={thinking || playing || !apiUrl}
+            disabled={thinking || playing || !apiUrl || !!guided}
             onClick={() => void startCall()}
           >
-            {deviceVoicePolicy.canLoad?"Start voice conversation":"Start speak-and-read conversation"}
+            {guided?"Switch to AI mode for voice conversation":deviceVoicePolicy.canLoad?"Start voice conversation":"Start speak-and-read conversation"}
           </button>
         )}
         {calling && pausedForThinking && (
@@ -672,6 +711,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                 stopKoreanPlayback();
                 history.current = [];
                 setTurns([]);
+                setGuided(null);
                 setDraft("");
                 setNotice("");
               }}

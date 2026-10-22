@@ -150,7 +150,8 @@ const LearningCollection=dynamic(()=>import("./ui/learning-collection").then(mod
 const SpeakDeck=dynamic(()=>import("./ui/speak-deck").then(module=>module.SpeakDeck),{loading:SectionPending});
 const PracticePage=dynamic(()=>import("./ui/practice-page").then(module=>module.PracticePage),{loading:SectionPending});
 const TutorPage=dynamic(()=>import("./ui/tutor-page").then(module=>module.TutorPage),{loading:SectionPending});
-const AccountModal=dynamic(()=>import("./ui/account-modal").then(module=>module.AccountModal),{loading:SectionPending});
+const loadAccountModal=()=>import("./ui/account-modal");
+const AccountModal=dynamic(()=>loadAccountModal().then(module=>module.AccountModal),{loading:SectionPending});
 
 export default function Home() {
   useEffect(()=>{
@@ -176,6 +177,7 @@ export default function Home() {
   const [account, setAccount] = useState<LearnerAccount | null>(null);
   const guest=account?.id === "device-only";
   const [ready, setReady] = useState(false);
+  useEffect(()=>{if(!ready||account)return;const timer=window.setTimeout(()=>{void loadAccountModal().catch(()=>{});},750);return()=>window.clearTimeout(timer);},[ready,account]);
 
 
   useEffect(() => {
@@ -372,14 +374,15 @@ export default function Home() {
   }
 
   async function authenticateLearner(user: LearnerAccount) {
+    const {learningProgress, ...accountDetails}=user;
     restoreVersion.current++;
     const apiUrl = publicApiUrl;
     if (apiUrl) {
-      const response = await fetch(`${apiUrl}/v1/progress/me`, {
+      const response = learningProgress !== undefined ? null : await fetch(`${apiUrl}/v1/progress/me`, {
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Your saved progress could not be loaded. Please try signing in again.");
-      const remote = await readOptionalProgress(response);
+      if (response && !response.ok) throw new Error("Your saved progress could not be loaded. Please try signing in again.");
+      const remote = learningProgress !== undefined ? learningProgress as Partial<SavedProgress> | null : await readOptionalProgress(response!);
       if (remote) setProgress(normalizeProgress(remote));
       else {
         const fresh = {...(guest ? progress : initialProgress), dailyGoalMinutes:user.learningProfile?.dailyMinutes ?? progress.dailyGoalMinutes};
@@ -395,7 +398,7 @@ export default function Home() {
     }
     try {window.localStorage.removeItem(deviceProfileKey);}catch{}
     setGuestAuthOpen(false);setAccountOpen(false);
-    setAccount(user);
+    setAccount(accountDetails);
   }
 
   async function signOut() {

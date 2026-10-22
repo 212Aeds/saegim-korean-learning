@@ -18,6 +18,7 @@ export type LearnerAccount = {
   email: string;
   displayName: string;
   learningProfile?: LearningProfile;
+  learningProgress?: unknown;
 };
 
 export function AccountModal({
