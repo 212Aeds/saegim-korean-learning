@@ -77,3 +77,18 @@ test('visible conversation prefetch never initializes a model and a later Listen
   assert.equal(voices.cachedBrowserVoice('처음 보는 대화 문장이에요.','jessica'),clip);
  }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
 });
+
+test('generated voice cache has a byte budget as well as a clip-count limit',async()=>{
+ const previous={window:global.window,Worker:global.Worker};let worker;
+ global.window={localStorage:{getItem:()=>null,setItem:()=>{}}};
+ global.Worker=class{constructor(){worker=this;this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
+ const voices=require('../apps/web/app/ui/browser-voices.ts');
+ try{
+  const init=voices.enableBrowserVoices();worker.reply('ready');await init;
+  for(const text of ['first','second','third']){const result=voices.synthesizeBrowserVoice(text,'jessica',new AbortController().signal);worker.reply('audio',{wav:new ArrayBuffer(3*1024*1024)});await result;}
+  assert.equal(voices.cachedBrowserVoice('first','jessica'),undefined);
+  assert.ok(voices.cachedBrowserVoice('second','jessica'));assert.ok(voices.cachedBrowserVoice('third','jessica'));
+  const large=voices.synthesizeBrowserVoice('oversized','chris',new AbortController().signal);worker.reply('audio',{wav:new ArrayBuffer(9*1024*1024)});assert.equal((await large).size,9*1024*1024);
+  assert.equal(voices.cachedBrowserVoice('oversized','chris'),undefined);
+ }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
+});

@@ -3,6 +3,7 @@ import {currentVoiceDevicePolicy} from "./voice-device-policy";
 export type BrowserVoiceState={phase:"idle"|"loading"|"ready"|"error";progress:number;message:string};
 let state:BrowserVoiceState={phase:"idle",progress:0,message:""};
 const clips=new Map<string,Blob>();
+const maxCachedVoiceBytes=8*1024*1024;
 const synthesizing=new Map<string,Promise<Blob>>();
 const listeners=new Set<(value:BrowserVoiceState)=>void>();
 const pending=new Map<number,{resolve:(value:ArrayBuffer|undefined)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
@@ -73,7 +74,12 @@ export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica"
   if(!task){
     task=request("synthesize",{text,voice},signal).then(wav=>{
       if(!wav||signal.aborted)throw new DOMException("Canceled","AbortError");
-      const blob=new Blob([wav],{type:"audio/wav"});clips.set(key,blob);if(clips.size>6)clips.delete(clips.keys().next().value!);return blob;
+      const blob=new Blob([wav],{type:"audio/wav"});
+      if(blob.size<=maxCachedVoiceBytes){
+        clips.set(key,blob);
+        while(clips.size>6||[...clips.values()].reduce((bytes,clip)=>bytes+clip.size,0)>maxCachedVoiceBytes)clips.delete(clips.keys().next().value!);
+      }
+      return blob;
     });
     synthesizing.set(key,task);
   }
