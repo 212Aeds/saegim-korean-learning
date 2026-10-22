@@ -590,7 +590,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           </p>
         )}
       </div>
-      {guided&&guidedStep&&<section className="conversation-help" aria-label="Guided conversation replies">
+      {guided&&guidedStep&&<section className="conversation-help guided-conversation" aria-label="Guided conversation replies">
         <strong>Guided practice · no AI requests</strong>
         <p>{guidedStep.reply.feedback}</p>
         <div className="flashcard-tools">{guidedStep.choices.map(choice=><button type="button" className="button button-soft" key={choice.korean} disabled={calling||thinking} onClick={()=>void sendMessage(choice.korean)}><span lang="ko">{choice.korean}</span> · {choice.english}</button>)}</div>

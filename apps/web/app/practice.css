@@ -240,3 +240,10 @@
 .practice-recall-answer>strong {font-size:16px;color:var(--forest-deep);}
 .practice-mistakes>summary:focus-visible {outline:2px solid var(--forest);outline-offset:4px;}
 @media(prefers-reduced-motion:no-preference){.practice-mistakes[open]>ol{animation:card-arrive 200ms ease-out;}}
+
+/* Guided replies stay in one readable column, including narrow touch screens. */
+.conversation-card .guided-conversation { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px; border: 1px solid #dfe5da; border-radius: 18px; background: #f5f8f0; }
+.guided-conversation p { margin: 0; line-height: 1.6; }
+.guided-conversation .flashcard-tools { justify-content: flex-start; margin: 0; }
+.guided-conversation .button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; line-height: 1.5; }
+.guided-conversation summary { cursor: pointer; padding: 10px 0; }
