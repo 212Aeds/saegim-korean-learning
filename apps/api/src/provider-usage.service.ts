@@ -25,7 +25,7 @@ export class ProviderUsageService {
   async allowFreeInference(accountId: string): Promise<ProviderUsageDecision> {
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(accountId)) return {allowed:false,reason:"unavailable"};
     const project=positiveLimit(process.env.FREE_AI_PROJECT_DAILY_LIMIT) ?? 200;
-    const account=positiveLimit(process.env.FREE_AI_ACCOUNT_DAILY_LIMIT) ?? 25;
+    const account=positiveLimit(process.env.FREE_AI_ACCOUNT_DAILY_LIMIT) ?? 100;
     try {
       const result=await this.database.query<{reason:string|null}>("SELECT reserve_tutor_request($1::uuid,$2::integer,$3::integer,$2::integer,$3::integer,$4::bigint,$5::bigint,$6::bigint) AS reason",[accountId,project,account,project*TUTOR_TOKEN_RESERVATION,account*TUTOR_TOKEN_RESERVATION,TUTOR_TOKEN_RESERVATION]);
       const reason=result.rows[0]?.reason;

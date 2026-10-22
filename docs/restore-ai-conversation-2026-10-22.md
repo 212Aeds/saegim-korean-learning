@@ -1,0 +1,11 @@
+# Restore actual AI conversation - 2026-10-22
+
+The user explicitly requested real AI for both typed and voice conversations, more useful openings, and working reply suggestions. The previous guided default did not meet that intent. Primary starter buttons again call the existing AI endpoint. Guided practice is now an explicit optional details section; failed AI requests no longer silently change the conversation into a script.
+
+Read-only database diagnostics showed 25 learner requests and 25 shared-project requests, with 400,000 reserved tokens. Render configuration confirmed a 25 learner / 200 project daily allowance. No matching sanitized provider-failure logs were found over the preceding 24 hours. The confirmed blocker was the learner cap, not proof that the free provider itself was exhausted.
+
+To restore useful conversation capacity, raise the learner allowance to 100 while retaining the shared project ceiling at 200, existing atomic token reservations, failed-call reservations, free-plan enforcement, and disabled paid providers. No usage counters are cleared or refunded; no credentials, permissions, provider/model selection, dependencies, database schemas or billing settings change. A spoken exchange can use both transcription and tutor requests; reply suggestions also use one request. The project ceiling remains the total guardrail.
+
+The conversation policy now requires a useful contribution and one relevant question, including a scene-specific opening. Typed and voice paths share replyTo and its recent-turn history. Reply help remains a distinct reply-help request grounded in the last partner question. No local scripted sentence is substituted for a provider reply.
+
+Evidence before deployment: 198 automated tests and API/hosted production builds passed. Tests cover the atomic 100/200 limits, optional scripts, transcript/history forwarding, helper mode and strict provider output validation. Live inference and browser results will be recorded after deployment; no physical-device or microphone test is claimed. Tests use synthetic messages and fixtures, excluding private lesson context. AI assistance was used for implementation and regression tests.

@@ -54,7 +54,6 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     [phase, setPhase] = useState(""),
     [level, setLevel] = useState(0);
   const [guided,setGuided]=useState<{starter:number;step:number}|null>(null);
-  const lastStarter=useRef(0);
   const guidedStep=guided?guidedConversationStep(profile.level,guided.starter,guided.step):null;
   const learning=conversationLearning(completedLessonIds);
   const [useLessonWords,setUseLessonWords]=useState(true);
@@ -168,7 +167,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     const timer=window.setTimeout(()=>controller.abort(),65000);
     try{
       const response=await fetch(`${apiUrl}/v1/tutor/conversation`,{method:"POST",credentials:"include",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reply-help",messages:conversationHistory(history.current,"Help me answer your latest question with one short Korean example I can edit."),level:profile.level,scenario,consent:true})});
-      if(!response.ok)throw Error(response.status===401?"Sign in again to get a reply idea. Your conversation is still here.":response.status===429?"The free tutor allowance is busy. Try again later, or write your own answer.":"A reply idea could not load. Try again.");
+      if(!response.ok)throw Error(response.status===401?"Sign in again to get a reply idea. Your conversation is still here.":response.status===429?"The daily AI allowance has been reached. Your conversation and draft are still here.":"A reply idea could not load. Try again.");
       const idea=await response.json() as Reply;
       if(![idea.korean,idea.english,idea.feedback].every(value=>typeof value==="string"&&value.length>0&&value.length<=500)||!/[가-힣]/u.test(idea.korean))throw Error("The suggestion was incomplete. Try again.");
       if(!controller.signal.aborted)setReplyIdea(idea);
@@ -203,17 +202,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         }),
         signal: controller.signal,
       });
-      let reply: Reply;
-      if(response.status===429||response.status===503){
-        if(signal)throw new Error("AI voice conversation is unavailable. Start a new conversation and choose a guided starter to keep practising.");
-        const opening=guidedConversationStep(profile.level,lastStarter.current,0);
-        setGuided({starter:lastStarter.current,step:0});
-        setNotice("AI is unavailable right now. Continue with app-authored guided practice below; it does not answer or evaluate your last message.");
-        reply=opening.reply;
-      }else{
-        if (!response.ok) throw new Error(conversationRequestError(response.status));
-        reply=(await response.json()) as Reply;
-      }
+      if (!response.ok) throw new Error(conversationRequestError(response.status));
+      const reply=(await response.json()) as Reply;
       if (
         !reply || typeof reply !== "object" ||
         ![reply.korean, reply.english, reply.feedback].every(
@@ -260,7 +250,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   async function beginGuided(topic:string,index:number){
     if(request.current||calling)return;
     listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);setAudioAvailable(false);
-    lastStarter.current=index;const opening=guidedConversationStep(profile.level,index,0);
+    const opening=guidedConversationStep(profile.level,index,0);
     setGuided({starter:index,step:0});setDraft("");setNotice("");
     history.current=[{role:"user",content:topic},{role:"assistant",content:opening.reply.korean,reply:opening.reply,partner:voice}];
     setTurns(history.current);void prefetchLocalKorean(opening.reply.korean,voice);
@@ -511,7 +501,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           <div className="conversation-empty">
             <PartnerAvatar voice={voice} />
             <strong>What would you like to talk about?</strong>
-            <p>Choose a guided exchange to start instantly, or type below for open-ended AI practice.</p>
+            <p>Choose a situation to start an AI conversation, or type your own topic below.</p>
             <div className="conversation-starters">
               {guide.starters.map((topic) => (
                 <button
@@ -519,12 +509,13 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                   className="button button-soft"
                   disabled={calling || thinking}
                   type="button"
-                  onClick={() => void beginGuided(topic,guide.starters.indexOf(topic))}
+                  onClick={() => void sendMessage(topic)}
                 >
                   {topic} <span aria-hidden="true">↗</span>
                 </button>
               ))}
             </div>
+            <details><summary>Prefer guided practice without AI?</summary><p>App-authored exchanges with example replies.</p><div className="flashcard-tools">{guide.starters.map((topic,index)=><button type="button" className="button button-quiet" key={topic} disabled={calling||thinking} onClick={()=>void beginGuided(topic,index)}>Guided: {topic}</button>)}</div></details>
           </div>
         )}
         {turns.map((turn, index) => (

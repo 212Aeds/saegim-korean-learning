@@ -7,7 +7,7 @@ test('all fifteen guided starters finish with bounded choices and matching recor
   for(const choice of result.choices){assert.ok(guidedChoiceMatches(choice.korean,choice.english,choice.korean));assert.ok(guidedChoiceMatches(choice.korean,choice.english,choice.english));assert.equal(guidedChoiceMatches(choice.korean,choice.english,'unrelated request'),false);}
  }
 });
-test('starters use local practice without API access, and unavailable AI offers explicitly labelled guided practice',()=>{
+test('guided practice is explicit and optional while primary starters use actual AI',()=>{
  const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');const start=ui.slice(ui.indexOf('async function beginGuided'),ui.indexOf('async function sendMessage'));
- assert.doesNotMatch(start,/fetch\(|replyTo\(/);assert.match(ui,/onClick=\{\(\) => void beginGuided/);assert.match(ui,/response.status===429\|\|response.status===503/);assert.match(ui,/it does not answer or evaluate your last message/);assert.match(ui,/Guided practice · no AI requests/);assert.match(ui,/if\(browserVoices&&speakReplies&&!guided\)/);
+ assert.doesNotMatch(start,/fetch\(|replyTo\(/);assert.match(ui,/onClick=\{\(\) => void sendMessage\(topic\)\}/);assert.match(ui,/Prefer guided practice without AI/);const reply=ui.slice(ui.indexOf("async function replyTo"),ui.indexOf("async function toggleReadAloud"));assert.doesNotMatch(reply,/guidedConversationStep|setGuided/);assert.match(ui,/Guided practice · no AI requests/);assert.match(ui,/if\(browserVoices&&speakReplies&&!guided\)/);
 });

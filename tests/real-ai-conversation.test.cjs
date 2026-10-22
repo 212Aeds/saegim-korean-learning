@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),ts=require('typescript');require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}}).outputText,p);
+test('learner allowance increases within the unchanged atomic project ceiling without billing writes',async()=>{
+ const previous={...process.env};delete process.env.FREE_AI_ACCOUNT_DAILY_LIMIT;delete process.env.FREE_AI_PROJECT_DAILY_LIMIT;
+ try{const {ProviderUsageService}=require('../apps/api/src/provider-usage.service.ts');let parameters,query;const service=new ProviderUsageService({query:async(sql,args)=>{query=sql;parameters=args;return {rows:[{reason:null}]};}});assert.equal((await service.allowFreeInference('00000000-0000-4000-8000-000000000001')).allowed,true);assert.equal(parameters[1],200);assert.equal(parameters[2],100);assert.doesNotMatch(query,/spend|UPDATE|DELETE/);process.env.FREE_AI_ACCOUNT_DAILY_LIMIT='40';await service.allowFreeInference('00000000-0000-4000-8000-000000000001');assert.equal(parameters[2],40);}finally{process.env=previous;}
+});
+test('AI opens the selected scene with a useful line and question, and voice turns use the same contextual request',()=>{
+ const {conversationPolicy}=require('../apps/api/src/tutor/conversation-policy.ts');const normal=conversationPolicy({level:'basic',scenario:'cafe',messages:[{role:'user',content:'Order lunch'}],consent:true});assert.match(normal,/bare greeting.*incomplete/);assert.match(normal,/scene-specific line and a concrete question/);
+ const help=conversationPolicy({mode:'reply-help',level:'basic',messages:[{role:'user',content:'Help'}],consent:true});assert.match(help,/LAST partner question/);assert.match(help,/not another partner turn or a new question/);
+ const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),voice=ui.slice(ui.indexOf('async function startCall'),ui.indexOf('  return (',ui.indexOf('async function startCall')));
+ assert.match(voice,/text = result.transcript.trim\(\)/);assert.match(voice,/await replyTo\(text, controller.signal\)/);assert.match(voice,/playElevenLabsKorean\(reply.korean/);assert.doesNotMatch(voice,/guidedConversationStep|beginGuided/);
+});
