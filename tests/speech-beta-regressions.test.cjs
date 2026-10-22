@@ -21,5 +21,5 @@ test('stop-and-check UI distinguishes checking from an inactive microphone and s
  const ui=fs.readFileSync('apps/web/app/ui/server-speech-practice.tsx','utf8');
  assert.match(ui,/finish.current=stop \? \(\)=>\{setState\("checking"\)/);
  assert.doesNotMatch(ui,/"Microphone off"/);assert.match(ui,/<MatchingVoiceSetup text=\{korean\} voice=\{voice\}/);
- const page=fs.readFileSync('apps/web/app/page.tsx','utf8');assert.match(page,/voiceWarmup/);assert.doesNotMatch(page,/browserVoicesConsented/);
+ const page=fs.readFileSync('apps/web/app/page.tsx','utf8');assert.match(page,/preloadVoiceFiles/);assert.doesNotMatch(page,/prepareBrowserVoicesAutomatically/);assert.doesNotMatch(page,/browserVoicesConsented/);
 });

@@ -3,7 +3,7 @@ import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
-import { browserVoiceState, prepareBrowserVoicesAutomatically, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
+import { browserVoicePlaybackElement, browserVoiceState, prepareBrowserVoicesAutomatically, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
 import {conversationLearning} from "./conversation-learning";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -62,6 +62,19 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   const deviceVoicePolicy=currentVoiceDevicePolicy();
   const voiceReady=!browserVoices||voiceSetup.phase==="ready";
   useEffect(()=>{const unsubscribe=subscribeBrowserVoices(setVoiceSetup);if(browserVoices)void prepareBrowserVoicesAutomatically().catch(()=>{});return unsubscribe;},[browserVoices]);
+  const audioHost=useRef<HTMLDivElement|null>(null);
+  const [audioAvailable,setAudioAvailable]=useState(false);
+  useEffect(()=>{
+    if(!browserVoices||!audioHost.current)return;
+    const audio=browserVoicePlaybackElement();
+    audio.controls=true;
+    audio.setAttribute("aria-label","Conversation audio");
+    audio.setAttribute("playsinline","");
+    const reveal=()=>setAudioAvailable(audio.src.startsWith("blob:"));
+    audio.addEventListener("loadedmetadata",reveal);
+    audioHost.current.appendChild(audio);
+    return ()=>{audio.removeEventListener("loadedmetadata",reveal);audio.remove();};
+  },[browserVoices]);
   const composer=useRef<HTMLFormElement|null>(null);
   const [speakReplies,setSpeakReplies] = useState(false);
   const [pausedForThinking, setPausedForThinking] = useState(false);
@@ -126,8 +139,10 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         waitForEnd: true,
         onPlaybackStart:()=>{if(mounted.current&&attempt===listeningAttempt.current)setAudioStatus("Your partner is speaking…");},
       });
-      if (!result.played && mounted.current && attempt===listeningAttempt.current)
-        setNotice(result.needsTap?"Audio is ready. Tap Listen again to play it on this device.":browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
+      if (!result.played && mounted.current && attempt===listeningAttempt.current){
+        setAudioAvailable(Boolean(result.needsTap));
+        setNotice(result.needsTap?"Audio is ready. Tap Play in the audio player, or tap Listen again.":browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
+      }
     } catch {
       if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
@@ -211,7 +226,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     if(browserVoices){
       primeBrowserVoicePlayback();
       try{await enableBrowserVoices();}
-      catch{if(mounted.current){setSpeakReplies(false);setNotice("Voice preparation could not finish. Retry preparation, then turn read-aloud on again.");}}
+      catch{if(mounted.current){setNotice("Read-aloud is on, but voice preparation could not finish. Tap Retry voice preparation.");}}
     }
   }
   async function sendMessage(message: string) {
@@ -426,10 +441,11 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       </section>}
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
-        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>void toggleReadAloud(event.target.checked)} />Read chat replies aloud</label><small>Reads new replies after you send a message. Use Listen beside an earlier reply to replay it.</small>
+        <button type="button" role="switch" aria-checked={speakReplies} className="button button-soft read-aloud-switch" onClick={()=>void toggleReadAloud(!speakReplies)}>Read chat replies aloud · {speakReplies?"On":"Off"}</button><small>Reads new replies after you send a message. Use Listen beside an earlier reply to replay it.</small>
+        {browserVoices&&<div className="conversation-audio-player" ref={audioHost} hidden={!audioAvailable}><small>If automatic playback is blocked, use Play here after the voice is ready.</small></div>}
         {notice && <p role="status">{notice}</p>}
         {playing && <p role="status">{audioStatus}</p>}
-        {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
+        {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);setAudioAvailable(false);}}>Stop audio</button>}
       </div>
       {learning.words.length>0&&<details className="conversation-learning"><summary>Practice words from your lessons</summary><p>{learning.titles.join(" · ")}</p><p lang="ko">{learning.words.join(" · ")}</p><label><input type="checkbox" checked={useLessonWords} disabled={calling||thinking||playing} onChange={e=>setUseLessonWords(e.target.checked)}/> Ask your partner to reuse these words</label><small>Completed lessons show exposure, not mastery. AI may introduce a new word or make a mistake.</small></details>}
       <section className="conversation-guide" aria-label="Conversation practice for your level">

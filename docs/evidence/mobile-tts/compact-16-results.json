@@ -1,0 +1,52 @@
+{
+  "runtime": {
+    "common": "1.31.0-dev.20260911-2a43ec07e",
+    "web": "1.31.0-dev.20260914-8d85527a0"
+  },
+  "environment": "Node WASM on Windows laptop; not Safari or physical phone",
+  "peakRSSMiB": 579,
+  "results": [
+    {
+      "voice": "chris",
+      "text": "안녕하세요.",
+      "ms": 3243,
+      "seconds": 1.6718367346938776,
+      "rms": 0.04587501526105266
+    },
+    {
+      "voice": "chris",
+      "text": "거실에 있어요.",
+      "ms": 3848,
+      "seconds": 1.811156462585034,
+      "rms": 0.041646395867915305
+    },
+    {
+      "voice": "chris",
+      "text": "이거 얼마예요?",
+      "ms": 4157,
+      "seconds": 1.7414965986394557,
+      "rms": 0.05200851607416064
+    },
+    {
+      "voice": "jessica",
+      "text": "안녕하세요.",
+      "ms": 4276,
+      "seconds": 1.7414965986394557,
+      "rms": 0.05755636555704906
+    },
+    {
+      "voice": "jessica",
+      "text": "거실에 있어요.",
+      "ms": 4289,
+      "seconds": 1.811156462585034,
+      "rms": 0.04935931912289866
+    },
+    {
+      "voice": "jessica",
+      "text": "이거 얼마예요?",
+      "ms": 3323,
+      "seconds": 1.7414965986394557,
+      "rms": 0.04833408835886943
+    }
+  ]
+}

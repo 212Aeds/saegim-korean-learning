@@ -16,16 +16,16 @@ async function asset(name) {
   if(!bytes){
     response=await fetch(url,{credentials:'omit',referrerPolicy:'no-referrer'});
     if(!response.ok)throw Error('The voice download could not finish. Please try again.');
-    bytes=await readVoiceAsset(response,expected.bytes,count=>{loaded+=count;report('Downloading Chris and Jessica…');});
+    bytes=await readVoiceAsset(response,expected.bytes,count=>{loaded+=count;report('Preparing audio…');});
     if(!await valid(bytes,expected))throw Error('Voice file verification failed. Please retry.');
     try{await cache?.put(url,new Response(bytes));}catch{/* Private browsing/storage limits must not prevent this visit's playback. */}
-  }else{loaded+=expected.bytes;report('Loading saved voices…');}
+  }else{loaded+=expected.bytes;report('Preparing audio…');}
   return bytes;
 }
 async function valid(bytes,expected){if(bytes.byteLength!==expected.bytes)return false;const hash=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')===expected.sha256;}
 async function initialize(profile){
   if(engine)return;
-  manifest=await (await fetch(profile==='mobile'?'./mobile-model-manifest.json':'./model-manifest.json')).json();
+  manifest=await (await fetch(profile==='desktop'?'./model-manifest.json':'./mobile-model-manifest.json')).json();
   total=Object.values(manifest.files).reduce((sum,file)=>sum+file.bytes,0);loaded=0;
   try{cache=await caches.open('saegim-supertonic-'+manifest.revision);}catch{}
   const json=async name=>JSON.parse(new TextDecoder().decode(await asset(name)));
@@ -34,10 +34,10 @@ async function initialize(profile){
   const sessions=[];
   try{
     for(const file of ['duration_predictor','text_encoder','vector_estimator','vocoder']){
-      const bytes=await asset('onnx/'+file+'.onnx');report('Preparing '+file.replaceAll('_',' ')+'…');
+      const bytes=await asset('onnx/'+file+'.onnx');report('Preparing audio…');
       // Prefer device acceleration; CPU/WASM remains available in the worker.
       let session;
-      if(profile!=='mobile'&&self.navigator.gpu){try{session=await ort.InferenceSession.create(bytes,{executionProviders:['webgpu','wasm'],graphOptimizationLevel:'all'});}catch{}}
+      if(profile==='desktop'&&self.navigator.gpu){try{session=await ort.InferenceSession.create(bytes,{executionProviders:['webgpu','wasm'],graphOptimizationLevel:'all'});}catch{}}
       sessions.push(session??await ort.InferenceSession.create(bytes,{executionProviders:['wasm'],graphOptimizationLevel:'all'}));
     }
     engine=new TextToSpeech(config,new UnicodeProcessor(indexer),...sessions);
@@ -65,7 +65,7 @@ onmessage=async({data})=>{
       if(!engine||!['chris','jessica'].includes(data.voice)||typeof data.text!=='string'||!/[가-힣]/u.test(data.text)||data.text.length>500)throw Error('Set up the conversation voices first.');
       report('Preparing your partner’s voice…');
       const text=/[.!?。！？]$/u.test(data.text)?data.text:data.text+'.';
-      const result=await engine.call(text,'ko',styles[data.voice],16,.9,.25,(step,total)=>report('Creating voice · '+step+' of '+total+'…'));
+      const result=await engine.call(text,'ko',styles[data.voice],8,.9,.25,(step,total)=>report('Creating voice · '+step+' of '+total+'…'));
       const wav=writeWavFile(finish(result.wav,engine.sampleRate),engine.sampleRate);
       if(wav.byteLength>5*1024*1024)throw Error('This spoken reply is too long.');
       postMessage({id:data.id,type:'audio',wav},[wav]);

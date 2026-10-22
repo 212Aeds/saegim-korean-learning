@@ -1,3 +1,4 @@
+import {stopVoiceFilePreload} from "./preload-voice-files";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
 export type BrowserVoiceState={phase:"idle"|"loading"|"ready"|"error";progress:number;message:string};
 let state:BrowserVoiceState={phase:"idle",progress:0,message:""};
@@ -53,6 +54,7 @@ export function cancelBrowserVoices(message=""){
 export function forgetBrowserVoiceConsent(){try{window.localStorage.removeItem(consentKey);}catch{}cancelBrowserVoices();}
 export function enableBrowserVoices(){
   const policy=currentVoiceDevicePolicy();if(!policy.canLoad){update({phase:"error",progress:0,message:policy.reason});return Promise.reject(new Error(policy.reason));}
+  stopVoiceFilePreload();
   primeBrowserVoicePlayback();
   if(state.phase==="ready")return Promise.resolve();
   if(initializing)return initializing;

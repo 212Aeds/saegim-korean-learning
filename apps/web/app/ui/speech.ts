@@ -351,7 +351,8 @@ export async function playElevenLabsKorean(
     activeUrl = recorded ? undefined : url;
     activeAudio = audio;
     audio.playbackRate = Math.min(1.4, Math.max(0.65, rate));
-    const release = () => {
+    const release = (keepForReplay=false) => {
+      if(keepForReplay)return;
       if (!recorded) URL.revokeObjectURL(url);
       if (activeAudio === audio) {
         activeAudio = undefined;
@@ -363,7 +364,7 @@ export async function playElevenLabsKorean(
       const finish = (success: boolean) => {
         window.clearTimeout(completionTimer);
         if (settlePlayback === finish) settlePlayback = undefined;
-        release();
+        release(success&&browserVoice);
         resolve(success);
       };
       if (fallbackOptions.waitForEnd) {
@@ -390,13 +391,15 @@ export async function playElevenLabsKorean(
   } catch (error) {
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };
+    // Keep the prepared source alive for the visible native Play control.
+    // Safari can require a direct tap after asynchronous synthesis.
+    if(browserVoice && error instanceof Error && error.name==="NotAllowedError")
+      return {played:false,source:"unavailable",needsTap:true};
     settlePlayback?.(false);
     activeAudio?.pause();
     if (activeUrl) URL.revokeObjectURL(activeUrl);
     activeAudio = undefined;
     activeUrl = undefined;
-    if(browserVoice && error instanceof Error && error.name==="NotAllowedError")
-      return {played:false,source:"unavailable",needsTap:true};
     if (fallbackOptions.consistentVoice || fallbackOptions.naturalOnly || consonantName(text.trim()))
       return { played: false, source: "unavailable" };
     await waitForKoreanVoices();

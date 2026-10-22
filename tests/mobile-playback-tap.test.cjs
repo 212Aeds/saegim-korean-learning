@@ -8,6 +8,7 @@ test('blocked generated audio is retained and replay starts synchronously inside
  global.Audio=class{constructor(src){this.src=src||'';}pause(){}play(){if(this.src.startsWith('data:'))return Promise.resolve();if(!inTap)return Promise.reject(new DOMException('Tap required','NotAllowedError'));startedInTap=true;return Promise.resolve();}};
  const speech=require('../apps/web/app/ui/speech.ts'),voices=require('../apps/web/app/ui/browser-voices.ts');
  try{const first=await speech.playElevenLabsKorean('가족과 같이 이야기해요.','jessica');assert.equal(first.needsTap,true);assert.equal(generated,1);
+ assert.equal((await fetch(voices.browserVoicePlaybackElement().src)).ok,true,"blocked audio remains usable by the visible native player");
  inTap=true;const replay=speech.playElevenLabsKorean('가족과 같이 이야기해요.','jessica');inTap=false;
  assert.equal(startedInTap,true);assert.equal((await replay).played,true);assert.equal(generated,1);
  }finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,old);}

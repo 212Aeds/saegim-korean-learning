@@ -47,7 +47,7 @@ test('conversation Listen primes the audio element before awaiting synthesis and
 
 test('unknown-memory iPhones use a smaller explicit preparation profile without automatic downloads',()=>{
  const result=voicePreparationPolicy({mobile:true,gpu:false});
- assert.equal(result.profile,'mobile');assert.equal(result.canLoad,true);assert.equal(result.automatic,false);assert.match(result.reason,/106 MB/);
+ assert.equal(result.profile,'mobile');assert.equal(result.canLoad,true);assert.equal(result.automatic,false);assert.match(result.reason,/prepare in the background/);
  const manifest=require('../apps/web/public/voices/mobile-model-manifest.json');
  assert.match(manifest.revision,/^[a-f0-9]{40}$/);assert.equal(manifest.variant,'mixed-fast');
  assert.ok(Object.values(manifest.files).reduce((n,f)=>n+f.bytes,0)<110_000_000);
@@ -70,4 +70,12 @@ test('read-aloud can prepare voices and setup does not wait for unused warm-up a
  assert.match(ui,/async function toggleReadAloud/);
  const initialize=worker.slice(worker.indexOf('async function initialize('),worker.indexOf('function finish('));
  assert.doesNotMatch(initialize,/await engine.call/);
+});
+
+test('home startup does not prepare the conversation model, and read-aloud has a full touch control',()=>{
+ const page=fs.readFileSync('apps/web/app/page.tsx','utf8'),ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),worker=fs.readFileSync('apps/web/public/voices/worker.js','utf8');
+ assert.doesNotMatch(page,/prepareBrowserVoicesAutomatically/);
+ assert.match(ui,/role="switch" aria-checked=\{speakReplies\}/);
+ assert.match(ui,/audio.controls=true/);assert.match(ui,/aria-label","Conversation audio/);
+ assert.match(worker,/engine.call\(text,'ko',styles\[data.voice\],8,/);
 });

@@ -1,4 +1,5 @@
 "use client";
+import {preloadVoiceFiles,stopVoiceFilePreload} from "./ui/preload-voice-files";
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
 import { useEffect, useMemo, useState, useRef } from "react";
@@ -25,7 +26,7 @@ import {
   ChatCircleDots,
 } from "./ui/icons";
 import {prefetchLocalKorean,usesBrowserConversationVoices} from "./ui/speech";
-import {prepareBrowserVoicesAutomatically} from "./ui/browser-voices";
+
 import {GuestLearningContext} from "./ui/guest-learning";
 
 import { readOptionalProgress } from "./ui/progress-response";
@@ -154,8 +155,11 @@ const AccountModal=dynamic(()=>import("./ui/account-modal").then(module=>module.
 export default function Home() {
   useEffect(()=>{
     void prefetchLocalKorean("안녕하세요","chris").then(()=>prefetchLocalKorean("안녕하세요","jessica"));
-    const voiceWarmup=window.setTimeout(()=>{if(usesBrowserConversationVoices())void prepareBrowserVoicesAutomatically().catch(()=>{});},1500);
-    return ()=>window.clearTimeout(voiceWarmup);
+    let timer:ReturnType<typeof setTimeout>;
+    const prepare=()=>{timer=setTimeout(()=>{if(usesBrowserConversationVoices())void preloadVoiceFiles();},4000);};
+    if(document.readyState==="complete")prepare();else window.addEventListener("load",prepare,{once:true});
+    return ()=>{clearTimeout(timer);window.removeEventListener("load",prepare);stopVoiceFilePreload();};
+
   },[]);
   const [tab, setTab] = useState<Tab>("today");
   const [progress, setProgress] = useState(initialProgress);
