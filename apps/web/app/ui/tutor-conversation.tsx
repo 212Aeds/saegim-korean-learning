@@ -166,7 +166,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     const controller=new AbortController();hintAbort.current=controller;setHelping(true);setHelpError("");
     const timer=window.setTimeout(()=>controller.abort(),65000);
     try{
-      const response=await fetch(`${apiUrl}/v1/tutor/conversation`,{method:"POST",credentials:"include",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reply-help",messages:conversationHistory(history.current,"Help me answer your latest question with one short Korean example I can edit."),level:profile.level,scenario,consent:true})});
+      const response=await fetch(`${apiUrl}/v1/tutor/conversation`,{method:"POST",credentials:"include",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reply-help",messages:conversationHistory(history.current,"Suggest my ANSWER to the last question, as the learner. Do not repeat or translate the question. Choose a plausible detail (a food, place, time or preference) and give one short Korean statement answering it. No question marks. I will edit the example."),level:profile.level,scenario,consent:true})});
       if(!response.ok)throw Error(response.status===401?"Sign in again to get a reply idea. Your conversation is still here.":response.status===429?"The daily AI allowance has been reached. Your conversation and draft are still here.":"A reply idea could not load. Try again.");
       const idea=await response.json() as Reply;
       if(![idea.korean,idea.english,idea.feedback].every(value=>typeof value==="string"&&value.length>0&&value.length<=500)||!/[가-힣]/u.test(idea.korean))throw Error("The suggestion was incomplete. Try again.");
@@ -720,3 +720,4 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     </section>
   );
 }
+
