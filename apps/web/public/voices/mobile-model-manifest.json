@@ -1,0 +1,48 @@
+{
+  "revision": "95618f5d61cef4923c3b802a332fd603723718f7",
+  "base": "https://huggingface.co/askurios8/supertonic-3-int8/resolve/95618f5d61cef4923c3b802a332fd603723718f7/",
+  "source": "https://huggingface.co/askurios8/supertonic-3-int8",
+  "variant": "mixed-fast",
+  "files": {
+    "onnx/tts.json": {
+      "bytes": 8253,
+      "sha256": "42078d3aef1cd43ab43021f3c54f47d2d75ceb4e75f627f118890128b06a0d09",
+      "path": "onnx/tts.json"
+    },
+    "onnx/unicode_indexer.json": {
+      "bytes": 277676,
+      "sha256": "9bf7346e43883a81f8645c81224f786d43c5b57f3641f6e7671a7d6c493cb24f",
+      "path": "onnx/unicode_indexer.json"
+    },
+    "voice_styles/M1.json": {
+      "bytes": 291748,
+      "sha256": "e35604687f5d23694b8e91593a93eec0e4eca6c0b02bb8ed69139ab2ea6b0a5b",
+      "path": "voice_styles/M1.json"
+    },
+    "voice_styles/F1.json": {
+      "bytes": 292046,
+      "sha256": "bbdec6ee00231c2c742ad05483df5334cab3b52fda3ba38e6a07059c4563dbc2",
+      "path": "voice_styles/F1.json"
+    },
+    "onnx/duration_predictor.onnx": {
+      "bytes": 3700147,
+      "sha256": "c3eb91414d5ff8a7a239b7fe9e34e7e2bf8a8140d8375ffb14718b1c639325db",
+      "path": "variants/mixed-fast/onnx/duration_predictor.onnx"
+    },
+    "onnx/text_encoder.onnx": {
+      "bytes": 9816461,
+      "sha256": "998c7a1445f3ef123f6516acd0fbaf9e9a73287f397612786db4cf4aeb1cb462",
+      "path": "variants/mixed-fast/onnx/text_encoder.onnx"
+    },
+    "onnx/vector_estimator.onnx": {
+      "bytes": 65447164,
+      "sha256": "073575704bf0b6ca0714eb6509029f324b794d5bd6dbdb27dccbbc5939abc167",
+      "path": "variants/mixed-fast/onnx/vector_estimator.onnx"
+    },
+    "onnx/vocoder.onnx": {
+      "bytes": 25820373,
+      "sha256": "ab337d1a10ed54c24cb42e0ea9be3733603149517fa0a8f54d07ef816cb766df",
+      "path": "variants/mixed-fast/onnx/vocoder.onnx"
+    }
+  }
+}

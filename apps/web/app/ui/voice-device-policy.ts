@@ -1,10 +1,10 @@
 type DeviceHints={mobile?:boolean;memoryGB?:number;gpu?:boolean;saveData?:boolean;effectiveType?:string;connectionType?:string};
 export function voicePreparationPolicy(hints:DeviceHints){
- const lowMemory=typeof hints.memoryGB==="number"&&hints.memoryGB>0&&hints.memoryGB<=4;
- const uncertainPhone=hints.mobile&&!hints.memoryGB;
- const canLoad=!lowMemory&&!uncertainPhone;
+ const profile=hints.mobile?"mobile":"desktop";
+ const lowMemory=typeof hints.memoryGB==="number"&&hints.memoryGB>0&&hints.memoryGB<=(hints.mobile?2:4);
+ const canLoad=!lowMemory;
  const metered=hints.saveData||hints.connectionType==="cellular"||/^(slow-2g|2g|3g)$/.test(hints.effectiveType??"");
- return {canLoad,automatic:canLoad&&!hints.mobile&&!metered,reason:!canLoad?"To reduce crash risk on this device, new conversation replies stay as text. Recorded Chris/Jessica audio and microphone practice remain available.":hints.mobile||metered?"Recorded audio is ready without the large model. New spoken replies need about 430 MB; prepare them on Wi-Fi when convenient.":"Conversation voices prepare in the background."};
+ return {profile,canLoad,automatic:canLoad&&!hints.mobile&&!metered,reason:!canLoad?"To reduce crash risk on this device, new conversation replies stay as text. Recorded Chris/Jessica audio and microphone practice remain available.":hints.mobile?"Chris and Jessica use a smaller 106 MB voice download on phones. Prepare once on Wi-Fi; saved files are reused when your browser permits. First-time setup can take a while.":metered?"Recorded audio is ready. Conversation voices need about 399 MB; prepare on Wi-Fi when convenient.":"Conversation voices prepare in the background."};
 }
 export function currentVoiceDevicePolicy(){
  if(typeof navigator==="undefined")return voicePreparationPolicy({});

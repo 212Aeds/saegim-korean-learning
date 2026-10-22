@@ -9,7 +9,7 @@ let engine,styles,loaded=0,total=1,cache,manifest;
 let lastReport=0,lastMessage='';
 const report=message=>{const now=performance.now();if(message===lastMessage&&now-lastReport<200)return;lastReport=now;lastMessage=message;postMessage({type:'progress',message,progress:Math.min(99,Math.floor(loaded/total*100))});};
 async function asset(name) {
-  const expected=manifest.files[name],url=manifest.base+name;
+  const expected=manifest.files[name],url=manifest.base+(expected.path??name);
   let response;try{response=await cache?.match(url);}catch{}
   let bytes;
   if(response){bytes=await response.arrayBuffer();if(!await valid(bytes,expected)){try{await cache?.delete(url);}catch{}bytes=undefined;}}
@@ -23,9 +23,9 @@ async function asset(name) {
   return bytes;
 }
 async function valid(bytes,expected){if(bytes.byteLength!==expected.bytes)return false;const hash=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')===expected.sha256;}
-async function initialize(){
+async function initialize(profile){
   if(engine)return;
-  manifest=await (await fetch('./model-manifest.json')).json();
+  manifest=await (await fetch(profile==='mobile'?'./mobile-model-manifest.json':'./model-manifest.json')).json();
   total=Object.values(manifest.files).reduce((sum,file)=>sum+file.bytes,0);loaded=0;
   try{cache=await caches.open('saegim-supertonic-'+manifest.revision);}catch{}
   const json=async name=>JSON.parse(new TextDecoder().decode(await asset(name)));
@@ -37,12 +37,14 @@ async function initialize(){
       const bytes=await asset('onnx/'+file+'.onnx');report('Preparing '+file.replaceAll('_',' ')+'…');
       // Prefer device acceleration; CPU/WASM remains available in the worker.
       let session;
-      if(self.navigator.gpu){try{session=await ort.InferenceSession.create(bytes,{executionProviders:['webgpu','wasm'],graphOptimizationLevel:'all'});}catch{}}
+      if(profile!=='mobile'&&self.navigator.gpu){try{session=await ort.InferenceSession.create(bytes,{executionProviders:['webgpu','wasm'],graphOptimizationLevel:'all'});}catch{}}
       sessions.push(session??await ort.InferenceSession.create(bytes,{executionProviders:['wasm'],graphOptimizationLevel:'all'}));
     }
     engine=new TextToSpeech(config,new UnicodeProcessor(indexer),...sessions);
     report("Finishing voice setup…");
-    for(const voice of ["chris","jessica"])await engine.call("안녕하세요.","ko",styles[voice],16,.9,.25);
+    // Both presets share the same inference sessions. A short mobile warm-up
+    // primes those sessions without generating two full, unused greetings.
+    for(const voice of (profile==='mobile'?["jessica"]:["chris","jessica"]))await engine.call("안녕하세요.","ko",styles[voice],profile==='mobile'?4:16,.9,.25);
   }catch(error){engine=undefined;await Promise.allSettled(sessions.map(session=>session.release()));throw error;}
 }
 function finish(samples,rate){
@@ -59,7 +61,7 @@ onmessage=async({data})=>{
   if(busy){postMessage({id:data.id,type:'error',message:'A voice request is already running.'});return;}
   busy=true;
   try{
-    if(data.type==='initialize'){await initialize();postMessage({id:data.id,type:'ready'});}
+    if(data.type==='initialize'){await initialize(data.profile);postMessage({id:data.id,type:'ready'});}
     else if(data.type==='synthesize'){
       if(!engine||!['chris','jessica'].includes(data.voice)||typeof data.text!=='string'||!/[가-힣]/u.test(data.text)||data.text.length>500)throw Error('Set up the conversation voices first.');
       report('Preparing your partner’s voice…');

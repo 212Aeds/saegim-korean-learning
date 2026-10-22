@@ -1,3 +1,5 @@
+Mobile update: see [the compact voice decision and test evidence](mobile-tts-2026-10-21.md). The new phone profile supersedes the earlier blanket unknown-memory iPhone block documented below.
+
 # How Saegim works — a guided code walkthrough
 
 Phone/cellular reliability follow-up (October 21): a bounded streaming reader removes the retained-chunks-plus-full-copy allocation during voice downloads and rejects incomplete files before model initialization. Phones, cellular/slow connections and data-saving mode do not automatically start the large model. Reported low-memory devices and phones with unknown memory use a conservative speak-and-read path. This is an application safety policy, not hardware certification. Start conversation prepares eligible voices on demand instead of remaining disabled. The fallback captures microphone turns and displays generated text replies; it does not pretend recorded phrases are generated speech. Worker errors terminate the worker and release pending requests.

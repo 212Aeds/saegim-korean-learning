@@ -30,3 +30,6 @@ work/start-gpu-audio.py
 # ONNX browser runtime files are copied from the pinned dependency at build time.
 apps/web/public/voices/ort/
 work/supertonic-browser-upstream/
+
+# Local compact-model evaluation assets and synthetic recordings.
+work/mobile-tts-evaluation/

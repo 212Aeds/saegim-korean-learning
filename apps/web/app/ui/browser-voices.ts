@@ -58,7 +58,7 @@ export function enableBrowserVoices(){
   if(initializing)return initializing;
   try{window.localStorage.setItem(consentKey,"true");}catch{}
   update({phase:"loading",progress:0,message:"Preparing Chris and Jessica…"});
-  const task=request("initialize").then(()=>update({phase:"ready",progress:100,message:"Chris and Jessica are ready."})).catch(error=>{if(error?.name!=="AbortError")update({phase:"error",progress:0,message:"Voice setup could not finish. Retry, or continue by text."});throw error;}).finally(()=>{if(initializing===task)initializing=undefined;});
+  const task=request("initialize",{profile:policy.profile}).then(()=>update({phase:"ready",progress:100,message:"Chris and Jessica are ready."})).catch(error=>{if(error?.name!=="AbortError")update({phase:"error",progress:0,message:"Voice setup could not finish. Retry, or continue by text."});throw error;}).finally(()=>{if(initializing===task)initializing=undefined;});
   initializing=task;return task;
 }
 export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica",signal:AbortSignal){
