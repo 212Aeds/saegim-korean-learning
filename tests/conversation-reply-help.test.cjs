@@ -7,7 +7,7 @@ test('reply suggestions use a distinct validated mode tied to the latest questio
  assert.match(conversationPolicy(input),/LAST partner question/);assert.match(conversationPolicy(input),/not another partner turn or a new question/);assert.doesNotMatch(conversationPolicy({...input,level:"new"}),/including one very simple question/);
  const normal=conversationPolicy({...input,mode:'conversation'});assert.match(normal,/latest learner message/);assert.match(normal,/answer it before following up/);
  const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');assert.match(ui,/mode:"reply-help"/);assert.match(ui,/latestPartner\?replyIdea\?\.korean:situation.phrase/);
- assert.doesNotMatch(ui,/The same Chris and Jessica voices as your lessons/);
+ assert.doesNotMatch(ui,/The same Chris and Jessica voices as your lessons/);assert.doesNotMatch(fs.readFileSync("apps/web/app/ui/beta-invitation.tsx","utf8"),/Conversation voice preparation|430 MB/);
  const speak=fs.readFileSync('apps/web/app/ui/server-speech-practice.tsx','utf8');assert.match(speak,/manualStop:true/);assert.doesNotMatch(speak,/Pause before checking/);
 });
 
