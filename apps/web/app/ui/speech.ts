@@ -1,4 +1,4 @@
-import { enableBrowserVoices, browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
+import { cachedBrowserVoice, enableBrowserVoices, browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
 import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
 import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
 import { localSpeechUrl } from "./local-speech-server";
@@ -234,6 +234,7 @@ export type CatalogVoice = {
 };
 export type KoreanPlayback = {
   played: boolean;
+  needsTap?: boolean;
   source: "catalog" | "elevenlabs" | "local" | "device" | "browser-model" | "unavailable";
 };
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -335,7 +336,7 @@ export async function playElevenLabsKorean(
       throw new Error();
     // A packaged clip has a public URL already. Start it directly inside the
     // tap gesture so mobile autoplay rules do not reject an awaited fetch.
-    const blob = recorded ? undefined : browserVoice ? await synthesizeBrowserVoice(naturalSpeechText(text),voice,controller.signal) : localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
+    const blob = recorded ? undefined : browserVoice ? cachedBrowserVoice(naturalSpeechText(text),voice) ?? await synthesizeBrowserVoice(naturalSpeechText(text),voice,controller.signal) : localSpeechUrl ? await localAudio(text, voice) : await response!.blob();
     if (
       version !== playbackVersion ||
       controller.signal.aborted ||
@@ -386,7 +387,7 @@ export async function playElevenLabsKorean(
     if (fallbackOptions.waitForEnd && !(await ended))
       return { played: false, source: "unavailable" };
     return { played: true, source: recorded ? "catalog" : browserVoice ? "browser-model" : localSpeechUrl ? "local" : "elevenlabs" };
-  } catch {
+  } catch (error) {
     if (version !== playbackVersion)
       return { played: false, source: "unavailable" };
     settlePlayback?.(false);
@@ -394,6 +395,8 @@ export async function playElevenLabsKorean(
     if (activeUrl) URL.revokeObjectURL(activeUrl);
     activeAudio = undefined;
     activeUrl = undefined;
+    if(browserVoice && error instanceof Error && error.name==="NotAllowedError")
+      return {played:false,source:"unavailable",needsTap:true};
     if (fallbackOptions.consistentVoice || fallbackOptions.naturalOnly || consonantName(text.trim()))
       return { played: false, source: "unavailable" };
     await waitForKoreanVoices();

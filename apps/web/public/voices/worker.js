@@ -41,10 +41,9 @@ async function initialize(profile){
       sessions.push(session??await ort.InferenceSession.create(bytes,{executionProviders:['wasm'],graphOptimizationLevel:'all'}));
     }
     engine=new TextToSpeech(config,new UnicodeProcessor(indexer),...sessions);
-    report("Finishing voice setup…");
-    // Both presets share the same inference sessions. A short mobile warm-up
-    // primes those sessions without generating two full, unused greetings.
-    for(const voice of (profile==='mobile'?["jessica"]:["chris","jessica"]))await engine.call("안녕하세요.","ko",styles[voice],profile==='mobile'?4:16,.9,.25);
+    // Sessions are ready now. Generate only audio the learner requested;
+    // a warm-up can stall at 99% and must not gate every chat control.
+
   }catch(error){engine=undefined;await Promise.allSettled(sessions.map(session=>session.release()));throw error;}
 }
 function finish(samples,rate){

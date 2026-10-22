@@ -61,6 +61,7 @@ export function enableBrowserVoices(){
   const task=request("initialize",{profile:policy.profile}).then(()=>update({phase:"ready",progress:100,message:"Chris and Jessica are ready."})).catch(error=>{if(error?.name!=="AbortError")update({phase:"error",progress:0,message:"Voice setup could not finish. Retry, or continue by text."});throw error;}).finally(()=>{if(initializing===task)initializing=undefined;});
   initializing=task;return task;
 }
+export function cachedBrowserVoice(text:string,voice:"chris"|"jessica"){return clips.get(voice+"|"+text);}
 export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica",signal:AbortSignal){
   if(state.phase!=="ready")throw Error("Set up Chris and Jessica first.");
   const key=voice+"|"+text;const saved=clips.get(key);if(saved&&!signal.aborted)return saved;

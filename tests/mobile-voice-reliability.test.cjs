@@ -63,3 +63,11 @@ test('an explicit iPhone setup forwards the compact profile to the worker',async
  try{await voices.prepareBrowserVoicesAutomatically();assert.equal(worker,undefined);const setup=voices.enableBrowserVoices();assert.equal(worker.message.profile,'mobile');worker.onmessage({data:{id:worker.message.id,type:'ready'}});await setup;assert.equal(voices.browserVoiceState().phase,'ready');}
  finally{voices.cancelBrowserVoices();if(nav)Object.defineProperty(global,'navigator',nav);else delete global.navigator;global.Worker=oldWorker;global.window=oldWindow;}
 });
+
+test('read-aloud can prepare voices and setup does not wait for unused warm-up audio',()=>{
+ const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),worker=fs.readFileSync('apps/web/public/voices/worker.js','utf8');
+ assert.doesNotMatch(ui,/checked=\{speakReplies\} disabled=\{!voiceReady\}/);
+ assert.match(ui,/async function toggleReadAloud/);
+ const initialize=worker.slice(worker.indexOf('async function initialize('),worker.indexOf('function finish('));
+ assert.doesNotMatch(initialize,/await engine.call/);
+});

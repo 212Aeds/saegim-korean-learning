@@ -127,7 +127,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         onPlaybackStart:()=>{if(mounted.current&&attempt===listeningAttempt.current)setAudioStatus("Your partner is speaking…");},
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current)
-        setNotice(browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
+        setNotice(result.needsTap?"Audio is ready. Tap Listen again to play it on this device.":browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
     } catch {
       if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
     } finally {
@@ -202,6 +202,16 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           setPendingMessage("");
         }
       }
+    }
+  }
+  async function toggleReadAloud(enabled:boolean){
+    setSpeakReplies(enabled);
+    if(!enabled)return;
+    setNotice("");
+    if(browserVoices){
+      primeBrowserVoicePlayback();
+      try{await enableBrowserVoices();}
+      catch{if(mounted.current){setSpeakReplies(false);setNotice("Voice preparation could not finish. Retry preparation, then turn read-aloud on again.");}}
     }
   }
   async function sendMessage(message: string) {
@@ -416,7 +426,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       </section>}
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
-        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} disabled={!voiceReady} onChange={event=>setSpeakReplies(event.target.checked)} />Read chat replies aloud</label>
+        <label className="preference-toggle"><input type="checkbox" checked={speakReplies} onChange={event=>void toggleReadAloud(event.target.checked)} />Read chat replies aloud</label><small>Reads new replies after you send a message. Use Listen beside an earlier reply to replay it.</small>
+        {notice && <p role="status">{notice}</p>}
         {playing && <p role="status">{audioStatus}</p>}
         {playing && <button type="button" className="button button-quiet" onClick={()=>{listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);}}>Stop audio</button>}
       </div>

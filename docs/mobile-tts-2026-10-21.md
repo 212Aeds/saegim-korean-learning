@@ -23,3 +23,11 @@ No physical iPhone, Android, Wi-Fi or cellular-device validation is claimed. Sma
 AI assistance was used for investigation, code and synthetic tests. The engineering decision was based on pinned artifacts and actual local inference rather than treating the model card's performance claims as measured results for Saegim.
 
 The actual browser-worker check also passed: the production worker initialized the mobile profile, verified the remote files, and generated WAVs for both presets from synthetic living-room/price-question text. Both audio controls entered playback and returned to play. This was the desktop in-app browser executing the mobile engine path, not Safari emulation.
+
+## Listen/read-aloud follow-up
+
+The live desktop tutor was observed stuck at “Finishing voice setup… 99%”; its read-aloud checkbox was disabled by voice readiness. Removed unused warm-up synthesis from initialization so ready means inference sessions loaded, not that two unsolicited greetings completed. The checkbox now accepts input before readiness and initiates preparation, with errors next to the controls. It reads future replies, explicitly explained in the interface.
+
+Browser playback may reject `play()` with `NotAllowedError` after asynchronous synthesis (https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/play). The playback result now distinguishes that rejection. The generated clip stays cached, the learner is asked to tap Listen again, and cached replay invokes `audio.play()` synchronously in the next tap without awaiting another synthesis promise. A synthetic policy test rejects the first delayed play and confirms direct replay succeeds with only one synthesis request.
+
+Verification uses the actual TutorConversation component and speech.ts wrapper in a 390px local fixture, synthetic iPhone policy and intercepted synthetic conversation reply. The fixture does not call the real tutor or send account data. This is more complete than the earlier worker-only audio-controls test, while still not a physical Safari test. AI assistance was used for diagnosis, implementation and tests.
