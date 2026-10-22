@@ -18,3 +18,11 @@ test('manual check preserves short captured speech during calibration; truly sil
   processor.onaudioprocess(event(new Float32Array(4096)));finish();await assert.rejects(empty,/No speech detected/);assert.equal(stops,2);
  }finally{if(nav)Object.defineProperty(global,'navigator',nav);else delete global.navigator;global.AudioContext=originalAudio;if(oldWindow===undefined)delete global.window;else global.window=oldWindow;}
 });
+
+test('manual Speak capture waits for Stop & check even after ten seconds of quiet',async()=>{
+ const nav=Object.getOwnPropertyDescriptor(global,'navigator'),clock=Object.getOwnPropertyDescriptor(global,'performance'),oldAudio=global.AudioContext,oldWindow=global.window;let processor,finish,elapsed=0,stops=0;
+ const node={connect(){},disconnect(){}};Object.defineProperty(global,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){stops++;}}]})}}});Object.defineProperty(global,'performance',{configurable:true,value:{now:()=>elapsed}});
+ global.window={setTimeout,clearTimeout};global.AudioContext=class{sampleRate=16000;state='running';createMediaStreamSource(){return node;}createScriptProcessor(){processor={...node};return processor;}createGain(){return {...node,gain:{value:1}};}async resume(){}async close(){}};
+ try{const recording=recordConversationTurn(new AbortController().signal,()=>{},{manualStop:true,onReady:value=>finish=value});await new Promise(r=>setImmediate(r));const frame=data=>processor.onaudioprocess({inputBuffer:{getChannelData:()=>data}});frame(new Float32Array(4096));elapsed=500;frame(Float32Array.from({length:4096},(_,i)=>.1*Math.sin(2*Math.PI*220*i/16000)));elapsed=12000;frame(new Float32Array(4096));assert.equal(stops,0);finish();assert.ok((await recording).byteLength>44);assert.equal(stops,1);}
+ finally{if(nav)Object.defineProperty(global,'navigator',nav);else delete global.navigator;if(clock)Object.defineProperty(global,'performance',clock);global.AudioContext=oldAudio;global.window=oldWindow;}
+});

@@ -11,6 +11,7 @@ export async function recordConversationTurn(
   onLevel: (level: number) => void,
   options: {
     silenceMs?: number;
+    manualStop?: boolean;
     maxSeconds?: number;
     onSilence?: (remainingMs: number | null) => void;
     onCalibrating?: () => void;
@@ -108,7 +109,7 @@ export async function recordConversationTurn(
         }
         if (speaking) clip.speechDetected=true;
         if (clip.speechDetected && continuing) lastSpeech=elapsed;
-        options.onSilence?.(clip.speechDetected && !continuing ? Math.max(0,pauseMs-(elapsed-lastSpeech)) : null);
+        options.onSilence?.(!options.manualStop && clip.speechDetected && !continuing ? Math.max(0,pauseMs-(elapsed-lastSpeech)) : null);
         onLevel(activity.ready ? Math.min(100,Math.round(Math.sqrt(rms / 0.03) * 100)) : 0);
         const count = Math.min(
           samples.length,
@@ -120,9 +121,9 @@ export async function recordConversationTurn(
         }
         if (
           clip.samples >= audioContext.sampleRate * clipSeconds ||
-          (clip.speechDetected
+          (!options.manualStop && (clip.speechDetected
             ? elapsed - lastSpeech >= pauseMs
-            : silenceDecision(elapsed, lastSpeech, false) !== "continue")
+            : silenceDecision(elapsed, lastSpeech, false) !== "continue"))
         )
           finish();
       };

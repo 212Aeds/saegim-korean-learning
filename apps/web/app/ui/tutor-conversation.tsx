@@ -3,7 +3,7 @@ import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
-import { browserVoicePlaybackElement, browserVoiceState, prepareBrowserVoicesAutomatically, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices, forgetBrowserVoiceConsent } from "./browser-voices";
+import { browserVoicePlaybackElement, browserVoiceState, prepareBrowserVoicesAutomatically, subscribeBrowserVoices, primeBrowserVoicePlayback, enableBrowserVoices } from "./browser-voices";
 import {conversationLearning} from "./conversation-learning";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -56,6 +56,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   const [audioStatus,setAudioStatus]=useState("");
   const [pendingMessage, setPendingMessage] = useState("");
   const [pace,setPace] = useState(1);
+  const [replyIdea,setReplyIdea]=useState<Reply|null>(null),[helping,setHelping]=useState(false),[helpError,setHelpError]=useState("");
+  const hintAbort=useRef<AbortController|null>(null);
   const [phraseAdded,setPhraseAdded]=useState(false);
   const [voiceSetup,setVoiceSetup]=useState(browserVoiceState);
   const browserVoices=usesBrowserConversationVoices();
@@ -148,6 +150,23 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     } finally {
       if (mounted.current && attempt===listeningAttempt.current){setPlaying(false);setAudioStatus("");}
     }
+  }
+  const latestPartner=[...turns].reverse().find(turn=>turn.role==="assistant");
+  const starter=latestPartner?replyIdea?.korean:situation.phrase;
+  const starterMeaning=latestPartner?replyIdea?.english:situation.meaning;
+  useEffect(()=>{hintAbort.current?.abort();hintAbort.current=null;setHelping(false);setReplyIdea(null);setHelpError("");setPhraseAdded(false);return ()=>hintAbort.current?.abort();},[turns.length,scenario]);
+  async function suggestReply(){
+    if(!latestPartner||helping||!apiUrl||calling||thinking)return;
+    const controller=new AbortController();hintAbort.current=controller;setHelping(true);setHelpError("");
+    const timer=window.setTimeout(()=>controller.abort(),65000);
+    try{
+      const response=await fetch(`${apiUrl}/v1/tutor/conversation`,{method:"POST",credentials:"include",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reply-help",messages:conversationHistory(history.current,"Help me answer your latest question with one short Korean example I can edit."),level:profile.level,scenario,consent:true})});
+      if(!response.ok)throw Error(response.status===429?"The free tutor allowance is busy. Try again later, or write your own answer.":"A reply idea could not load. Try again.");
+      const idea=await response.json() as Reply;
+      if(![idea.korean,idea.english,idea.feedback].every(value=>typeof value==="string"&&value.length>0&&value.length<=500)||!/[가-힣]/u.test(idea.korean))throw Error("The suggestion was incomplete. Try again.");
+      if(!controller.signal.aborted)setReplyIdea(idea);
+    }catch(error){if(mounted.current&&hintAbort.current===controller)setHelpError(controller.signal.aborted?"The suggestion took too long. Try again.":error instanceof Error?error.message:"A reply idea could not load.");}
+    finally{window.clearTimeout(timer);if(hintAbort.current===controller){hintAbort.current=null;if(mounted.current)setHelping(false);}}
   }
   async function replyTo(text: string, signal?: AbortSignal): Promise<Reply> {
     if (!apiUrl)
@@ -271,7 +290,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       setPhase("Getting Korean audio ready…");
       if(browserVoices&&useVoiceReplies)await enableBrowserVoices();
       if (useVoiceReplies&&!(await koreanConversationAudioAvailable()))
-        throw new Error("Set up Chris and Jessica above before starting a voice conversation. You can keep chatting by text.");
+        throw new Error("Audio could not prepare. Try again, or keep chatting by text.");
       if (controller.signal.aborted) return;
       const started = Date.now();
       for (
@@ -432,13 +451,8 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
           ))}
         </div>
       </div>
-      {browserVoices&&<section className="conversation-voice-setup" aria-label="Conversation voice setup">
-        <strong>{voiceReady?"The same Chris and Jessica voices as your lessons":"Bring Chris and Jessica into your conversation"}</strong>
-        {!voiceReady&&<p>{deviceVoicePolicy.reason} Speech generation uses your device, with no paid requests.</p>}
-        {voiceSetup.phase==="loading"?<><p role="status">{voiceSetup.message} {voiceSetup.progress}%</p><progress value={voiceSetup.progress} max={100} aria-label="Voice setup progress"/><button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent}>Cancel setup</button></>:!voiceReady&&deviceVoicePolicy.canLoad?<button type="button" className="button button-dark" onClick={()=>void enableBrowserVoices().catch(()=>{})}>{voiceSetup.phase==="error"?"Retry voice preparation":"Prepare conversation voices"}</button>:voiceReady?<small>Ready for this visit. Your selected partner keeps the same voice.</small>:<small>Use text chat or speak-and-read below.</small>}
-        {voiceSetup.phase==="error"&&<p role="status">{voiceSetup.message}</p>}
-        <details><summary>Voice model &amp; license</summary><a href="/voices/MOBILE-MODEL-NOTES.md" target="_blank" rel="noopener noreferrer">Mobile model · modified INT8 version</a><a href="/voices/MODEL-LICENSE.txt" target="_blank" rel="noopener noreferrer">Supertonic 3 · OpenRAIL-M model license</a><a href="/voices/SUPERTONIC-LICENSE.txt" target="_blank" rel="noopener noreferrer">Browser adapter · MIT license</a>{voiceReady&&<button type="button" className="button button-quiet" onClick={forgetBrowserVoiceConsent} disabled={calling||playing}>Unload conversation voices</button>}</details>
-      </section>}
+      {browserVoices&&voiceSetup.phase==="loading"&&<p role="status">Preparing audio…</p>}
+      {browserVoices&&voiceSetup.phase==="error"&&<button type="button" className="button button-quiet" onClick={()=>void enableBrowserVoices().catch(()=>{})}>Retry audio</button>}
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
         <button type="button" role="switch" aria-checked={speakReplies} className="button button-soft read-aloud-switch" onClick={()=>void toggleReadAloud(!speakReplies)}>Read chat replies aloud · {speakReplies?"On":"Off"}</button><small>Reads new replies after you send a message. Use Listen beside an earlier reply to replay it.</small>
@@ -552,9 +566,10 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       {turns.some(turn=>turn.role==="assistant")&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Use Listen beside a reply to hear it again.</small></div>}
       <details className="conversation-phrase-help">
         <summary>Need a phrase to get started?</summary>
-        <p lang="ko">{situation.phrase}</p><p className="conversation-roman">{transcriptRomanization(situation.phrase)}</p><p>{situation.meaning}</p>
-        <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling || thinking} aria-pressed={phraseAdded} onClick={() => {setDraft(situation.phrase);setPhraseAdded(true);requestAnimationFrame(()=>{composer.current?.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});composer.current?.querySelector("textarea")?.focus({preventScroll:true});});}}>{phraseAdded?"Phrase added ↓":"Use this phrase"}</button><button type="button" className="button button-quiet" disabled={calling || thinking || playing} onClick={() => void listen(situation.phrase)}>{playing?"Preparing / speaking…":"Listen"}</button></div>
-        <WordReference word={situation.phrase} />
+        {latestPartner&&<><p>Get an editable example for your partner’s latest question.</p><button type="button" className="button button-soft" disabled={helping||calling||thinking||playing} onClick={()=>void suggestReply()}>{helping?"Finding a reply idea…":replyIdea?"Try another reply idea":"Suggest a reply to this question"}</button><small>Uses the usual free tutor allowance. Edit the example to match what you mean.</small></>}
+        {helpError&&<p role="status">{helpError}</p>}
+        {starter&&<><p lang="ko">{starter}</p><p className="conversation-roman">{transcriptRomanization(starter)}</p><p>{starterMeaning}</p>
+        <div className="flashcard-tools"><button type="button" className="button button-soft" disabled={calling||thinking} aria-pressed={phraseAdded} onClick={()=>{setDraft(starter);setPhraseAdded(true);requestAnimationFrame(()=>{composer.current?.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});composer.current?.querySelector("textarea")?.focus({preventScroll:true});});}}>{phraseAdded?"Phrase added ↓":"Use this phrase"}</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing} onClick={()=>void listen(starter)}>{playing?"Preparing / speaking…":"Listen"}</button></div><WordReference word={starter}/></>}
       </details>
       <div className={`voice-conversation-panel ${calling ? "is-active" : ""}`}>
         <div>
