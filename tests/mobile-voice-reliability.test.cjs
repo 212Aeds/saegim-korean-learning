@@ -34,3 +34,13 @@ test('the conversation action is usable before voice readiness and has a speak-a
  assert.match(ui,/Start speak-and-read conversation/);assert.match(ui,/if\(browserVoices&&useVoiceReplies\)await enableBrowserVoices/);
  assert.match(ui,/const playback = useVoiceReplies \?/);
 });
+
+test('conversation Listen primes the audio element before awaiting synthesis and labels blocked novel audio',()=>{
+ const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');
+ const listen=ui.slice(ui.indexOf('  async function listen('),ui.indexOf('  async function replyTo('));
+ assert.ok(listen.indexOf('primeBrowserVoicePlayback()')<listen.indexOf('await playElevenLabsKorean'));
+ assert.match(ui,/recordedAudioEnabled && recordedAudioUrl\(text,partner\)/);
+ assert.match(ui,/Audio unavailable on this device/);
+ const css=fs.readFileSync('apps/web/app/globals.css','utf8');
+ assert.match(css,/\.conversation-card button,\.conversation-card summary\{min-height:44px;touch-action:manipulation;/);
+});

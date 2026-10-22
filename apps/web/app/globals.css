@@ -340,3 +340,13 @@
 @media(prefers-reduced-motion:reduce){.lesson-answer-mascot{animation:none}}
 
 .share-qr{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.share-qr svg{width:72px;height:72px}.share-qr img{max-width:100%;height:auto;background:white}.beta-invitation details{margin-block:16px}
+
+/* Give chat controls room for a finger and keep long replies within narrow screens. */
+.conversation-card button,.conversation-card summary{min-height:44px;touch-action:manipulation;}
+.conversation-card button{white-space:normal;}
+.conversation-card .chat-bubble{min-width:0;overflow-wrap:anywhere;}
+@media(max-width:600px){
+ .conversation-card .conversation-help{display:flex;flex-wrap:wrap;gap:8px;}
+ .conversation-card .conversation-help small{flex-basis:100%;}
+ .conversation-card textarea{font-size:16px;}
+}

@@ -1,4 +1,5 @@
 "use client";
+import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearningProfile } from "../learning-profile";
@@ -107,7 +108,12 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
   }, [turns.length, thinking, pendingMessage]);
+  function canListen(text: string, partner = voice) {
+    return !browserVoices || deviceVoicePolicy.canLoad || Boolean(recordedAudioEnabled && recordedAudioUrl(text,partner));
+  }
   async function listen(text: string, partner = voice) {
+    if(!canListen(text,partner)){setNotice(deviceVoicePolicy.reason);return;}
+    if(browserVoices)primeBrowserVoicePlayback();
     const attempt=++listeningAttempt.current;
     setPlaying(true);
     setNotice("");
@@ -487,7 +493,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                     disabled={playing || calling || thinking}
                     onClick={() => void listen(turn.content, turn.partner)}
                   >
-                    ▶ Listen
+                    {canListen(turn.content,turn.partner)?playing?"Preparing / speaking…":"▶ Listen":"Audio unavailable on this device"}
                   </button>
                 </>
               )}

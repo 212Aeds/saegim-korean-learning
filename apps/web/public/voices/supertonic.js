@@ -161,6 +161,16 @@ export class TextToSpeech {
     }
 
     async _infer(textList, langList, style, totalStep, speed = 1.05, progressCallback = null) {
+        // Own only this utterance's tensors; shared voice styles stay alive.
+        const owned = new Set();
+        const track = tensor => { owned.add(tensor); return tensor; };
+        const release = tensor => { if (owned.delete(tensor)) tensor.dispose(); };
+        const run = async (session, feeds) => {
+            const outputs = await session.run(feeds);
+            for (const tensor of Object.values(outputs)) track(tensor);
+            return outputs;
+        };
+        try {
         const bsz = textList.length;
         
         // Process text
@@ -168,19 +178,20 @@ export class TextToSpeech {
         
         const textIdsFlat = new BigInt64Array(textIds.flat().map(x => BigInt(x)));
         const textIdsShape = [bsz, textIds[0].length];
-        const textIdsTensor = new ort.Tensor('int64', textIdsFlat, textIdsShape);
+        const textIdsTensor = track(new ort.Tensor('int64', textIdsFlat, textIdsShape));
         
         const textMaskFlat = new Float32Array(textMask.flat(2));
         const textMaskShape = [bsz, 1, textMask[0][0].length];
-        const textMaskTensor = new ort.Tensor('float32', textMaskFlat, textMaskShape);
+        const textMaskTensor = track(new ort.Tensor('float32', textMaskFlat, textMaskShape));
         
         // Predict duration
-        const dpOutputs = await this.dpOrt.run({
+        const dpOutputs = await run(this.dpOrt, {
             text_ids: textIdsTensor,
             style_dp: style.dp,
             text_mask: textMaskTensor
         });
         const duration = Array.from(dpOutputs.duration.data);
+        for (const tensor of Object.values(dpOutputs)) release(tensor);
         
         // Apply speed factor to duration
         for (let i = 0; i < duration.length; i++) {
@@ -188,7 +199,7 @@ export class TextToSpeech {
         }
         
         // Encode text
-        const textEncOutputs = await this.textEncOrt.run({
+        const textEncOutputs = await run(this.textEncOrt, {
             text_ids: textIdsTensor,
             style_ttl: style.ttl,
             text_mask: textMaskTensor
@@ -206,11 +217,11 @@ export class TextToSpeech {
         
         const latentMaskFlat = new Float32Array(latentMask.flat(2));
         const latentMaskShape = [bsz, 1, latentMask[0][0].length];
-        const latentMaskTensor = new ort.Tensor('float32', latentMaskFlat, latentMaskShape);
+        const latentMaskTensor = track(new ort.Tensor('float32', latentMaskFlat, latentMaskShape));
         
         // Prepare constant arrays
         const totalStepArray = new Float32Array(bsz).fill(totalStep);
-        const totalStepTensor = new ort.Tensor('float32', totalStepArray, [bsz]);
+        const totalStepTensor = track(new ort.Tensor('float32', totalStepArray, [bsz]));
         
         // Denoising loop
         for (let step = 0; step < totalStep; step++) {
@@ -219,13 +230,13 @@ export class TextToSpeech {
             }
             
             const currentStepArray = new Float32Array(bsz).fill(step);
-            const currentStepTensor = new ort.Tensor('float32', currentStepArray, [bsz]);
+            const currentStepTensor = track(new ort.Tensor('float32', currentStepArray, [bsz]));
             
             const xtFlat = new Float32Array(xt.flat(2));
             const xtShape = [bsz, xt[0].length, xt[0][0].length];
-            const xtTensor = new ort.Tensor('float32', xtFlat, xtShape);
+            const xtTensor = track(new ort.Tensor('float32', xtFlat, xtShape));
             
-            const vectorEstOutputs = await this.vectorEstOrt.run({
+            const vectorEstOutputs = await run(this.vectorEstOrt, {
                 noisy_latent: xtTensor,
                 text_emb: textEmb,
                 style_ttl: style.ttl,
@@ -236,6 +247,9 @@ export class TextToSpeech {
             });
             
             const denoised = Array.from(vectorEstOutputs.denoised_latent.data);
+            for (const tensor of Object.values(vectorEstOutputs)) release(tensor);
+            release(xtTensor);
+            release(currentStepTensor);
             
             // Reshape to 3D
             const latentDim = xt[0].length;
@@ -258,15 +272,19 @@ export class TextToSpeech {
         // Generate waveform
         const finalXtFlat = new Float32Array(xt.flat(2));
         const finalXtShape = [bsz, xt[0].length, xt[0][0].length];
-        const finalXtTensor = new ort.Tensor('float32', finalXtFlat, finalXtShape);
+        const finalXtTensor = track(new ort.Tensor('float32', finalXtFlat, finalXtShape));
         
-        const vocoderOutputs = await this.vocoderOrt.run({
+        const vocoderOutputs = await run(this.vocoderOrt, {
             latent: finalXtTensor
         });
         
         const wav = Array.from(vocoderOutputs.wav_tts.data);
         
         return { wav, duration };
+        } finally {
+            for (const tensor of owned) tensor.dispose();
+            owned.clear();
+        }
     }
 
     async call(text, lang, style, totalStep, speed = 1.05, silenceDuration = 0.3, progressCallback = null) {
