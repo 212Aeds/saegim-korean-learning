@@ -13,7 +13,8 @@ test('phone and constrained network hints never trigger a large automatic model 
  for(const hints of [{mobile:true,memoryGB:8,gpu:true},{saveData:true},{connectionType:'cellular'},{effectiveType:'3g'},{effectiveType:'2g'}])assert.equal(voicePreparationPolicy(hints).automatic,false);
  assert.deepEqual([voicePreparationPolicy({memoryGB:8,gpu:true}).canLoad,voicePreparationPolicy({memoryGB:8,gpu:true}).automatic],[true,true]);
  for(const hints of [{memoryGB:2},{memoryGB:4},{mobile:true,gpu:false}]){const result=voicePreparationPolicy(hints);assert.equal(result.canLoad,false);assert.match(result.reason,/Recorded Chris\/Jessica audio and microphone/);}
- assert.equal(voicePreparationPolicy({mobile:true,gpu:true}).canLoad,true,'mobile GPU is eligible for an explicit attempt, not automatic loading');
+ assert.equal(voicePreparationPolicy({mobile:true,gpu:true}).canLoad,false,'GPU availability does not establish enough phone memory');
+ assert.equal(voicePreparationPolicy({mobile:true,gpu:true,memoryGB:8}).canLoad,true);
 });
 test('streamed voice downloads preserve exact bytes and reject interrupted or oversized streams',async()=>{
  const source=fs.readFileSync('apps/web/public/voices/read-asset.js','utf8');
