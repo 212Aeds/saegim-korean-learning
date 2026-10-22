@@ -37,3 +37,15 @@ test('reply help remains usable while audio is preparing or playing',()=>{
  const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');
  assert.match(ui,/disabled=\{helping\|\|calling\|\|thinking\} onClick=\{\(\)=>void suggestReply\(\)\}/);
 });
+
+test('reply-help history strips UI metadata before strict API validation',()=>{
+ const {conversationHistory}=require('../apps/web/app/ui/conversation-history.ts');
+ const turns=[{role:'user',content:'Let us order lunch.'},{role:'assistant',content:'뭐 먹고 싶어요?',reply:{korean:'뭐 먹고 싶어요?',english:'What would you like?',feedback:'Try an answer.'},partner:'jessica'}];
+ const messages=conversationHistory(turns,'Help me answer your latest question.');
+ assert.deepEqual(Object.keys(messages[1]).sort(),['content','role']);
+ assert.equal(conversationRequestSchema.safeParse({mode:'reply-help',messages,level:'basic',scenario:'cafe',consent:true}).success,true);
+ assert.equal(turns[1].partner,'jessica');
+ const bounded=conversationHistory(Array.from({length:12},(_,i)=>({...turns[i%2]})),'Help me reply.');
+ assert.equal(bounded.length,11);
+ assert.equal(conversationRequestSchema.safeParse({mode:'reply-help',messages:bounded,level:'basic',scenario:'cafe',consent:true}).success,true);
+});
