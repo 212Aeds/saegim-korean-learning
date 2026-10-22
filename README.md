@@ -1,6 +1,6 @@
 # Saegim
 
-Saegim is a free, mobile-first Korean-learning app. Korean studies require an account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 57+ lessons, a 5,000+-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
+Saegim is a free, mobile-first Korean-learning app. Korean studies allow a guest or signed in account so lessons, review cards, and speaking practice can sync across devices. The current beginner path has 57+ lessons, a 5,000+-entry Korean-English dictionary, three-step spaced review, and a 100-card speaking deck.
 
 ## Run locally
 
