@@ -19,3 +19,21 @@ test('hosted conversation forwards the actual latest transcript and previous exc
  assert.notEqual(a.explanation,b.explanation);assert.equal(sent[1].messages.at(-1).content,'오늘은 차를 마시고 싶어요.');assert.equal(sent[1].messages.at(-2).content,a.explanation);assert.match(sent[1].messages[0].content,/latest learner message/);
  }finally{global.fetch=original;process.env=old;}
 });
+
+test('hosted reply help accepts plain-text line breaks while rejecting markup',async()=>{
+ const old={...process.env},original=global.fetch;
+ Object.assign(process.env,{CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-token',CLOUDFLARE_FREE_PLAN_CONFIRMED:'true',TUTOR_PROVIDER:'cloudflare',PAID_FEATURES_ENABLED:'false',PROVIDER_TERMS_REVIEWED:'true'});
+ let text='물을\n마시고 싶어요.';
+ global.fetch=async()=>new Response(JSON.stringify({success:true,result:{response:JSON.stringify({explanation:text,hint:'I would like water.',nextExercise:'Edit this example to suit you.'})}}));
+ try{
+  const {OpenRouterTutorProvider}=require('../apps/api/src/tutor/tutor-provider.ts');const provider=new OpenRouterTutorProvider();
+  const input={question:'Help me reply.',lessonContext:'',conversation:{mode:'reply-help',level:'basic',scenario:'cafe',consent:true,messages:[{role:'user',content:'Help me reply.'}]}};
+  assert.equal((await provider.answer(input)).explanation,'물을 마시고 싶어요.');
+  text='<b>물</b>';await assert.rejects(()=>provider.answer(input));
+ }finally{global.fetch=original;process.env=old;}
+});
+
+test('reply help remains usable while audio is preparing or playing',()=>{
+ const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');
+ assert.match(ui,/disabled=\{helping\|\|calling\|\|thinking\} onClick=\{\(\)=>void suggestReply\(\)\}/);
+});

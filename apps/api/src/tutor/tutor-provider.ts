@@ -60,7 +60,13 @@ export class OpenRouterTutorProvider extends TutorProvider {
         }) as {response?:unknown;choices?:Array<{finish_reason?:string;message?:{content?:unknown}}>};
         const content = result.response ?? ( result.choices?.[0]?.finish_reason === "stop" ? result.choices[0].message?.content : undefined);
         if(!content) throw Error("Invalid provider response");
-        return tutorAnswerSchema.parse(typeof content === "string" ? JSON.parse(content) : content);
+        const raw: unknown = typeof content === "string" ? JSON.parse(content) : content;
+        // Accept harmless layout whitespace, while retaining strict key and markup checks.
+        const plain = raw && typeof raw === "object" && !Array.isArray(raw)
+          ? Object.fromEntries(Object.entries(raw).map(([key, value]) => [key,
+              typeof value === "string" ? value.replace(/[\r\n\t]+/gu, " ") : value]))
+          : raw;
+        return tutorAnswerSchema.parse(plain);
       }
       const response = await fetch(local ? "http://127.0.0.1:11434/api/chat" : endpoint, {
         method: "POST", signal: controller.signal,

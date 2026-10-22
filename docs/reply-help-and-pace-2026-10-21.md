@@ -1,0 +1,9 @@
+# Reply help and spoken pace - 2026-10-21
+
+The suggestion button was disabled while audio was preparing or playing. Suggestions now work independently of playback; live calls and pending turns still prevent conflicting history. Sign-in expiry has an explicit message. Hosted answers now normalize line breaks and tabs before strict validation, retaining rejection of unexpected fields and markup. Synthetic tests reproduced both defects before the patch and passed afterward. This does not establish which failure the tester encountered.
+
+The compact voice worker now uses speed 1 instead of 0.9, retaining Chris/Jessica, eight inference steps, and the learner pace slider. Six synthetic samples produced finite, non-silent audio in Node WASM on the Windows laptop. Durations were 1.53-1.60 seconds, versus 1.67-1.81 seconds in the previous saved sample run. Output is stochastic: this is not a controlled latency benchmark, pronunciation review, or iPhone result. No provider/model/dependency/billing change.
+
+Verification: 190 tests passed, covering curriculum/level separation, lesson answers/retries, flashcards, review, guest progress, preferences, reminders, recording, mobile playback failure recovery, tensor cleanup, provider contracts and reply help. API and hosted production builds passed. Audio audit verified 1,870 clips, including 798 block clips. Initial JavaScript is 351,786 gzip bytes, effectively unchanged from 351,785; this is not a cellular load-time measurement.
+
+Limits: automated coverage is not every combination of every button, lesson, browser and setting. Real iPhone Safari, microphone capture, first-visit download time, live AI generation and cold starts still require beta testing. Render Free warns of API wake-up delays of 50 seconds or more; zero lag cannot be guaranteed. No real learner data or microphone recording was used. AI assistance was used to inspect code, patch the defects and generate regression tests.
