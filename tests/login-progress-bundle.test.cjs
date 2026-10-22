@@ -20,3 +20,20 @@ test('session restoration bundles progress only after identifying the signed-in 
  controller.getAccount=async()=>({account:{id:'synthetic-id',email:'test@example.org',displayName:'Test'}});
  const restored=await controller.currentAccount({});assert.deepEqual(restored.learningProgress,{completed:2});assert.equal(reads,1);
 });
+
+test('session lookup uses one read and still rejects expired or missing sessions',async()=>{
+ const calls=[];let found=true;
+ const controller=new AuthController({query:async(sql,args)=>{calls.push({sql,args});return found?{rowCount:1,rows:[{id:'synthetic-id',email:'test@example.org',display_name:'Test'}]}:{rowCount:0,rows:[]};}});
+ assert.equal((await controller.getAccount({headers:{cookie:'sori_session=synthetic-token'}})).account.id,'synthetic-id');
+ assert.equal(calls.length,1);assert.match(calls[0].sql,/sessions\.expires_at > now\(\)/);assert.equal(calls[0].args[0],crypto.createHash('sha256').update('synthetic-token').digest('hex'));
+ found=false;assert.equal(await controller.getAccount({headers:{cookie:'sori_session=expired'}}),null);
+ const count=calls.length;assert.equal(await controller.getAccount({headers:{}}),null);assert.equal(calls.length,count);
+});
+
+test('session creation cleans expired sessions and inserts the new session in one database round trip',async()=>{
+ const calls=[],headers=[];
+ const controller=new AuthController({query:async(sql,args)=>{calls.push({sql,args});return {rows:[]};}});
+ await controller.createSession('synthetic-id',{}, {setHeader:(...args)=>headers.push(args)});
+ assert.equal(calls.length,1);assert.match(calls[0].sql,/WITH expired_sessions AS/);assert.match(calls[0].sql,/DELETE FROM learner_sessions WHERE expires_at <= now\(\)/);assert.match(calls[0].sql,/INSERT INTO learner_sessions/);assert.equal(calls[0].args[1],'synthetic-id');assert.match(headers[0][1],/HttpOnly; SameSite=Lax/);
+ const failed=new AuthController({query:async()=>{throw Error('database offline');}});await assert.rejects(failed.createSession('synthetic-id',{}, {setHeader:()=>assert.fail('must not set cookie on failure')}));
+});

@@ -471,10 +471,10 @@ export class AuthController {
     const token = randomBytes(32).toString("base64url");
     try {
       await this.database.query(
-        "DELETE FROM learner_sessions WHERE expires_at <= now()",
-      );
-      await this.database.query(
-        `INSERT INTO learner_sessions (token_hash, account_id, expires_at)
+        `WITH expired_sessions AS (
+           DELETE FROM learner_sessions WHERE expires_at <= now()
+         )
+         INSERT INTO learner_sessions (token_hash, account_id, expires_at)
          VALUES ($1, $2, now() + interval '30 days')`,
         [hash(token), accountId],
       );
@@ -493,9 +493,6 @@ export class AuthController {
   private async getAccount(request: Request) {
     const token = cookieToken(request);
     if (!token) return null;
-    await this.database.query(
-      "DELETE FROM learner_sessions WHERE expires_at <= now()",
-    );
     const result = await this.database.query<AccountRow>(
       `SELECT accounts.id, accounts.email, accounts.display_name, accounts.learning_profile
        FROM learner_sessions sessions
