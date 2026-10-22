@@ -1,0 +1,19 @@
+# Beta readiness check — October 22, 2026
+
+Target: a limited feedback beta on October 23, not a claim that the system is bug-free. AI assistance was used for test execution, investigation, the regression patch and these notes. Models, voices, pace, authentication rules, progress, free usage limits and billing settings were preserved. No learner microphone was recorded and no private lesson context was sent for live tests.
+
+## Automated evidence
+
+All 207 local tests passed after the echo safeguard. API and hosted production builds passed. The hosted build verified 1,870 recorded clips, including 798 Hangul block clips. Existing tests cover course prerequisites and placement decks, flashcard flipping and sound, progress/session isolation, helper request validation, provider guards, voice-cache byte/count limits, tensor disposal, playback interruption/retry, quiet/noisy microphone fixtures, permission rejection, late microphone tracks, stalled audio frames, manual stop, WAV duration/size validation and conversation history. This is automated coverage, not a manual walkthrough of every lesson or acoustic accuracy certification. Four untracked feature-preview tests are included in the local total; their preview source remains unpublished.
+
+## Browser evidence
+
+A fresh production tab restored the account and opened AI Tutor. A real directions starter returned 어디에 가고 싶으세요? The helper returned a Korean food preference rather than a place, demonstrating that successful requests are not proof of semantically correct suggestions. At a 390px viewport, the composer, helper Use this phrase and read-aloud switch accepted clicks, and body scrollWidth matched clientWidth (375px). This is viewport testing, not physical touchscreen or Safari testing.
+
+A synthetic learner said 도서관에 가고 싶어요. 책을 읽고 싶어요. The live AI echoed that message verbatim instead of continuing. Generated Jessica read-aloud completed: duration 5.087211 seconds, ended=true, media error=null; no captured browser console errors/warnings. The exact-echo failure is now rejected before it is added to conversation history or spoken. Typed draft is retained for explicit retry; no automatic extra provider request is made. The guard compares normalized text and is not a semantic evaluator. Similar paraphrases or inaccurate translations may still pass.
+
+A real-component fixture with synthetic microphone capture, transcription, provider replies and playback carried context into later voice turns (one-message first payload, three-message second payload); End conversation returned to idle. The fixture's zero-time fake speech automatically advanced during the thinking timer; it is not evidence of real-world latency or speech accuracy. A separately rebuilt echo fixture displayed the retry notice, preserved the draft, made exactly one request and added no successful conversation turn.
+
+## Before inviting learners
+
+Run an actual iPhone/Safari Wi-Fi smoke test: sign in, allow the microphone, speak a short and a longer phrase, Stop & check, toggle read-aloud, play/replay a novel AI line, end a voice call and switch tabs. Repeat on a laptop microphone. Hardware and cellular tests were not performed here. Use the existing feedback form and start with a small group. Render free-server wake-up can still delay the first account/AI request after idle. The shared 200-request/day project allowance remains, including transcription and reply suggestions; this is not a concurrent-user capacity promise. AI linguistic correctness needs continued human feedback.

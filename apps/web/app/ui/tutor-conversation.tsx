@@ -1,6 +1,6 @@
 "use client";
 import {guidedConversationStep,guidedChoiceMatches} from "./guided-conversation";
-import {isUsefulReplySuggestion} from "./reply-suggestion";
+import {isUsefulReplySuggestion,isRepeatedConversationLine} from "./reply-suggestion";
 import {conversationRequestError} from "./conversation-request-error";
 import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
@@ -219,6 +219,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         throw new Error("The reply was incomplete. Please try again.");
       if (controller.signal.aborted)
         throw new DOMException("Stopped", "AbortError");
+      if(isRepeatedConversationLine(reply.korean,text))throw new Error("Your partner repeated your message instead of replying. Please try again.");
       history.current = [
         ...history.current,
         { role: "user", content: text },
