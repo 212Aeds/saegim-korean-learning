@@ -247,3 +247,6 @@
 .guided-conversation .flashcard-tools { justify-content: flex-start; margin: 0; }
 .guided-conversation .button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; line-height: 1.5; }
 .guided-conversation summary { cursor: pointer; padding: 10px 0; }
+
+.conversation-card .guided-conversation .button { font-size: 14px; }
+@media (max-width: 760px) { .conversation-card .guided-conversation .button { font-size: 16px; } }
