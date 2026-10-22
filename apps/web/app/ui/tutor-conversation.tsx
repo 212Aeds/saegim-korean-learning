@@ -1,4 +1,5 @@
 "use client";
+import {conversationRequestError} from "./conversation-request-error";
 import {recordedAudioEnabled, recordedAudioUrl} from "./recorded-audio";
 import {currentVoiceDevicePolicy} from "./voice-device-policy";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -196,14 +197,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         }),
         signal: controller.signal,
       });
-      if (!response.ok)
-        throw new Error(
-          response.status === 429
-            ? "Your conversation partner is busy. Your message is still here; try again shortly."
-            : response.status === 401
-              ? "Sign in again to continue."
-              : "Your partner could not reply. Please try again.",
-        );
+      if (!response.ok) throw new Error(conversationRequestError(response.status));
       const reply = (await response.json()) as Reply;
       if (
         !reply || typeof reply !== "object" ||
@@ -250,8 +244,9 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
   }
   async function sendMessage(message: string) {
     const text = message.trim().replace(/\s+/gu, " ").slice(0, 600);
-    if (!text || request.current || calling || playing) return;
-    if(browserVoices&&speakReplies)primeBrowserVoicePlayback();
+    if (!text || request.current || calling) return;
+    if(playing){listeningAttempt.current++;stopKoreanPlayback();setPlaying(false);setAudioAvailable(false);}
+    if(browserVoices&&speakReplies){primeBrowserVoicePlayback();void enableBrowserVoices().catch(()=>{});}
     setDraft(text);
     setNotice("");
     try {

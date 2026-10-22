@@ -65,7 +65,7 @@ onmessage=async({data})=>{
       if(!engine||!['chris','jessica'].includes(data.voice)||typeof data.text!=='string'||!/[가-힣]/u.test(data.text)||data.text.length>500)throw Error('Set up the conversation voices first.');
       report('Preparing your partner’s voice…');
       const text=/[.!?。！？]$/u.test(data.text)?data.text:data.text+'.';
-      const result=await engine.call(text,'ko',styles[data.voice],8,1,.25,(step,total)=>report('Creating voice · '+step+' of '+total+'…'));
+      const result=await engine.call(text,'ko',styles[data.voice],8,.9,.25,(step,total)=>report('Creating voice · '+step+' of '+total+'…'));
       const wav=writeWavFile(finish(result.wav,engine.sampleRate),engine.sampleRate);
       if(wav.byteLength>5*1024*1024)throw Error('This spoken reply is too long.');
       postMessage({id:data.id,type:'audio',wav},[wav]);
