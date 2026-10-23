@@ -19,3 +19,5 @@ NIKL romanization: https://www.korean.go.kr/front_eng/roman/roman_01.do
 - Deployment: pending.
 
 Rollback: revert the application patch and redeploy the website while retaining patched Node 24.22.1. Accounts/progress are unaffected by this frontend patch.
+
+Deployment verification: commit 9d1a47b is Live on static deployment dep-dbdgmidg1s2s73beknl0, built with Node 24.22.1. Fresh browser loaded the published Speak section. Clicking Listen on 채소 with Chris completed and returned Your turn; Speak Korean remained enabled during playback and afterward. No warning/error console entries. Microphone was not activated on production. A separate local catalog signal check inspected all 1,072 manifest WAVs: none silent/empty (minimum RMS 0.0279, shortest 1.95s). Availability/format/signal checks do not establish pronunciation quality or physical-device behavior.
