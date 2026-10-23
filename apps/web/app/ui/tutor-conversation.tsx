@@ -1,4 +1,5 @@
 "use client";
+import {pauseOnPageLeave} from "./page-suspension";
 import {guidedConversationStep,guidedChoiceMatches} from "./guided-conversation";
 import {isUsefulReplySuggestion,isRepeatedConversationLine} from "./reply-suggestion";
 import {conversationRequestError} from "./conversation-request-error";
@@ -120,6 +121,13 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       stopKoreanPlayback();
     };
   }, []);
+  useEffect(()=>pauseOnPageLeave(()=>{
+    if(!call.current&&!playing)return;
+    if(call.current)stopCall();
+    listeningAttempt.current++;
+    stopKoreanPlayback();setPlaying(false);setAudioStatus("");
+    setNotice("Audio conversation paused when you left the page. Your messages are still here. Tap a message to listen again, or restart voice practice when ready.");
+  }),[playing]);
   useEffect(()=>{void prefetchLocalKorean(situation.phrase,voice);setPhraseAdded(false);},[situation.phrase,voice]);
   useEffect(() => {
     log.current?.scrollTo({
@@ -131,6 +139,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     return !browserVoices || deviceVoicePolicy.canLoad || Boolean(recordedAudioEnabled && recordedAudioUrl(text,partner));
   }
   async function listen(text: string, partner = voice) {
+    if(document.hidden)return;
     if(!canListen(text,partner)){setNotice(deviceVoicePolicy.reason);return;}
     if(browserVoices)primeBrowserVoicePlayback();
     const attempt=++listeningAttempt.current;
@@ -536,6 +545,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                     <summary>Translation & learning tip</summary>
                     <p>{turn.reply.english}</p>
                     <p>{turn.reply.feedback}</p>
+                    {turn.reply.feedback.includes("Source: NIKL Korean-English dictionary, 좋아하다.")&&<a href="https://krdict.korean.go.kr/eng/dicSearch/SearchView?ParaWordNo=27929&nation=eng" target="_blank" rel="noopener noreferrer">NIKL: 좋아하다 examples ↗</a>}
                     <WordReference word={turn.content} />
                   </details>
                 </>

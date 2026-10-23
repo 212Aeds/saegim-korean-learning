@@ -4,6 +4,18 @@
 // https://www.korean.go.kr/front_eng/roman/roman_01.do
 import type {TutorAnswer} from "./tutor.schema";
 
+// NIKL 좋아하다 examples include noun-modifying 좋아하는 and sentence forms.
+// https://krdict.korean.go.kr/eng/dicSearch/SearchView?ParaWordNo=27929&nation=eng
+export function checkedLikeFormAnswer(question:string):TutorAnswer|null {
+  const text=question.normalize("NFC");
+  if(!text.includes("좋아하는")||!text.includes("좋아해요")||!/formal|differen|polite|meaning|차이|존댓말|공손/i.test(text))return null;
+  return {
+    explanation:"좋아해요 can end a polite sentence: 책을 좋아해요 means I like books. 좋아하는 modifies a following noun: 좋아하는 책 means a book someone likes. These forms have different grammatical roles; 좋아하는 is not a more polite replacement for 좋아해요.",
+    hint:"Use 좋아하는 before a noun and 좋아해요 to finish a polite statement or question. The person who likes something is supplied by context. Source: NIKL Korean-English dictionary, 좋아하다 examples.",
+    nextExercise:"Compare 책을 좋아해요 (I like books) with 제가 좋아하는 책 (a book I like). Notice which form finishes the statement and which describes 책.",
+  };
+}
+
 // Reuse the authored lesson for this narrow foundational intent. Generation
 // repeatedly omitted the written silent ㅇ even when the facts were supplied.
 export function checkedHangulAnswer(question:string):TutorAnswer|null {

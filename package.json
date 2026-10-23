@@ -40,5 +40,11 @@
   "dependencies": {
     "@neon/config": "^1.8.6",
     "@neon/env": "^1.5.3"
+  },
+  "overrides": {
+    "neon": {
+      "@hono/node-server": "2.0.10",
+      "diff": "5.2.2"
+    }
   }
 }

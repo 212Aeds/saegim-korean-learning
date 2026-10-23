@@ -3,14 +3,15 @@ import { HttpException, HttpStatus, Injectable, ServiceUnavailableException } fr
 import { ProviderUsageService, TUTOR_REQUEST_RESERVATION_MICRO_USD } from "../provider-usage.service";
 import { TutorProvider, usesLocalTutor } from "./tutor-provider";
 import type { TutorAnswer, ConversationRequest } from "./tutor.schema";
-import {checkedHangulAnswer,checkedGreetingAnswer} from "./lesson-grounding";
+import {checkedHangulAnswer,checkedGreetingAnswer,checkedLikeFormAnswer} from "./lesson-grounding";
+import {conversationGuidance} from "./conversation-guidance";
 
 @Injectable()
 export class TutorService {
   constructor(private readonly provider: TutorProvider, private readonly usage: ProviderUsageService) {}
 
   async answer(accountId: string, question: string, lessonContext: string, conversation?: ConversationRequest): Promise<TutorAnswer> {
-    const checked = conversation ? null : checkedHangulAnswer(question) ?? checkedGreetingAnswer(question);
+    const checked = conversation ? null : checkedHangulAnswer(question) ?? checkedGreetingAnswer(question) ?? checkedLikeFormAnswer(question);
     if (checked) return checked;
     if (!this.provider.isAvailable()) throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
     const reservation = usesCloudflareTutor() ? await this.usage.allowFreeInference(accountId) : usesLocalTutor() ? {allowed:true, reason:undefined} : await this.usage.allowAndRecord(accountId, "tutor", TUTOR_REQUEST_RESERVATION_MICRO_USD);
@@ -24,7 +25,8 @@ export class TutorService {
       throw new ServiceUnavailableException("The tutor is unavailable. Use the lesson hint instead.");
     }
     try {
-      return await this.provider.answer({ question, lessonContext, conversation });
+      const answer=await this.provider.answer({ question, lessonContext, conversation });
+      return conversation?conversationGuidance(conversation,answer):answer;
     } catch (error) {
       const safeReasons = ["Provider failure", "Provider response too large", "Invalid provider response", "Invalid tutor answer"];
       const reason = error instanceof Error && safeReasons.includes(error.message) ? error.message : "Unavailable or timed out";

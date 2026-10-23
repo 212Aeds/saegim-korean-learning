@@ -95,3 +95,5 @@ Bubble replay: partner message content is now a native replay button, with trans
 Node security update (2026-10-22): both Render services pin Node 24.22.1; see docs/node-security-2026-10-22.md for the advisory, scope, and verification.
 
 Speak playback recovery (2026-10-23): startup now releases on cancellation, timeout, and media failure; Speak can interrupt Listen. See docs/speak-card-recovery-2026-10-23.md for catalog coverage, short-word feedback, sources, and test limitations.
+
+Beta follow-up (2026-10-23): conversation practice notes use authored guidance while dialogue stays AI-generated; voice sessions pause on page leave. Scoped Neon CLI patch overrides clear the known dependency advisories. See docs/beta-followup-2026-10-23.md for sources, tradeoffs, test evidence, and physical iPhone limitations.
