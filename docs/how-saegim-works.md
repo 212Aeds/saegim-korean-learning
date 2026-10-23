@@ -91,3 +91,5 @@ Beta regression check, October 22: live testing found the AI could repeat the le
 Chat read-aloud: the reusable playback element stays hidden; Listen and Stop audio are the controls, including another Listen tap if Safari blocks autoplay. Different synthesis jobs are serialized because the worker can generate only one line at a time. This avoids busy errors resetting the model, while keeping the same voices, generation quality settings and speaking pace. Details: chat-audio-controls-2026-10-22.md.
 
 Bubble replay: partner message content is now a native replay button, with translation controls outside it. Novel browser-generated replies play complete sentences in sequence and prepare the next while the first plays. This can reduce the wait to the first audio; it does not make AI responses or cold model setup instantaneous. A single warmed-engine measurement and the cancellation/pace tests are documented in bubble-replay-2026-10-22.md.
+
+Node security update (2026-10-22): both Render services pin Node 24.22.1; see docs/node-security-2026-10-22.md for the advisory, scope, and verification.
