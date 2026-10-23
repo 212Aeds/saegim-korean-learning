@@ -101,3 +101,5 @@ Beta follow-up (2026-10-23): conversation practice notes use authored guidance w
 Ding and conversation openings (2026-10-23): corrected missing success sounds and added gesture-time sound unlock after Stop & check. Exact prepared short openings can play while later text generates, without changing TTS pace. See docs/ding-openings-2026-10-23.md for evidence and limits.
 
 Native practice sound recovery (2026-10-23): feedback uses a reusable native audio clip instead of a Web Audio context, with visible retry if playback is rejected. Conversation prompts request a brief meaningful first sentence; all voice speeds remain unchanged. See docs/native-practice-sounds-2026-10-23.md for measurements, implementation tradeoffs, and unconfirmed iPhone outcome.
+
+Completed-card feedback (2026-10-23): the screenshot identified the separate Practiced · Next card action. That branch now plays the same optional sound as first-time completion without awarding progress again. See docs/beta-flow-audit-2026-10-23.md for the failing reproduction, 227-test result, browser walkthrough, deployment, and remaining beta limits.
