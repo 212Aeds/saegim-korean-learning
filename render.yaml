@@ -22,7 +22,7 @@ services:
       - key: PAID_FEATURES_ENABLED
         value: "false"
       - key: TUTOR_PROVIDER
-        value: disabled
+        sync: false
       - key: PROVIDER_MONTHLY_SPEND_CAP_CENTS
         value: "0"
       - key: OPENROUTER_AUDIO_ENABLED
