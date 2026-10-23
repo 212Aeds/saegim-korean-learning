@@ -254,7 +254,11 @@ export function SpeakDeck({
               I practiced this card <Check size={17} />
             </button>
           ) : (
-            <button className="button button-soft" onClick={() => move(1)}>
+            <button className="button button-soft" onClick={() => {
+              if (completionInProgress.current) return;
+              playCorrectAnswerSound();
+              move(1);
+            }}>
               Practiced · Next card <ArrowRight size={17} />
             </button>
           )}
