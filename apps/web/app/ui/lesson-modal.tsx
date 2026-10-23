@@ -270,9 +270,9 @@ export function LessonModal({
                 onVoiceChange={(speechVoice) => onPreferencesChange({ ...preferences, speechVoice })}
                 onResult={(transcript, matches) => {
                   setSpeechResult({ transcript, matches });
+                  if (matches) playCorrectAnswerSound();
                   if (!attempted) {
                     setAttempted(true);
-                    if (matches) playCorrectAnswerSound();
                     if (matches && originalTurn && phase === "practice") setPracticeCorrect((count) => count + 1);
                     else if(matches && originalTurn) setQuizCorrect((count) => count + 1);
                   }

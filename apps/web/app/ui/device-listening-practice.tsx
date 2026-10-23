@@ -6,6 +6,7 @@ import { ListeningControls } from "./listening-controls";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { matchesPracticeAnswer, practiceAnswerNote } from "./speech-check";
+import {playCorrectAnswerSound} from "./feedback-sound";
 import { playElevenLabsKorean, prefetchLocalKorean, preferredSpeechRate, saveElevenLabsVoice, saveSpeechRate, selectedElevenLabsVoice, stopKoreanPlayback, type ElevenLabsVoice } from "./speech";
 
 export function DeviceListeningPractice({korean, expectedRomanization, selectedVoice, selectedPace, onVoiceChange, onPaceChange, onResult}: {
@@ -48,7 +49,7 @@ export function DeviceListeningPractice({korean, expectedRomanization, selectedV
     <div className="speech-actions"><button type="button" className="button button-soft" disabled={busy} onClick={()=>void listen()}>{busy ? "Listening…" : "Listen to Korean"}</button>
       <button type="button" className="button button-quiet" disabled={!busy} onClick={stop}>Stop audio</button></div>
     <MatchingVoiceSetup text={korean} voice={voice}/>
-    <form onSubmit={event=>{event.preventDefault();const matches=matchesPracticeAnswer(korean,written,expectedRomanization);setNotice(matches?practiceAnswerNote(korean,written)||"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");onResult?.(written,matches);}}>
+    <form onSubmit={event=>{event.preventDefault();const matches=matchesPracticeAnswer(korean,written,expectedRomanization);setNotice(matches?practiceAnswerNote(korean,written)||"That matches the target wording.":"Compare with the target and try again. Another wording may also be valid.");if(matches&&!onResult)playCorrectAnswerSound();onResult?.(written,matches);}}>
       <KoreanInput value={written} onChange={setWritten} label={expectedRomanization ? "Write Korean or romanization" : "Write the Korean target"} maxLength={500} openOnFocus={false}/>
       <button className="button button-dark" disabled={!written.trim()}>Check written response</button>
     </form><WordReference word={korean}/>{notice && <p role="status">{notice}</p>}

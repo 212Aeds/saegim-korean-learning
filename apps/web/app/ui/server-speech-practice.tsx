@@ -99,7 +99,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     try {
       wav=await recordConversationTurn(current.signal,value=>{if(attempt===version.current)setLevel(value);},{manualStop:true,onCalibrating:()=>{if(attempt===version.current)setNotice("Adjusting to background noise… Wait for Listening, then speak.");},onReady:stop=>{
         if(attempt!==version.current)return;
-        finish.current=stop ? ()=>{setState("checking");setNotice("Recording finished. Checking your Korean…");stop();} : null;
+        finish.current=stop ? ()=>{setState("checking");setNotice("Recording finished. Checking your Korean…");stop();unlockPracticeSounds();} : null;
         if(stop){setState("listening");setNotice("Listening. Say the phrase, then tap Stop & check.");}
       }});
       if(current.signal.aborted||attempt!==version.current)return;

@@ -288,15 +288,20 @@ export async function prefetchLocalKorean(text: string, voice = selectedElevenLa
 
 // Prepare only a visible conversation line with an already initialized model.
 // Listen shares the same in-flight synthesis; this never starts model setup or a paid call.
+function conversationVoiceParts(text:string,voice:ElevenLabsVoice){
+  return conversationSpeechParts(text,part=>recordedAudioEnabled&&Boolean(recordedAudioUrl(part,voice)));
+}
 export async function prefetchConversationKorean(text: string, voice: ElevenLabsVoice) {
   if (recordedAudioEnabled && recordedAudioUrl(text,voice) || localSpeechUrl) return prefetchLocalKorean(text,voice);
   if (!usesBrowserConversationVoices() || browserVoiceState().phase !== "ready") return;
-  try { await synthesizeBrowserVoice(naturalSpeechText(conversationSpeechParts(text)[0]??text),voice,new AbortController().signal); }
+  const first=conversationVoiceParts(text,voice)[0]??text;
+  if(recordedAudioEnabled&&recordedAudioUrl(first,voice))return prefetchLocalKorean(first,voice);
+  try { await synthesizeBrowserVoice(naturalSpeechText(first),voice,new AbortController().signal); }
   catch { /* Explicit Listen can retry after preparation fails. */ }
 }
 
 export async function playConversationKorean(text:string,voice:ElevenLabsVoice,rate=1,options:KoreanSpeechOptions={}):Promise<KoreanPlayback>{
-  const parts=usesBrowserConversationVoices()&&!(recordedAudioEnabled&&recordedAudioUrl(text,voice))&&!localSpeechUrl?conversationSpeechParts(text):[text];
+  const parts=usesBrowserConversationVoices()&&!(recordedAudioEnabled&&recordedAudioUrl(text,voice))&&!localSpeechUrl?conversationVoiceParts(text,voice):[text];
   let last:KoreanPlayback={played:false,source:"unavailable"};
   for(let index=0;index<parts.length;index++){
     const playback=playElevenLabsKorean(parts[index],voice,rate,{...options,waitForEnd:true,onPlaybackStart:()=>{

@@ -97,3 +97,5 @@ Node security update (2026-10-22): both Render services pin Node 24.22.1; see do
 Speak playback recovery (2026-10-23): startup now releases on cancellation, timeout, and media failure; Speak can interrupt Listen. See docs/speak-card-recovery-2026-10-23.md for catalog coverage, short-word feedback, sources, and test limitations.
 
 Beta follow-up (2026-10-23): conversation practice notes use authored guidance while dialogue stays AI-generated; voice sessions pause on page leave. Scoped Neon CLI patch overrides clear the known dependency advisories. See docs/beta-followup-2026-10-23.md for sources, tradeoffs, test evidence, and physical iPhone limitations.
+
+Ding and conversation openings (2026-10-23): corrected missing success sounds and added gesture-time sound unlock after Stop & check. Exact prepared short openings can play while later text generates, without changing TTS pace. See docs/ding-openings-2026-10-23.md for evidence and limits.

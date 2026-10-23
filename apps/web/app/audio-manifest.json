@@ -1070,5 +1070,13 @@
   "chris|다시 말해 주세요": "/audio/lessons/465f38fd496ac4d32f4bb16405b13d8d6b5fb126d9b97ee6fcc4b0467de6af2e.wav",
   "jessica|다시 말해 주세요": "/audio/lessons/1719290a1c413dbf827c33c2b99af9d5a59a8c275e354f42e3ff0eb5d9b37175.wav",
   "chris|내일 만나요": "/audio/lessons/573019e6616f403a608b6ce15572a3053b0e206fcc5ac2585e1a22dd596789fb.wav",
-  "jessica|내일 만나요": "/audio/lessons/29d5ec3735a784d1cbd61aaa784eff9c8c9f6347b7253dc5f1d418833ced9e20.wav"
+  "jessica|내일 만나요": "/audio/lessons/29d5ec3735a784d1cbd61aaa784eff9c8c9f6347b7253dc5f1d418833ced9e20.wav",
+  "chris|좋아요!": "/audio/lessons/ebc57697c8cbc7a798e4e85d594c0dda761503883c985f6991ab9decf1f7f485.wav",
+  "jessica|좋아요!": "/audio/lessons/e5eef1b07106b6e2e35a218904dd5c262a9a8bafbdac9694b5f83d4f97109713.wav",
+  "chris|안녕하세요!": "/audio/lessons/8ff967d9f79dbf98cd2487c783c0ba9aec5ceb6f094ed3d0d793048781ef18d9.wav",
+  "jessica|안녕하세요!": "/audio/lessons/ca28054ed07d168862c0db789ff9ea1540740c16bc43363c1fbf543b905a2a82.wav",
+  "chris|네, 좋아요.": "/audio/lessons/5d50048766783ecb197b08eacaa4058e5777e2d3508bc31cfbb1c6c3b6ff4ad5.wav",
+  "jessica|네, 좋아요.": "/audio/lessons/5ba83f18ecec5a1ae5719e44dcc0f1b1ea397a6b5c79d780070791f77ccb2c07.wav",
+  "chris|그렇군요.": "/audio/lessons/5bc6d374543de06df23cafe5c21d2b388564ac8ffd0de0574cc55043949f690e.wav",
+  "jessica|그렇군요.": "/audio/lessons/89ee0a6bb914382df2830097484d5a46d7d72f249df1f81ba50e17706dfd6276.wav"
 }

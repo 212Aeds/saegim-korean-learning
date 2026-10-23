@@ -31,3 +31,19 @@ test('partner bubble is a native replay button with separate translation control
  assert.match(ui,/type="button" className="chat-message-content chat-message-replay"/);assert.match(ui,/aria-label=\{`Replay/);assert.match(ui,/onClick=\{\(\)=>void listen\(turn.content,turn.partner\)\}/);assert.doesNotMatch(ui,/▶ Listen/);
  assert.match(ui,/ref=\{audioHost\} hidden aria-hidden="true"/);assert.match(ui,/Tap an earlier message bubble to hear it again/);
 });
+
+test('a prepared opening stays separate so it can start before a new sentence is synthesized',()=>{
+ const {conversationSpeechParts}=require('../apps/web/app/ui/conversation-speech-parts.ts');
+ assert.deepEqual(conversationSpeechParts('좋아요! 오늘은 어떤 음식을 먹고 싶어요?',part=>part==='좋아요!'),['좋아요!','오늘은 어떤 음식을 먹고 싶어요?']);
+});
+
+test('prepared conversation openings start from the catalog before new synthesis, at the selected pace',async()=>{
+ const previous={window:global.window,Worker:global.Worker,Audio:global.Audio,fetch:global.fetch};let audio;const events=[];
+ global.window={setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},speechSynthesis:{cancel(){}}};
+ global.fetch=async()=>new Response(new Uint8Array(44),{headers:{'content-type':'audio/wav'}});
+ global.Worker=class{postMessage(data){if(data.type==='synthesize')events.push('generate');queueMicrotask(()=>this.onmessage({data:{id:data.id,type:data.type==='initialize'?'ready':'audio',wav:new ArrayBuffer(100)}}));}terminate(){}};
+ global.Audio=class{constructor(src){this.src=src||'';}pause(){}play(){if(this.src.startsWith('/audio/')||this.src.startsWith('blob:')){audio=this;events.push({src:this.src,pace:this.playbackRate});}return Promise.resolve();}};
+ delete require.cache[require.resolve('../apps/web/app/ui/browser-voices.ts')];delete require.cache[require.resolve('../apps/web/app/ui/speech.ts')];
+ const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts'),tick=()=>new Promise(r=>setImmediate(r));
+ try{await voices.enableBrowserVoices();const playback=speech.playConversationKorean('좋아요! 오늘은 어떤 음식을 먹고 싶어요?','chris',.9);await tick();await tick();assert.match(events[0].src,/^\/audio\//);assert.equal(events[0].pace,.9);assert.ok(events.includes('generate'));audio.onended();await tick();assert.equal(events.at(-1).pace,.9);audio.onended();assert.equal((await playback).played,true);}finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,previous);}
+});

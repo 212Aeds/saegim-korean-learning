@@ -1,0 +1,7 @@
+const fs=require('node:fs'),ts=require('typescript'),{test}=require('node:test'),assert=require('node:assert/strict');require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,p);
+test('correct-answer ding resumes an interrupted context, plays two tones, and respects mute',async()=>{
+ const old={window:global.window,AudioContext:global.AudioContext};let tones=0,resumes=0,muted=false,context;
+ global.AudioContext=class{state='interrupted';currentTime=1;constructor(){context=this;}resume(){resumes++;this.state='running';return Promise.resolve();}createOscillator(){tones++;return {frequency:{value:0},connect(){},disconnect(){},start(){},stop(){}};}createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}};}};
+ global.window={AudioContext:global.AudioContext,localStorage:{getItem:()=>muted?'true':null}};
+ try{const {unlockPracticeSounds,playCorrectAnswerSound}=require('../apps/web/app/ui/feedback-sound.ts');unlockPracticeSounds();await new Promise(r=>setImmediate(r));playCorrectAnswerSound();assert.equal(tones,2);context.state='interrupted';unlockPracticeSounds();await new Promise(r=>setImmediate(r));playCorrectAnswerSound();assert.equal(tones,4);assert.equal(resumes,2);muted=true;playCorrectAnswerSound();assert.equal(tones,4);}finally{Object.assign(global,old);}
+});
