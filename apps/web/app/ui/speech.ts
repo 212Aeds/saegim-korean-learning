@@ -293,9 +293,10 @@ function conversationVoiceParts(text:string,voice:ElevenLabsVoice){
 }
 export async function prefetchConversationKorean(text: string, voice: ElevenLabsVoice) {
   if (recordedAudioEnabled && recordedAudioUrl(text,voice) || localSpeechUrl) return prefetchLocalKorean(text,voice);
-  if (!usesBrowserConversationVoices() || browserVoiceState().phase !== "ready") return;
+  if (!usesBrowserConversationVoices()) return;
   const first=conversationVoiceParts(text,voice)[0]??text;
   if(recordedAudioEnabled&&recordedAudioUrl(first,voice))return prefetchLocalKorean(first,voice);
+  if(browserVoiceState().phase !== "ready") return;
   try { await synthesizeBrowserVoice(naturalSpeechText(first),voice,new AbortController().signal); }
   catch { /* Explicit Listen can retry after preparation fails. */ }
 }

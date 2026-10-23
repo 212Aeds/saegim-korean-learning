@@ -47,3 +47,9 @@ test('prepared conversation openings start from the catalog before new synthesis
  const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts'),tick=()=>new Promise(r=>setImmediate(r));
  try{await voices.enableBrowserVoices();const playback=speech.playConversationKorean('좋아요! 오늘은 어떤 음식을 먹고 싶어요?','chris',.9);await tick();await tick();assert.match(events[0].src,/^\/audio\//);assert.equal(events[0].pace,.9);assert.ok(events.includes('generate'));audio.onended();await tick();assert.equal(events.at(-1).pace,.9);audio.onended();assert.equal((await playback).played,true);}finally{speech.stopKoreanPlayback();voices.cancelBrowserVoices();Object.assign(global,previous);}
 });
+
+test('prepared opening downloads do not wait for inference-model readiness',async()=>{
+ const old={window:global.window,fetch:global.fetch};let fetched=0;
+ global.window={setTimeout,clearTimeout};global.fetch=async url=>{fetched++;assert.match(url,/^\/audio\/lessons\//);return new Response(new Uint8Array(44),{headers:{'content-type':'audio/wav'}});};
+ try{const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts');assert.notEqual(voices.browserVoiceState().phase,'ready');await speech.prefetchConversationKorean('그렇군요. 새로운 이야기를 해 주세요.','jessica');assert.equal(fetched,1);assert.notEqual(voices.browserVoiceState().phase,'ready');}finally{Object.assign(global,old);}
+});

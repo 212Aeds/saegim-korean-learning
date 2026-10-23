@@ -1,4 +1,5 @@
 "use client";
+import {preparePracticeSounds} from "./ui/feedback-sound";
 import {preloadVoiceFiles,stopVoiceFilePreload} from "./ui/preload-voice-files";
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
@@ -154,6 +155,7 @@ const loadAccountModal=()=>import("./ui/account-modal");
 const AccountModal=dynamic(()=>loadAccountModal().then(module=>module.AccountModal),{loading:SectionPending});
 
 export default function Home() {
+  useEffect(()=>{preparePracticeSounds();},[]);
   useEffect(()=>{
     void prefetchLocalKorean("안녕하세요","chris").then(()=>prefetchLocalKorean("안녕하세요","jessica"));
     let timer:ReturnType<typeof setTimeout>;

@@ -99,3 +99,5 @@ Speak playback recovery (2026-10-23): startup now releases on cancellation, time
 Beta follow-up (2026-10-23): conversation practice notes use authored guidance while dialogue stays AI-generated; voice sessions pause on page leave. Scoped Neon CLI patch overrides clear the known dependency advisories. See docs/beta-followup-2026-10-23.md for sources, tradeoffs, test evidence, and physical iPhone limitations.
 
 Ding and conversation openings (2026-10-23): corrected missing success sounds and added gesture-time sound unlock after Stop & check. Exact prepared short openings can play while later text generates, without changing TTS pace. See docs/ding-openings-2026-10-23.md for evidence and limits.
+
+Native practice sound recovery (2026-10-23): feedback uses a reusable native audio clip instead of a Web Audio context, with visible retry if playback is rejected. Conversation prompts request a brief meaningful first sentence; all voice speeds remain unchanged. See docs/native-practice-sounds-2026-10-23.md for measurements, implementation tradeoffs, and unconfirmed iPhone outcome.

@@ -15,21 +15,10 @@ test('flip cards expose only the visible face and make the hidden face inert', (
   assert.equal(html.includes('is-turned'), flipped);
  }
 });
-test('practice chime plays two ascending notes, respects mute, and tolerates missing audio', () => {
- const frequencies = [];
- let muted = 'true';
- class AudioContext {
-  currentTime = 0; state = 'running'; destination = {};
-  createOscillator() { const frequency = { value: 0 }; return { frequency, connect() {}, start() { frequencies.push(frequency.value); }, stop() {} }; }
-  createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }; }
- }
- global.window = { AudioContext, localStorage: { getItem: () => muted } };
- global.AudioContext = AudioContext;
- try {
-  playCorrectAnswerSound(); assert.equal(frequencies.length, 0);
-  muted = 'false'; playCorrectAnswerSound(); assert.deepEqual(frequencies, [659.25, 783.99]);
-  delete window.AudioContext; assert.doesNotThrow(playCorrectAnswerSound);
- } finally { delete global.window; delete global.AudioContext; }
+test('practice chime recording retains its two ascending tones',()=>{
+ const bytes=readFileSync('apps/web/public/audio/feedback/correct.wav'),rate=bytes.readUInt32LE(24);
+ function peak(start,end){let best=0,freq=0;for(let f=630;f<=810;f++){let x=0,y=0;for(let i=Math.floor(start*rate);i<end*rate;i++){const v=bytes.readInt16LE(44+i*2);x+=v*Math.cos(2*Math.PI*f*i/rate);y+=v*Math.sin(2*Math.PI*f*i/rate);}const power=x*x+y*y;if(power>best){best=power;freq=f;}}return freq;}
+ assert.ok(Math.abs(peak(.025,.08)-659.25)<3);assert.ok(Math.abs(peak(.16,.22)-783.99)<3);
 });
 const { reviewSession } = require('../apps/web/app/ui/review-session.ts');
 test('optional saved-card practice caps a deduplicated session and preserves the saved queue', () => {
