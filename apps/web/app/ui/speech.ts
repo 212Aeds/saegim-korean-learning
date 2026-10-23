@@ -399,9 +399,19 @@ export async function playElevenLabsKorean(
         }, 120_000);
       }
       audio.onended = () => finish(true);
-      audio.onerror = () => finish(false);
+      audio.onerror = () => { controller.abort(); finish(false); };
     });
-    await audio.play();
+    // Some mobile browsers leave play() pending when loading is interrupted.
+    // Cancellation must release the caller even if that promise never settles.
+    await new Promise<void>((resolve, reject) => {
+      const abort = () => { cleanup(); reject(new DOMException("Playback stopped", "AbortError")); };
+      const cleanup = () => controller.signal.removeEventListener("abort", abort);
+      controller.signal.addEventListener("abort", abort, { once: true });
+      if (controller.signal.aborted) { abort(); return; }
+      try {
+        audio.play().then(() => { cleanup(); resolve(); }, error => { cleanup(); reject(error); });
+      } catch (error) { cleanup(); reject(error); }
+    });
     if(!controller.signal.aborted && version===playbackVersion)fallbackOptions.onPlaybackStart?.();
     window.clearTimeout(timeout);
     if (controller.signal.aborted || version !== playbackVersion) {

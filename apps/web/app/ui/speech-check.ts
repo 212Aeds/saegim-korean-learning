@@ -46,6 +46,18 @@ export function silenceDecision(elapsedMs: number, lastSpeechMs: number, speechD
 export function matchesPracticeAnswer(korean: string, answer: string, romanization?: string): boolean {
   if (compareSpeech(korean, answer, true).matches) return true;
   const normalized = (value: string) => value.toLowerCase().replace(/[\s\p{P}]/gu, "");
-  if(korean.normalize("NFC").trim()==="또" && answer.trim().toLowerCase()==="ddo")return true;
+  if(practiceAnswerNote(korean,answer))return true;
   return Boolean(romanization && /^[a-z\s\p{P}]+$/iu.test(answer.trim()) && normalized(answer) === normalized(romanization));
+}
+
+export function practiceAnswerNote(korean:string,answer:string) {
+  const cue=answer.trim().toLowerCase(),target=korean.normalize("NFC").trim();
+  const standard=target==="또"&&cue==="ddo"?"tto":target==="딸"&&cue==="ddal"?"ttal":"";
+  return standard?`Accepted as a sound cue. Standard romanization: ${standard}.`:"";
+}
+
+export function speechContrastHint(korean:string,heard:string) {
+  if(normalizeSpeech(korean)==="딸"&&["달","dal"].includes(normalizeSpeech(heard).toLowerCase()))
+    return "Recognition can confuse these short words. The transcript says 달 (dal); the target is 딸 (ttal). Replay the target and retry, or edit the transcript if it missed what you said. This is not a pronunciation score.";
+  return "";
 }

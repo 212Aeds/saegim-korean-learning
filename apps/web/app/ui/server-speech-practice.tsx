@@ -6,6 +6,7 @@ import { playCorrectAnswerSound, unlockPracticeSounds } from "./feedback-sound";
 import { recordConversationTurn } from "./conversation-recording";
 import { ListeningControls } from "./listening-controls";
 import {speechAttempt} from "./speech-attempt";
+import {practiceAnswerNote, speechContrastHint} from "./speech-check";
 import { SpeechFeedback } from "./speech-feedback";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
@@ -77,7 +78,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     const result=speechAttempt(korean,answer,expectedRomanization,source),correct=result.matches;
     pendingMismatch.current=result.needsConfirmation?answer:null;setNeedsConfirmation(result.needsConfirmation);
     setHeard(answer);setMatch(correct);if(result.submit)onResult?.(answer,correct);if(correct&&!onResult)playCorrectAnswerSound();
-    setNotice(correct?korean==="또"&&answer.toLowerCase()==="ddo"?"Accepted as a sound cue. Standard romanization: tto.":"Nice work! That matches the target wording.":"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
+    setNotice(correct?practiceAnswerNote(korean,answer)||"Nice work! That matches the target wording.":source==="speech"&&speechContrastHint(korean,answer)||"Try again. Compare the transcript with the target. Recognition can make mistakes; this checks wording, not pronunciation quality.");
   }
   async function listen() {
     if(busy.current)return;
@@ -88,7 +89,9 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     finally{if(attempt===version.current){busy.current=false;setState("ready");}}
   }
   async function start() {
-    if(!ready||busy.current)return;
+    if(!ready)return;
+    if(state==="playing")cancel();
+    else if(busy.current)return;
     unlockPracticeSounds();
     busy.current=true;const attempt=++version.current, current=new AbortController();controller.current=current;
     setState("starting");setNotice("Allow microphone access if your browser asks. Wait for Listening before speaking.");setMatch(null);setHeard("");setLevel(0);stopKoreanPlayback();
@@ -116,7 +119,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
       <meter min={0} max={100} value={level} aria-label="Microphone input level" />
       <div className="speech-practice-actions">
         {variant!=="lesson-speaking" && <button type="button" className="button button-soft" disabled={active} onClick={()=>void listen()}><SpeakerHigh size={18}/>{state==="playing"?"Playing Korean…":"Listen"}</button>}
-        <button type="button" className="button button-dark" disabled={!ready||(active&&state!=="listening")} onClick={state==="listening"?()=>finish.current?.():()=>void start()}>{state==="listening"?<Stop size={18}/>:<Microphone size={18}/>} {state==="listening"?"Stop & check":state==="starting"?"Opening mic…":state==="checking"?"Checking…":heard?"Try speaking again":"Speak Korean"}</button>
+        <button type="button" className="button button-dark" disabled={!ready||(active&&state!=="listening"&&state!=="playing")} onClick={state==="listening"?()=>finish.current?.():()=>void start()}>{state==="listening"?<Stop size={18}/>:<Microphone size={18}/>} {state==="listening"?"Stop & check":state==="starting"?"Opening mic…":state==="checking"?"Checking…":heard?"Try speaking again":"Speak Korean"}</button>
         {active && <button type="button" className="button button-quiet" onClick={()=>cancel()}>{state==="playing"?"Stop audio":"Cancel"}</button>}
       </div>
       {!ready && <button type="button" className="button button-quiet" disabled={connecting||active} onClick={()=>void reconnect()}>{connecting?"Connecting speech…":"Retry speech connection"}</button>}

@@ -7,3 +7,14 @@ test('practice accepts the supplied romanization and Korean without accepting mi
  assert.equal(matchesPracticeAnswer('나무','namu'),false);
  assert.equal(matchesPracticeAnswer('ㄱ','g'),true);
 });
+
+test('daughter sound cue is accepted, but moon is never silently substituted for daughter',()=>{
+ const {speechContrastHint,practiceAnswerNote}=require('../apps/web/app/ui/speech-check.ts');
+ for(const answer of ['딸','ttal','ddal',' DDAL '])assert.equal(matchesPracticeAnswer('딸',answer,'ttal'),true,answer);
+ for(const answer of ['달','dal','탈','tal'])assert.equal(matchesPracticeAnswer('딸',answer,'ttal'),false,answer);
+ assert.match(practiceAnswerNote('딸','ddal'),/ttal/);
+ assert.match(speechContrastHint('딸','달.'),/Recognition can confuse/);
+ assert.equal(speechContrastHint('딸','딸'),'');assert.equal(speechContrastHint('거실','교실'),'');
+ const {speechAttempt}=require('../apps/web/app/ui/speech-attempt.ts');
+ assert.deepEqual(speechAttempt('딸','달','ttal','speech'),{matches:false,needsConfirmation:true,submit:false});
+});

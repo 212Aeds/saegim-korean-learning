@@ -93,3 +93,5 @@ Chat read-aloud: the reusable playback element stays hidden; Listen and Stop aud
 Bubble replay: partner message content is now a native replay button, with translation controls outside it. Novel browser-generated replies play complete sentences in sequence and prepare the next while the first plays. This can reduce the wait to the first audio; it does not make AI responses or cold model setup instantaneous. A single warmed-engine measurement and the cancellation/pace tests are documented in bubble-replay-2026-10-22.md.
 
 Node security update (2026-10-22): both Render services pin Node 24.22.1; see docs/node-security-2026-10-22.md for the advisory, scope, and verification.
+
+Speak playback recovery (2026-10-23): startup now releases on cancellation, timeout, and media failure; Speak can interrupt Listen. See docs/speak-card-recovery-2026-10-23.md for catalog coverage, short-word feedback, sources, and test limitations.
