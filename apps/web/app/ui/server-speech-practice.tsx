@@ -111,7 +111,7 @@ export function ServerSpeechPractice({ korean, expectedRomanization, onResult, s
     finally{if(wav)new Uint8Array(wav).fill(0);if(attempt===version.current){controller.current=null;finish.current=null;busy.current=false;setState("ready");setLevel(0);}}
   }
   return <section className="speech-practice speaking-studio" aria-label="Korean speech practice" data-state={state}>
-    <div className="speaking-studio-heading"><span className="micro-label">YOUR TURN TO SPEAK</span><h3>One phrase. A little more confidence.</h3></div>
+    <div className="speaking-studio-heading"><span className="micro-label">YOUR TURN TO SPEAK</span><h3>Listen, then try speaking.</h3></div>
     <p className="speech-practice-status" role="status" aria-live="polite">{notice}</p>
     {variant!=="lesson-speaking" && <ListeningControls voice={voice} pace={pace} disabled={active} onVoiceChange={value=>{setVoice(value);saveElevenLabsVoice(value);onVoiceChange?.(value);}} onPaceChange={value=>{setPace(value);saveSpeechRate(value);onPaceChange?.(value);}} />}
     <div className="speaking-mic-panel" data-active={state==="listening"}>

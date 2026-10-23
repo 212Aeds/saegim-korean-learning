@@ -444,7 +444,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       aria-labelledby="conversation-title"
     >
       <span className="micro-label">YOUR KOREAN, IN CONVERSATION</span>
-      <h2 id="conversation-title">A partner for every little exchange.</h2>
+      <h2 id="conversation-title">Practice a conversation.</h2>
       <p>
         Tell your partner what you want to practice. Order lunch, talk about
         your day, or ask for help finding your words.
@@ -497,7 +497,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         </div></details>
         {turns.length > 0 && <small>Choosing a situation starts a fresh conversation. You can also describe any topic in your message.</small>}
         <div className="conversation-session-meter"><span><strong>{koreanTurns}</strong> / {guide.turns} Korean replies in this visit</span><progress max={guide.turns} value={Math.min(koreanTurns, guide.turns)} aria-label="Korean replies practiced in this conversation" /></div>
-        {koreanTurns >= guide.turns && <p className="conversation-checkpoint" role="status">A little conversation, completed. Keep going or take a break. This counts replies, not fluency or pronunciation.</p>}
+        {koreanTurns >= guide.turns && <p className="conversation-checkpoint" role="status">Conversation goal reached. Keep going or take a break. This counts replies, not fluency or pronunciation.</p>}
       </section>
       <div
         ref={log}

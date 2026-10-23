@@ -282,8 +282,8 @@ export default function Home() {
       ({
         today: "Today",
         learn: "Your learning path",
-        review: "A little recall goes a long way",
-        words: "A little word goes a long way",
+        review: "Review your Korean",
+        words: "Your word collection",
         speak: "Find your Korean voice",
         tutor: "Your Korean tutor",
         practice: "Your practice space",
@@ -535,7 +535,7 @@ export default function Home() {
         </nav>
         <div className="side-note">
           <Sparkle className="note-spark" size={18} aria-hidden="true" />
-          <p>Little steps add up.</p>
+          <p>Korean, remembered.</p>
           <span>오늘도 화이팅</span>
         </div>
         <div className="profile-row">
@@ -591,8 +591,8 @@ export default function Home() {
               <h1>
                 {tab === "today" ? (
                   <>
-                    A little Korean
-                    <br className="mobile-break" /> goes a long way.
+                    Ready to practice
+                    <br className="mobile-break" /> your Korean?
                   </>
                 ) : (
                   title
@@ -719,7 +719,7 @@ export default function Home() {
             <span>
               <span className="footer-seal">한</span>{" "}
               <strong>한국어, 한 걸음씩</strong>{" "}
-              <span>— Korean, one step at a time.</span>
+              <span>— Learn Korean with Saegim.</span>
             </span>
           </footer>
         </div>
@@ -826,7 +826,7 @@ function TodayView({
       <div className="daily-goal-row">
         <div>
           <span className="micro-label">YOUR DAILY RHYTHM</span>
-          <strong>Choose a little time that feels doable.</strong>
+          <strong>Choose your daily practice time.</strong>
         </div>
         <label>
           <span className="sr-only">Daily study time</span>
@@ -879,7 +879,7 @@ function TodayView({
               <div className="art-dot dot-one" />
               <div className="art-dot dot-two" />
               <div className="hangul-stamp">한</div>
-              <span className="art-caption">one small beginning</span>
+              <span className="art-caption">letters into words</span>
             </div>
           </section>
 
@@ -892,7 +892,7 @@ function TodayView({
                 {!progress.completed
                   ? "Your review deck starts here"
                   : dueCount
-                    ? `${dueCount} little things to remember`
+                    ? `${dueCount} cards ready to review`
                     : "You’re all caught up"}
               </strong>
               <span>
@@ -941,9 +941,9 @@ function TodayView({
                 </div>
               </div>
               <h3>
-                Build a tiny
+                Build your
                 <br />
-                learning habit.
+                study routine.
               </h3>
               <p>One lesson, one review. That’s a lovely start.</p>
               <button className="text-link" onClick={() => onTab("learn")}>
@@ -1051,7 +1051,7 @@ function TodayView({
             <p>
               매일 조금씩
               <br />
-              Every day, a little.
+              Practice and remember.
             </p>
             <span className="quote-foot">YOUR REMINDER, IF YOU NEED IT</span>
           </section>
@@ -1061,7 +1061,7 @@ function TodayView({
         <CalendarDots size={17} />
         <span>
           {!progress.completed
-            ? `Small steps count. Your next step is ${nextLesson.title}.`
+            ? `Your next lesson is ${nextLesson.title}.`
             : dueCount
               ? "Your review brings earlier sounds back while they are still familiar."
               : "Your next review is scheduled for later."}
@@ -1154,7 +1154,7 @@ function LearnView({
       <div className="learning-pathways">
         <section className="daily-practice"><span className="micro-label">RECOMMENDED FOR YOU</span><h3>{recommendation.title}</h3><p>{recommendation.detail}. Chosen using your starting level, interests, and completed prerequisites.</p><button type="button" className="button button-dark" onClick={() => onLesson(recommendation)}>Start this lesson</button></section>
         <LevelFocus profile={learningProfile} />
-        {(learningProfile.level==="new"||learningProfile.level==="hangul")&&<section className="practice-intro"><h3>Give the letters a little practice.</h3><p>Build a Hangul block with tiles, then try writing it with a Korean keyboard.</p><button type="button" className="button button-soft" onClick={onBlockPractice}>Build &amp; write Hangul</button></section>}
+        {(learningProfile.level==="new"||learningProfile.level==="hangul")&&<section className="practice-intro"><h3>Practice Hangul letters and blocks.</h3><p>Build a Hangul block with tiles, then try writing it with a Korean keyboard.</p><button type="button" className="button button-soft" onClick={onBlockPractice}>Build &amp; write Hangul</button></section>}
         <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
         <details className="learning-progress-details"><summary>My progress & topic chapters<span>See what you’ve learned</span></summary><LearningCollection completed={progress.completedLessonIds} items={progress.reviewItems} profile={learningProfile} onLesson={onLesson} /></details>
         <label className="course-view-control">Browse lessons<select value={readyOnly ? "ready" : "all"} onChange={event=>setReadyOnly(event.target.value === "ready")}><option value="all">All lessons, including upcoming steps</option><option value="ready">Ready to start or revisit</option></select></label>
@@ -1505,7 +1505,7 @@ function ReviewView({
               <>
                 A few things are ready
                 <br />
-                for a little revisit.
+                for review.
               </>
             ) : (
               <>
@@ -1572,7 +1572,7 @@ function ReviewView({
           )}
         </button>
       </div>
-      {progress.reviewItems.length > 0 && <section className="recovery-practice"><div><span className="micro-label">KEEP YOUR WORDS CLOSE</span><h3>A little practice, whenever you like.</h3><p>Revisit up to 10 saved cards, even when nothing is due. Your ratings update their next review dates.</p></div><button className="button button-soft" onClick={onPractice}>Practice saved cards <ArrowRight size={17} /></button></section>}
+      {progress.reviewItems.length > 0 && <section className="recovery-practice"><div><span className="micro-label">KEEP YOUR WORDS CLOSE</span><h3>Practice your saved cards.</h3><p>Revisit up to 10 saved cards, even when nothing is due. Your ratings update their next review dates.</p></div><button className="button button-soft" onClick={onPractice}>Practice saved cards <ArrowRight size={17} /></button></section>}
       {overview.recovery > 0 && <section className="recovery-practice"><div><span className="micro-label">A FOCUSED SECOND CHANCE</span><h3>Give the tricky ones another go.</h3><p>{overview.recovery} cards marked Again, ready to practice whenever you choose.</p></div><button type="button" className="button button-dark" onClick={onMissed}>Practice missed cards</button></section>}
       <div className="review-footnote">
         You’ve marked cards remembered <strong>{progress.reviewsDone}</strong> times so far.

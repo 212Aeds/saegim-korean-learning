@@ -22,7 +22,7 @@ import { SoriMascot } from "./sori-mascot";
 import { KoreanInput } from "./korean-keyboard";
 import { WordReference } from "./word-reference";
 import { playElevenLabsKorean, prefetchLocalKorean, stopKoreanPlayback } from "./speech";
-import { prepareQuestions, lessonIntroduction, lessonTopicIntroduction } from "./lesson-questions";
+import { prepareQuestions, lessonIntroduction, lessonTopicIntroduction, lessonLetterIntroduction } from "./lesson-questions";
 import { playCorrectAnswerSound } from "./feedback-sound";
 
 const allWords: KoreanWord[] = [
@@ -80,6 +80,8 @@ export function LessonModal({
   const question = questions[step];
   const topic = phase === "practice" ? lessonTopicIntroduction(question,lesson) : null;
   const showTopic = topic && !seenTopics.includes(topic.id);
+  const letterIntro = phase === "practice" ? lessonLetterIntroduction(question, lesson) : null;
+  const showLetter = letterIntro && !seenTopics.includes(letterIntro.id);
   const currentWord = question
     ? allWords.find((word) => word.korean === question.korean)
     : undefined;
@@ -126,7 +128,7 @@ export function LessonModal({
     setAudioNotice(""); setAudioBusy(false);
     return () => { playbackAttempt.current += 1; stopKoreanPlayback(); };
   }, [phase, step, preferences.speechVoice]);
-  useEffect(() => { const text = phase === "briefing" ? introduction.example : question?.korean; if (text) void prefetchLocalKorean(text, preferences.speechVoice); }, [phase, question?.korean, introduction.example, preferences.speechVoice]);
+  useEffect(() => { const text = phase === "briefing" ? introduction.example : showLetter ? letterIntro.audioText : question?.korean; if (text) void prefetchLocalKorean(text, preferences.speechVoice); }, [phase, question?.korean, introduction.example, preferences.speechVoice, showLetter, letterIntro?.audioText]);
   async function listen(text: string, rate = preferences.speechPace) {
     const attempt = ++playbackAttempt.current;
     setAudioBusy(true); setAudioNotice("");
@@ -214,6 +216,20 @@ export function LessonModal({
             <button className="button button-dark continue-button" onClick={() => { setPhase("practice"); setStep(0); }}>
               Start practice <ArrowRight size={17} />
             </button>
+          </div>
+        ) : showLetter ? (
+          <div className="lesson-briefing lesson-step-motion">
+            <span className="question-count">LETTER &amp; SOUND</span>
+            <h2 id="lesson-title">{letterIntro.title}</h2>
+            <p>{letterIntro.explanation}</p>
+            <div className="briefing-example">
+              <span className="micro-label">LISTEN TO THE SOUND</span>
+              <strong lang="ko">{letterIntro.audioText}</strong>
+              <span>{letterIntro.romanization}</span>
+              <button type="button" className="button button-quiet" disabled={audioBusy} onClick={() => void listen(letterIntro.audioText)}><SpeakerHigh size={16} /> {audioBusy ? "Playing…" : `Listen · ${preferences.speechVoice === "chris" ? "Chris" : "Jessica"}`}</button>
+            </div>
+            <WordReference word={letterIntro.letter} />
+            <button className="button button-dark continue-button" onClick={() => setSeenTopics(current => [...current, letterIntro.id])}>Practice this letter <ArrowRight size={17} /></button>
           </div>
         ) : showTopic ? (
           <div className="lesson-briefing lesson-step-motion">

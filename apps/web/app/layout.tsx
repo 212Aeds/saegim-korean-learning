@@ -9,7 +9,7 @@ import "./public-site.css";
 export const metadata: Metadata = {
   title: "Saegim — Korean, remembered",
   description:
-    "A free, friendly place to learn Korean one small step at a time.",
+    "Learn Korean with free lessons, speaking practice, and review.",
   applicationName: "Saegim",
 };
 

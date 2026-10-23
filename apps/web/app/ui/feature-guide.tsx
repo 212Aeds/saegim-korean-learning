@@ -27,7 +27,7 @@ export function FeatureGuide({sections,onNavigate,onSettings}: {
   }
   return <details className="feature-guide" ref={panel}>
     <summary>Find your next step <span>A quick guide to Saegim</span></summary>
-    <p className="feature-guide-intro">A simple routine: choose your next lesson, learn one small thing, then revisit it tomorrow. Your level and goals stay changeable in Settings.</p>
+    <p className="feature-guide-intro">A simple routine: choose a lesson, practice its examples, then review what you learned. Your level and goals stay changeable in Settings.</p>
     {guest && <p>You can finish lessons and practice without an email. Guest progress stays in this browser; clearing site data can erase it. An account is optional for syncing, AI and speech recognition.</p>}
     <nav className="feature-guide-links" aria-label="Feature guide">
       {sections.filter(section=>["today","learn","review"].includes(section.id)).map(section=><button key={section.id} type="button" onClick={()=>{close();onNavigate(section.id);}}>

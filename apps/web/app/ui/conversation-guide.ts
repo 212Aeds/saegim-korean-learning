@@ -1,7 +1,7 @@
 import type { LearningProfile } from "../learning-profile";
 
 export const conversationGuides = {
-  new: { title: "First little exchanges", detail: "A greeting or a single word is enough. Your partner keeps each turn short.", goal: "Try a greeting, give your name, and ask for help when you need it.", turns: 3,
+  new: { title: "Your first exchanges", detail: "A greeting or a single word is enough. Your partner keeps each turn short.", goal: "Try a greeting, give your name, and ask for help when you need it.", turns: 3,
     starters: ["Help me practice a greeting, one short question at a time.", "Help me say my name in very simple Korean.", "Teach me to ask for water, one word at a time."] },
   hangul: { title: "From letters to phrases", detail: "Read familiar words, then try a short polite reply.", goal: "Introduce yourself, make one request, and answer a short question.", turns: 4,
     starters: ["Let’s introduce ourselves with short polite phrases.", "Help me order one drink with familiar words.", "Practice asking where the station is in simple Korean."] },

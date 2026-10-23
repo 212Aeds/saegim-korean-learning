@@ -78,7 +78,7 @@ export function DailyPractice({
           <h3>
             {complete
               ? "Your practice sprout is blooming!"
-              : "Give your Korean a little room to grow."}
+              : "Your practice plan for today."}
           </h3>
           <p>
             {complete

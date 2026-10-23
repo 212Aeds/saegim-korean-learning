@@ -51,7 +51,7 @@ export function LandingPage({
       <section className="landing-hero" id="home">
         <div className="landing-copy">
           <span className="micro-label"><Sparkle size={14} /> YOUR KOREAN, YOUR WAY</span>
-          <h1>Korean, one<br /><em>small win at a time.</em></h1>
+          <h1>Learn Korean.<br /><em>Make it yours.</em></h1>
           <p>
             Start with the letters. Find your words. Build sentences you can use.
             A welcoming place to practice Korean, at your own pace.
@@ -64,12 +64,12 @@ export function LandingPage({
 
           <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "Try lessons without an email. Guest progress stays on this device; an account is optional for syncing."}</span>
         </div>
-        <div className="landing-art" aria-label="The Korean syllable 한, one small beginning">
+        <div className="landing-art" aria-label="The Korean syllable 한">
           <span className="landing-orbit orbit-one" />
           <span className="landing-orbit orbit-two" />
           <span className="landing-sun" />
           <span className="landing-syllable" lang="ko">한</span>
-          <span className="landing-art-note">one small beginning</span>
+          <span className="landing-art-note">letters into words</span>
           <button type="button" className="landing-mini-card" disabled={samplePlaying} aria-label={samplePlaying ? "Playing hello in Korean" : "Hear hello in Korean"} onClick={()=>void hearHello()}>
             <span className="landing-mini-icon"><SpeakerHigh size={15} /></span>
             <span><strong>안녕하세요</strong><small>{samplePlaying ? "Playing…" : "annyeonghaseyo · tap to listen"}</small></span>
@@ -95,7 +95,7 @@ export function LandingPage({
         </article>
         <article>
           <SpeakerHigh size={20} />
-          <div><strong>Speak one step at a time</strong><span>Listen, learn the pattern, and say it yourself.</span></div>
+          <div><strong>Practice speaking Korean</strong><span>Listen, learn the pattern, and say it yourself.</span></div>
         </article>
       </section>
       <section className="public-path" id="your-path" aria-labelledby="public-path-title">
@@ -103,14 +103,14 @@ export function LandingPage({
         <div className="public-path-grid">{[
           ["01", "ㄱ · ㅏ · 가", "Find your foundations", "Meet Hangul shapes and sounds before tackling whole words."],
           ["02", "WORDS → SENTENCES", "Make Korean useful", "Explore everyday themes, sentence patterns, and writing practice."],
-          ["03", "RECALL · REVISIT", "Keep a little more", "Turn your lessons into review cards. Give tricky answers another try."],
+          ["03", "RECALL · REVISIT", "Remember what you learn", "Turn your lessons into review cards. Give tricky answers another try."],
         ].map(([number, sample, title, text]) => <article key={number}><span className="public-step-number">{number}</span><div className="public-path-sample" aria-hidden="true">{sample}</div><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
       <LandingSampler onStart={onStartGuest ?? onCreateAccount} />
       <FeedbackBanner />
       <FounderStory />
       <BetaInvitation />
-      <section className="public-invitation"><SoriMascot /><div><span className="micro-label">MAKE A LITTLE ROOM FOR KOREAN</span><h2>Five minutes is a place to start.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onStartGuest ?? onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
+      <section className="public-invitation"><SoriMascot /><div><span className="micro-label">YOUR LEARNING PLAN</span><h2>Find the right starting point.</h2><p>Choose a daily rhythm that fits your life. Your completed lessons stay with you when you take a break.</p></div><button className="button button-dark" onClick={onStartGuest ?? onCreateAccount}>Find my starting point <ArrowRight size={16} /></button></section>
       <section className="public-faq" aria-labelledby="public-faq-title"><div><span className="micro-label">BEFORE YOU BEGIN</span><h2 id="public-faq-title">A few helpful answers.</h2></div><div>{[
         ["Do I need to know Hangul?", "No. Choose “brand new” and start with letters and syllable blocks. If you already know some Korean, choose a suitable starting level."],
         ["Is it free?", "Yes. The lessons, review cards, word collection, and practice in this version are available without a subscription."],
@@ -121,7 +121,7 @@ export function LandingPage({
       <footer className="landing-footer">
         <span><a href="/learn/">Learning guides</a> · <a href="/feedback/">Feedback</a> · <a href="/privacy/">Privacy</a> · <a href="/about/">About</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
-        <span>한국어, 한 걸음씩 · Korean, one step at a time.</span>
+        <span>Learn Korean with Saegim.</span>
       </footer>
     </div>
   );

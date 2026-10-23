@@ -147,6 +147,30 @@ export function lessonTopicIntroduction(question: LessonQuestion | undefined, le
   return null;
 }
 
+// Romanization follows NIKL. A recorded syllable demonstrates the sound;
+// consonant letter names are kept distinct from their approximate sound cues.
+export function lessonLetterIntroduction(question: LessonQuestion | undefined, lesson: Lesson) {
+  if (lesson.category !== "Hangul" || !question) return null;
+  const letter = hangulLetters.find(item => item.korean === question.korean);
+  if (!letter) return null;
+  const vowels = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
+  const vowelIndex = vowels.indexOf(letter.korean);
+  const romanization = letter.romanization.trim();
+  const audioText = vowelIndex >= 0
+    ? String.fromCharCode(0xac00 + 11 * 588 + vowelIndex * 28)
+    : letter.example;
+  return {
+    id: `letter-${letter.korean}`,
+    letter: letter.korean,
+    title: `Meet ${letter.korean}`,
+    explanation: vowelIndex >= 0
+      ? `${letter.korean} is romanized as ${romanization}. ${letter.korean === "ㅓ" ? "Think of an approximate uh sound, not English e followed by o. " : ""}Listen to ${audioText}: the initial ㅇ is silent, so you hear the vowel.`
+      : `${letter.korean} is called ${romanization}. Sound cue: ${letter.meaning}. Listen to it in ${audioText}. English sound cues are approximate.`,
+    audioText,
+    romanization: vowelIndex >= 0 ? romanization : hangulSyllableExamples.find(item => item.korean === audioText)?.romanization,
+  };
+}
+
 export function prepareQuestions(lesson: Lesson) {
   const supplemental = lesson.authoredOnly ? [] : generatedQuestions(lesson);
   const all = [...lesson.questions, ...supplemental];

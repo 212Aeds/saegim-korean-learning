@@ -31,7 +31,7 @@ export function HabitGarden({
           {habit.studiedToday
             ? "Today’s practice is saved. Your streak has room to keep growing."
             : habit.atRisk
-              ? "A little practice today keeps your current streak going."
+              ? "Your next session can include a lesson, review, or speaking practice."
               : "A fresh start counts. Complete a lesson, review, speaking card, or practice round."}
         </p>
       </div>
