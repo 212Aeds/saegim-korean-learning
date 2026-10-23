@@ -7,5 +7,5 @@ test('AI opens the selected scene with a useful line and question, and voice tur
  const {conversationPolicy}=require('../apps/api/src/tutor/conversation-policy.ts');const normal=conversationPolicy({level:'basic',scenario:'cafe',messages:[{role:'user',content:'Order lunch'}],consent:true});assert.match(normal,/bare greeting.*incomplete/);assert.match(normal,/scene-specific line and a concrete question/);
  const help=conversationPolicy({mode:'reply-help',level:'basic',messages:[{role:'user',content:'Help'}],consent:true});assert.match(help,/LAST partner question/);assert.match(help,/not another partner turn or a new question/);
  const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),voice=ui.slice(ui.indexOf('async function startCall'),ui.indexOf('  return (',ui.indexOf('async function startCall')));
- assert.match(voice,/text = result.transcript.trim\(\)/);assert.match(voice,/await replyTo\(text, controller.signal\)/);assert.match(voice,/playElevenLabsKorean\(reply.korean/);assert.doesNotMatch(voice,/guidedConversationStep|beginGuided/);
+ assert.match(voice,/text = result.transcript.trim\(\)/);assert.match(voice,/await replyTo\(text, controller.signal\)/);assert.match(voice,/playConversationKorean\(reply.korean/);assert.doesNotMatch(voice,/guidedConversationStep|beginGuided/);
 });

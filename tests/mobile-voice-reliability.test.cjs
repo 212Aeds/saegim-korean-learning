@@ -38,7 +38,7 @@ test('the conversation action is usable before voice readiness and has a speak-a
 test('conversation Listen primes the audio element before awaiting synthesis and labels blocked novel audio',()=>{
  const ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8');
  const listen=ui.slice(ui.indexOf('  async function listen('),ui.indexOf('  async function replyTo('));
- assert.ok(listen.indexOf('primeBrowserVoicePlayback()')<listen.indexOf('await playElevenLabsKorean'));
+ assert.ok(listen.indexOf('primeBrowserVoicePlayback()')<listen.indexOf('await playConversationKorean'));
  assert.match(ui,/recordedAudioEnabled && recordedAudioUrl\(text,partner\)/);
  assert.match(ui,/Audio unavailable on this device/);
  const css=fs.readFileSync('apps/web/app/globals.css','utf8');
@@ -76,6 +76,6 @@ test('home startup does not prepare the conversation model, and read-aloud has a
  const page=fs.readFileSync('apps/web/app/page.tsx','utf8'),ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),worker=fs.readFileSync('apps/web/public/voices/worker.js','utf8');
  assert.doesNotMatch(page,/prepareBrowserVoicesAutomatically/);
  assert.match(ui,/role="switch" aria-checked=\{speakReplies\}/);
- assert.match(ui,/audio.controls=false/);assert.match(ui,/ref=\{audioHost\} hidden aria-hidden="true"/);assert.match(ui,/Tap Listen again to play it/);assert.doesNotMatch(ui,/If automatic playback is blocked|Tap Play in the audio player/);assert.match(ui,/aria-label","Conversation audio/);
+ assert.match(ui,/audio.controls=false/);assert.match(ui,/ref=\{audioHost\} hidden aria-hidden="true"/);assert.match(ui,/Tap the message bubble again to play it/);assert.doesNotMatch(ui,/If automatic playback is blocked|Tap Play in the audio player/);assert.match(ui,/aria-label","Conversation audio/);
  assert.match(worker,/engine.call\(text,'ko',styles\[data.voice\],8,/);
 });

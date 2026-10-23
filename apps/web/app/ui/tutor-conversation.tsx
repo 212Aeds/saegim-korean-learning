@@ -17,7 +17,7 @@ import {
   type ConversationTurn,
 } from "./conversation-history";
 import {
-  playElevenLabsKorean,
+  playConversationKorean,
   selectedElevenLabsVoice,
   preferredSpeechRate,
   saveSpeechRate,
@@ -138,7 +138,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     setNotice("");
     setAudioStatus("Preparing your partner’s voice…");
     try {
-      const result = await playElevenLabsKorean(text, partner, pace, {
+      const result = await playConversationKorean(text, partner, pace, {
         naturalOnly: true,
         consistentVoice: true,
         conversationVoice: true,
@@ -147,10 +147,10 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       });
       if (!result.played && mounted.current && attempt===listeningAttempt.current){
 
-        setNotice(result.needsTap?"Audio is ready. Tap Listen again to play it.":browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
+        setNotice(result.needsTap?"Audio is ready. Tap the message bubble again to play it.":browserVoices&&!deviceVoicePolicy.canLoad?deviceVoicePolicy.reason:browserVoices&&!voiceReady?"Your matching voices are still preparing. You can keep chatting by text.":"Voice playback is unavailable. You can continue by typing.");
       }
     } catch {
-      if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Try listening again or continue by typing.");
+      if (mounted.current && attempt===listeningAttempt.current) setNotice("Audio could not start. Tap the message bubble again or continue by typing.");
     } finally {
       if (mounted.current && attempt===listeningAttempt.current){setPlaying(false);setAudioStatus("");}
     }
@@ -376,7 +376,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         setDraft("");
         if (controller.signal.aborted) break;
         setPhase("Preparing your partner’s voice…");
-        const playback = useVoiceReplies ? await playElevenLabsKorean(reply.korean, voice, pace, {
+        const playback = useVoiceReplies ? await playConversationKorean(reply.korean, voice, pace, {
           naturalOnly: true,
           consistentVoice: true,
           conversationVoice: true,
@@ -473,7 +473,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
       {browserVoices&&voiceSetup.phase==="error"&&<button type="button" className="button button-quiet" onClick={()=>void enableBrowserVoices().catch(()=>{})}>Retry audio</button>}
       <div className="listening-controls">
         <label><span>Conversation pace <strong>{pace.toFixed(2)}×</strong></span><input aria-label="Conversation pace" type="range" min="0.65" max="1.4" step="0.05" value={pace} disabled={playing || calling} onChange={event=>{const value=Number(event.target.value);setPace(value);saveSpeechRate(value);}} /><small>A natural conversation rhythm. Slow it down whenever you need.</small></label>
-        <button type="button" role="switch" aria-checked={speakReplies} className="button button-soft read-aloud-switch" onClick={()=>void toggleReadAloud(!speakReplies)}>Read chat replies aloud · {speakReplies?"On":"Off"}</button><small>Reads new replies after you send a message. Use Listen beside an earlier reply to replay it.</small>
+        <button type="button" role="switch" aria-checked={speakReplies} className="button button-soft read-aloud-switch" onClick={()=>void toggleReadAloud(!speakReplies)}>Read chat replies aloud · {speakReplies?"On":"Off"}</button><small>Reads new replies after you send a message. Tap an earlier message bubble to hear it again.</small>
         {browserVoices&&<div ref={audioHost} hidden aria-hidden="true" />}
         {notice && <p role="status">{notice}</p>}
         {playing && <p role="status">{audioStatus}</p>}
@@ -519,27 +519,17 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
             <details><summary>Prefer guided practice without AI?</summary><p>App-authored exchanges with example replies.</p><div className="flashcard-tools">{guide.starters.map((topic,index)=><button type="button" className="button button-quiet" key={topic} disabled={calling||thinking} onClick={()=>void beginGuided(topic,index)}>Guided: {topic}</button>)}</div></details>
           </div>
         )}
-        {turns.map((turn, index) => (
+        {turns.map((turn, index) => {
+          const content=<><span className="micro-label">{turn.role==="user"?"YOU":turn.partner==="chris"?"CHRIS":"JESSICA"}</span>
+            <span className="chat-message-korean" lang={turn.role==="assistant"?"ko":undefined}>{turn.content}</span>
+            {/[가-힣]/u.test(turn.content)&&<span className="conversation-roman" lang="ko-Latn">{transcriptRomanization(turn.content)}</span>}</>;
+          return (
           <article key={index} className={`conversation-turn is-${turn.role}`}>
             {turn.role === "assistant" && (
               <PartnerAvatar voice={turn.partner ?? voice} />
             )}
             <div className="chat-bubble">
-              <span className="micro-label">
-                {turn.role === "user"
-                  ? "YOU"
-                  : turn.partner === "chris"
-                    ? "CHRIS"
-                    : "JESSICA"}
-              </span>
-              <p lang={turn.role === "assistant" ? "ko" : undefined}>
-                {turn.content}
-              </p>
-              {/[가-힣]/u.test(turn.content) && (
-                <p className="conversation-roman" lang="ko-Latn">
-                  {transcriptRomanization(turn.content)}
-                </p>
-              )}
+              {turn.role==="assistant"?<button type="button" className="chat-message-content chat-message-replay" aria-label={`Replay ${turn.partner==="chris"?"Chris":"Jessica"}’s message: ${turn.content}`} title={canListen(turn.content,turn.partner)?"Tap to hear this message":"Audio unavailable on this device"} disabled={playing||calling||thinking||!canListen(turn.content,turn.partner)} onClick={()=>void listen(turn.content,turn.partner)}>{content}</button>:<div className="chat-message-content">{content}</div>}
               {turn.reply && (
                 <>
                   <details className="chat-help">
@@ -548,18 +538,11 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
                     <p>{turn.reply.feedback}</p>
                     <WordReference word={turn.content} />
                   </details>
-                  <button
-                    className="button button-quiet"
-                    disabled={playing || calling || thinking}
-                    onClick={() => void listen(turn.content, turn.partner)}
-                  >
-                    {canListen(turn.content,turn.partner)?playing?"Preparing / speaking…":"▶ Listen":"Audio unavailable on this device"}
-                  </button>
                 </>
               )}
             </div>
           </article>
-        ))}
+        )})}
         {pendingMessage && (
           <article className="conversation-turn is-user">
             <div className="chat-bubble">
@@ -589,7 +572,7 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
         {guidedStep.choices.length>0&&<details><summary>Reply meanings and references</summary>{guidedStep.choices.map(choice=><div key={choice.korean}><p lang="ko">{choice.korean}</p><p>{transcriptRomanization(choice.korean)} · {choice.english}</p><WordReference word={choice.korean}/></div>)}</details>}
         <button type="button" className="button button-quiet" disabled={calling||thinking} onClick={()=>{setGuided(null);setNotice("AI conversation selected. Type your own reply below; the free AI allowance applies.");}}>Use AI for open-ended chat</button>
       </section>}
-      {turns.some(turn=>turn.role==="assistant")&&!guided&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Use Listen beside a reply to hear it again.</small></div>}
+      {turns.some(turn=>turn.role==="assistant")&&!guided&&<div className="conversation-help" aria-label="Conversation help"><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Please say your last reply in simpler Korean, with one short question.")}>Simpler Korean</button><button type="button" className="button button-quiet" disabled={calling||thinking||playing||!!draft.trim()} onClick={()=>void sendMessage("Help me answer your last question. Give one short Korean example and its meaning in the learning tip.")}>Help me answer</button><small>These ask your tutor for another reply and use the usual free allowance. Clear your draft first to use them. Tap a message bubble to hear it again.</small></div>}
       <details className="conversation-phrase-help">
         <summary>Need a phrase to get started?</summary>
         {latestPartner&&<><p>Get an editable example for your partner’s latest question.</p><button type="button" className="button button-soft" disabled={helping||calling||thinking} onClick={()=>void suggestReply()}>{helping?"Finding a reply idea…":replyIdea?"Try another reply idea":"Suggest a reply to this question"}</button><small>{guided?"Guided examples use no AI requests. Choose an example below or switch to AI to write freely.":"Uses the usual free tutor allowance. Edit the example to match what you mean."}</small></>}

@@ -1,3 +1,4 @@
+import {conversationSpeechParts} from "./conversation-speech-parts";
 import { cachedBrowserVoice, enableBrowserVoices, browserVoiceState, synthesizeBrowserVoice, primeBrowserVoicePlayback, browserVoicePlaybackElement } from "./browser-voices";
 import { recordedAudioEnabled, recordedAudioUrl } from "./recorded-audio";
 import { paidFeaturesEnabled, hostedAiEnabled } from "../release";
@@ -290,10 +291,24 @@ export async function prefetchLocalKorean(text: string, voice = selectedElevenLa
 export async function prefetchConversationKorean(text: string, voice: ElevenLabsVoice) {
   if (recordedAudioEnabled && recordedAudioUrl(text,voice) || localSpeechUrl) return prefetchLocalKorean(text,voice);
   if (!usesBrowserConversationVoices() || browserVoiceState().phase !== "ready") return;
-  try { await synthesizeBrowserVoice(naturalSpeechText(text),voice,new AbortController().signal); }
+  try { await synthesizeBrowserVoice(naturalSpeechText(conversationSpeechParts(text)[0]??text),voice,new AbortController().signal); }
   catch { /* Explicit Listen can retry after preparation fails. */ }
 }
 
+export async function playConversationKorean(text:string,voice:ElevenLabsVoice,rate=1,options:KoreanSpeechOptions={}):Promise<KoreanPlayback>{
+  const parts=usesBrowserConversationVoices()&&!(recordedAudioEnabled&&recordedAudioUrl(text,voice))&&!localSpeechUrl?conversationSpeechParts(text):[text];
+  let last:KoreanPlayback={played:false,source:"unavailable"};
+  for(let index=0;index<parts.length;index++){
+    const playback=playElevenLabsKorean(parts[index],voice,rate,{...options,waitForEnd:true,onPlaybackStart:()=>{
+      options.onPlaybackStart?.();
+      if(index+1<parts.length)void prefetchConversationKorean(parts[index+1],voice);
+    }});
+    const version=playbackVersion;
+    last=await playback;
+    if(!last.played||version!==playbackVersion)return {...last,played:false};
+  }
+  return last;
+}
 export async function playElevenLabsKorean(
   text: string,
   voice: ElevenLabsVoice = selectedElevenLabsVoice(),

@@ -355,3 +355,4 @@
 .conversation-card .read-aloud-switch[aria-checked=true]{background:var(--forest,#536b4f);color:white;}
 .conversation-audio-player{flex-basis:100%;min-width:0;}
 .conversation-audio-player audio{display:block;width:100%;min-height:44px;margin-top:8px;}
+.chat-message-korean{display:block;font-size:20px;line-height:1.6;margin:12px 0}.chat-message-content .conversation-roman{display:block}.chat-message-replay{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}.chat-message-replay:focus-visible{outline:2px solid #344c30;outline-offset:6px;border-radius:8px}.chat-message-replay:disabled{cursor:default;opacity:1}@media(max-width:700px){.chat-message-korean{font-size:18px}}
