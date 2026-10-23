@@ -23,3 +23,5 @@ Regression test proves the catalog opening's play call occurs before new synthes
 223 local tests passed, including four existing untracked preview tests that are not published. Hosted build passed; no API code changed. Deployment pending. Test fixtures, logs, local models, and previews remain unpublished.
 
 Rollback: revert this frontend patch, its manifest entries, and eight clips; retain Node 24.22.1 and the previous security fixes. No database changes.
+
+Deployment verified: commit 4488b4a is Live on static deployment dep-dbdhah6q1p3s738kj02g, Node 24.22.1, zero reported dependency vulnerabilities. Fetched all eight new published WAVs, validated format, and confirmed byte-for-byte equality with the audited local clips. Fresh live Speak written check for 집 showed Match and mascot; no console warnings/errors. Did not mark a card practiced or access the microphone. Existing learner voice Chris and pace 1.00 remained unchanged.
