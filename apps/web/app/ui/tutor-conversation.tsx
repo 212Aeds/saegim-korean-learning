@@ -78,8 +78,6 @@ export function TutorConversation({ profile, completedLessonIds=[] }: { profile:
     audio.controls=false;
     audio.setAttribute("aria-label","Conversation audio");
     audio.setAttribute("playsinline","");
-
-
     audioHost.current.appendChild(audio);
     return ()=>{audio.remove();};
   },[browserVoices]);
