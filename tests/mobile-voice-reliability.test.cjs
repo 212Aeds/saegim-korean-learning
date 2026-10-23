@@ -76,6 +76,7 @@ test('home startup does not prepare the conversation model, and read-aloud has a
  const page=fs.readFileSync('apps/web/app/page.tsx','utf8'),ui=fs.readFileSync('apps/web/app/ui/tutor-conversation.tsx','utf8'),worker=fs.readFileSync('apps/web/public/voices/worker.js','utf8');
  assert.doesNotMatch(page,/prepareBrowserVoicesAutomatically/);
  assert.match(ui,/role="switch" aria-checked=\{speakReplies\}/);
- assert.match(ui,/audio.controls=true/);assert.match(ui,/aria-label","Conversation audio/);
+ assert.match(ui,/audio.controls=false/);assert.match(ui,/ref=\{audioHost\} hidden aria-hidden="true"/);assert.match(ui,/Tap Listen again to play it/);assert.doesNotMatch(ui,/If automatic playback is blocked|Tap Play in the audio player/);assert.match(ui,/aria-label","Conversation audio/);
  assert.match(worker,/engine.call\(text,'ko',styles\[data.voice\],8,/);
 });
+

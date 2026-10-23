@@ -92,3 +92,33 @@ test('generated voice cache has a byte budget as well as a clip-count limit',asy
   assert.equal(voices.cachedBrowserVoice('oversized','chris'),undefined);
  }finally{voices.cancelBrowserVoices();Object.assign(global,previous);}
 });
+
+test('different conversation lines serialize without a busy-worker reset',async()=>{
+ const previous={window:global.window,Worker:global.Worker};let worker,results;
+ global.window={localStorage:{getItem:()=>null,setItem:()=>{}}};
+ global.Worker=class{constructor(){worker=this;this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){this.terminated=true;}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
+ const voices=require('../apps/web/app/ui/browser-voices.ts');
+ try{
+  const init=voices.enableBrowserVoices();worker.reply('ready');await init;
+  const first=voices.synthesizeBrowserVoice('첫 번째 문장이에요.','jessica',new AbortController().signal);
+  const second=voices.synthesizeBrowserVoice('다른 문장이에요.','chris',new AbortController().signal);results=Promise.allSettled([first,second]);
+  assert.equal(worker.messages.filter(m=>m.type==='synthesize').length,1);
+  worker.reply('audio',{wav:new ArrayBuffer(80)});await first;await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(worker.messages.filter(m=>m.type==='synthesize').length,2);assert.equal(worker.messages.at(-1).voice,'chris');
+  worker.reply('audio',{wav:new ArrayBuffer(80)});await second;assert.equal(worker.terminated,undefined);
+ }finally{voices.cancelBrowserVoices();await results;Object.assign(global,previous);}
+});
+
+test('canceling queued speech never sends its old text to a replacement worker',async()=>{
+ const previous={window:global.window,Worker:global.Worker};const workers=[];let results;
+ global.window={localStorage:{getItem:()=>null,setItem:()=>{}}};
+ global.Worker=class{constructor(){workers.push(this);this.messages=[];}postMessage(message){this.messages.push(message);}terminate(){}reply(type,extra={}){this.onmessage({data:{id:this.messages.at(-1).id,type,...extra}});}};
+ const voices=require('../apps/web/app/ui/browser-voices.ts');
+ try{
+  const init=voices.enableBrowserVoices();workers[0].reply('ready');await init;
+  const first=voices.synthesizeBrowserVoice('이전 문장이에요.','jessica',new AbortController().signal),abort=new AbortController();
+  const queued=voices.synthesizeBrowserVoice('취소한 문장이에요.','chris',abort.signal);results=Promise.allSettled([first,queued]);abort.abort();
+  const retry=voices.enableBrowserVoices();workers[1].reply('ready');await retry;
+  assert.ok((await results).every(result=>result.status==='rejected'));assert.equal(workers[1].messages.length,1);
+ }finally{voices.cancelBrowserVoices();await results;Object.assign(global,previous);}
+});

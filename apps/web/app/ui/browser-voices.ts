@@ -72,7 +72,14 @@ export async function synthesizeBrowserVoice(text:string,voice:"chris"|"jessica"
   const key=voice+"|"+text;const saved=clips.get(key);if(saved&&!signal.aborted)return saved;
   let task=synthesizing.get(key);
   if(!task){
-    task=request("synthesize",{text,voice},signal).then(wav=>{
+    const waiting=[...synthesizing.values()],connected=worker;
+    const generate=()=>{
+      if(signal.aborted||worker!==connected||state.phase!=="ready")throw new DOMException("Canceled","AbortError");
+      return request("synthesize",{text,voice},signal);
+    };
+    // The worker runs one inference at a time. Optional prefetch must not make
+    // an overlapping Listen fail as busy and discard the initialized model.
+    task=(waiting.length?Promise.allSettled(waiting).then(generate):generate()).then(wav=>{
       if(!wav||signal.aborted)throw new DOMException("Canceled","AbortError");
       const blob=new Blob([wav],{type:"audio/wav"});
       if(blob.size<=maxCachedVoiceBytes){
