@@ -127,7 +127,7 @@ export function LessonModal({
   useEffect(() => {
     setAudioNotice(""); setAudioBusy(false);
     return () => { playbackAttempt.current += 1; stopKoreanPlayback(); };
-  }, [phase, step, preferences.speechVoice]);
+  }, [phase, step, preferences.speechVoice, showLetter]);
   useEffect(() => { const text = phase === "briefing" ? introduction.example : showLetter ? letterIntro.audioText : question?.korean; if (text) void prefetchLocalKorean(text, preferences.speechVoice); }, [phase, question?.korean, introduction.example, preferences.speechVoice, showLetter, letterIntro?.audioText]);
   async function listen(text: string, rate = preferences.speechPace) {
     const attempt = ++playbackAttempt.current;
