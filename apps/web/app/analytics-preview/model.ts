@@ -3,7 +3,9 @@ export type Feature = typeof features[number];
 export type Measurement = {feature: Feature; outcome: "success" | "failure" | "cancelled"; milliseconds: number};
 export function summarize(input: unknown[]) {
   const valid = input.filter((entry): entry is Measurement => {
-    if (!entry || typeof entry !== "object") return false;
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false;
+    const keys = Object.keys(entry);
+    if (keys.length !== 3 || keys.some(key => !["feature", "outcome", "milliseconds"].includes(key))) return false;
     const e = entry as Measurement;
     return features.includes(e.feature) && ["success","failure","cancelled"].includes(e.outcome)
       && Number.isFinite(e.milliseconds) && e.milliseconds >= 0 && e.milliseconds <= 120000;

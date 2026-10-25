@@ -12,3 +12,8 @@ test('cancellation is separate from failure and latency excludes failed or cance
 test('empty data does not imply zero latency or perfect success',()=>{const r=summarize([]).rows[0];assert.equal(r.p95,null);assert.equal(r.successRate,null);});
 test('availability distinguishes failure, slow recovery and healthy checks',()=>{assert.equal(availability([false,false]),'down');assert.equal(availability([false,true]),'recovered');assert.equal(availability([true]),'up');assert.equal(availability([]),'unknown');});
 test('fixtures use only valid measurements and fixed features',()=>{assert.equal(summarize(demoEvents).total,demoEvents.length);});
+test('fixtures reject extra fields and invalid durations rather than silently accepting them',()=>{
+ const valid={feature:'speak',outcome:'success',milliseconds:120000};
+ assert.equal(summarize([valid]).total,1);
+ for(const entry of [{...valid,text:'synthetic private content'},{...valid,milliseconds:120001},{...valid,milliseconds:NaN},{...valid,outcome:'other'},null,[]])assert.equal(summarize([entry]).total,0);
+});

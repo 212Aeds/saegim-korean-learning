@@ -24,3 +24,7 @@ The live analytics expansion remains a proposal in analytics-expansion-design.md
 Restart locally (PowerShell, repository root): set SAEGIM_ANALYTICS_PREVIEW=true and SORI_WEB_DIST_DIR=.next-analytics-preview, run npm run build:web, then npm --workspace @sori/web run start -- --port 3038. The current server remains available for review. Stop that server to end the preview. Production builds must leave SAEGIM_ANALYTICS_PREVIEW unset.
 
 Prepared with AI assistance. Existing account/progress, voice engine, playback speed, usage caps and paid-provider settings were not modified.
+
+## Follow-up validation
+
+The sample validator now rejects extra fields instead of accepting entries that contain arbitrary additional content. A regression test first reproduced the gap, then passed with the strict three-field check. Six focused tests cover this plus invalid duration bounds, cancellations, empty data and recovery states. This remains a fixture validator, not a production collection endpoint. The preview server is bound to 127.0.0.1 for local review only.
