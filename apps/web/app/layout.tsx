@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { CloudflareAnalytics } from "./ui/cloudflare-analytics";
 import "./styles.css";
 import "./practice.css";
 import "./globals.css";
@@ -24,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<CloudflareAnalytics /></body>
     </html>
   );
 }

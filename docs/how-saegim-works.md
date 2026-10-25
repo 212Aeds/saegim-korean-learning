@@ -109,3 +109,5 @@ Letter introductions (2026-10-23): lesson-questions.ts derives a short pronuncia
 Beta FAQ (2026-10-23): public help now distinguishes guest browser storage from account sync and describes current voice preparation/cache limitations without the obsolete 430 MB promise. See docs/beta-faq-2026-10-23.md for evidence. Playback and storage behavior are unchanged.
 
 Letter audio transition (2026-10-24): leaving a pronunciation introduction now runs the same audio cleanup as a question change. This prevents overlapping audio and stale busy/error state while keeping the current voices and pace. See docs/letter-audio-transition-2026-10-24.md for the reproduction and synthetic browser check.
+
+Website analytics (2026-10-24, explicitly authorized): RootLayout loads a production-host-only Cloudflare beacon after hydration, with automatic SPA measurement off and browser privacy signals respected. It supplies no custom learner events or identifiers. The public token is not an API credential. The privacy page describes the collection; docs/web-analytics-2026-10-24.md explains metrics, limitations, tests, and removal.
