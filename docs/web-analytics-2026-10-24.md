@@ -27,3 +27,8 @@ Cloudflare dashboard → Observability → Web Analytics → saegim.onrender.com
 231 local tests passed, including the pre-existing unpublished preview tests. New tests verify a single script, exact hostname restriction, privacy signals, spa:false, and no custom event fields. Hosted build passed at 353,339 gzip startup bytes locally, below the existing budget. No microphone or private learner data was used. Production deployment and receipt verification are recorded after publication.
 
 Rollback: remove CloudflareAnalytics from RootLayout (or remove the beacon installer), rebuild and deploy. Existing analytics data is managed in Cloudflare; removing the script prevents new collection. No database migration is involved.
+
+Production: commit e5f6c1b deployed successfully as dep-dbep688m7kps73ek6kt0. Render used Node 24.22.1; hosted startup gzip bytes were 354,557, below budget. Live privacy page returned HTTP 200, contained one correctly configured module beacon, and showed no browser warnings/errors. Cloudflare dashboard still reported insufficient data immediately after the synthetic public-page visit; ingestion is not yet confirmed and can take several minutes. Counts are not historical or exact unique people.
+
+Separate follow-up: build audit warnings prompted npm audit --omit=dev. It reported five high-severity findings involving body-parser, multer/@nestjs dependencies, and zod. No forced or unrelated dependency updates were applied in this analytics change. Review affected runtime paths and official advisories in a dedicated security patch.
+
