@@ -400,8 +400,8 @@ export class AuthController {
     }
   }
 
-  private publicAccount(row: AccountRow): Account {
-    return { id: row.id, email: row.email, displayName: row.display_name, learningProfile: row.learning_profile };
+  private publicAccount(row: AccountRow): Account & {developerAccess: boolean} {
+    return { id: row.id, email: row.email, displayName: row.display_name, learningProfile: row.learning_profile, developerAccess: row.email === "aeden.gray2@gmail.com" };
   }
 
   private rateKey(bucket: string, identifier: string) {

@@ -111,3 +111,6 @@ Beta FAQ (2026-10-23): public help now distinguishes guest browser storage from 
 Letter audio transition (2026-10-24): leaving a pronunciation introduction now runs the same audio cleanup as a question change. This prevents overlapping audio and stale busy/error state while keeping the current voices and pace. See docs/letter-audio-transition-2026-10-24.md for the reproduction and synthetic browser check.
 
 Website analytics (2026-10-24, explicitly authorized): RootLayout loads a production-host-only Cloudflare beacon after hydration, with automatic SPA measurement off and browser privacy signals respected. It supplies no custom learner events or identifiers. The public token is not an API credential. The privacy page describes the collection; docs/web-analytics-2026-10-24.md explains metrics, limitations, tests, and removal.
+# Private developer reporting
+
+The hosted Developer section uses the existing account session plus a server-side owner-email check. The browser's developerAccess flag only controls navigation; the guarded API controls access to existing project quota totals. The report does not expose learner records or enable new event collection. See `docs/developer-section.md` for authorization, interpretation and verification details. Beta invitation edits stay on the user's device until they choose to copy or share them.

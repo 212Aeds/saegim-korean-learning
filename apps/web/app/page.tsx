@@ -533,6 +533,7 @@ export default function Home() {
             </button>
           ))}
         </nav>
+        {account?.developerAccess && <a className="nav-item" href="/developer/">Developer</a>}
         <div className="side-note">
           <Sparkle className="note-spark" size={18} aria-hidden="true" />
           <p>Korean, remembered.</p>

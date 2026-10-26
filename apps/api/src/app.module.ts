@@ -3,6 +3,7 @@ import { DatabaseService } from "./database.service";
 import { AuthController } from "./auth.controller";
 import { LearningController, WordsController } from "./learning.controller";
 import { SessionAuthGuard } from "./session-auth.guard";
+import { DeveloperController } from "./developer.controller";
 
 import { ProviderUsageService } from "./provider-usage.service";
 import { AudioController } from "./audio/audio.controller";
@@ -17,7 +18,7 @@ import { TutorService } from "./tutor/tutor.service";
 import { OpenRouterTutorProvider, TutorProvider } from "./tutor/tutor-provider";
 
 @Module({
-  controllers: [LearningController, WordsController, AuthController, AudioController, SpeechController, TutorController],
+  controllers: [LearningController, WordsController, AuthController, AudioController, SpeechController, TutorController, DeveloperController],
   providers: [DatabaseService, SessionAuthGuard, ProviderUsageService, SpeechAudioCacheService, AudioCatalogService, TutorService,
     { provide: AudioStorage, useClass: NeonAudioStorage },
     { provide: KoreanAudioProvider, useClass: UnavailableKoreanAudioProvider },

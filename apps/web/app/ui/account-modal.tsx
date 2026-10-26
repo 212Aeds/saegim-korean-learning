@@ -14,6 +14,7 @@ import {StudyReminders} from "./study-reminders";
 import { ProfilePreview } from "./profile-preview";
 
 export type LearnerAccount = {
+  developerAccess?: boolean;
   id: string;
   email: string;
   displayName: string;
