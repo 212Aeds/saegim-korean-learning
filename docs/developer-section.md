@@ -10,7 +10,7 @@ The auth response supplies a developerAccess display hint so only the owner sees
 
 The report displays at most 30 days of existing UTC project quota reservations from provider_project_usage. These counts include reservations for failed calls and do not measure unique users, completed conversations, transcription accuracy or costs. It performs no new telemetry collection or provider call. Cloudflare visits/performance remain in Cloudflare's separately authenticated dashboard. The original analytics lab is still an environment-gated local demo; production must leave its flag unset.
 
-The public beta invitation now offers a Hangul guide, optional feedback, native sharing with fallback, an editable invitation and an existing QR code. It does not send invitations automatically, track recipients, promise unlimited AI or require feedback to learn. Clipboard failures show manual-copy guidance; cancellation of native sharing is silent. The draft clearly identifies the creator and beta status and asks people to respect community rules.
+The public beta invitation now offers a Hangul guide, optional feedback, native sharing with fallback, an editable invitation and an existing QR code. It does not send invitations automatically, track recipients, promise unlimited AI or require feedback to learn. Clipboard failures show manual-copy guidance; cancellation of native sharing is silent. The draft identifies the beta status without implying that every person sharing it is the creator. Contributors are asked to disclose their connection and respect community rules.
 
 ## Verification
 
