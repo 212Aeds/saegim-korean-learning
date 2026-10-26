@@ -1,6 +1,18 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),ts=require('typescript');
 require.extensions['.ts']=(m,p)=>m._compile(ts.transpileModule(fs.readFileSync(p,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}}).outputText,p);
 const {cloudflareAvailable,cloudflareRequest}=require('../apps/api/src/cloudflare-ai.ts');
+test('provider diagnostics record a synthetic 429 and recovery without retaining payloads',async()=>{
+ const old={...process.env},fetch=global.fetch;
+ try{
+  Object.assign(process.env,{CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'synthetic-secret',CLOUDFLARE_FREE_PLAN_CONFIRMED:'true'});
+  const {providerResults}=require('../apps/api/src/provider-health.ts');
+  global.fetch=async()=>new Response('synthetic private error text',{status:429});
+  await assert.rejects(cloudflareRequest('tutor',{prompt:'synthetic learner text'}));
+  assert.equal(providerResults().tutor.state,'limited');assert.ok(!JSON.stringify(providerResults()).includes('synthetic'));
+  global.fetch=async()=>new Response(JSON.stringify({success:true,result:{text:'fixture'}}));
+  await cloudflareRequest('tutor',{});assert.equal(providerResults().tutor.state,'success');
+ }finally{global.fetch=fetch;process.env=old;}
+});
 test('Cloudflare requires explicit free-plan confirmation and never falls back after quota errors',async()=>{
  const old={...process.env},fetch=global.fetch;let calls=0;
  try{process.env.CLOUDFLARE_ACCOUNT_ID='a'.repeat(32);process.env.CLOUDFLARE_API_TOKEN='test-secret';delete process.env.CLOUDFLARE_FREE_PLAN_CONFIRMED;assert.equal(cloudflareAvailable(),false);global.fetch=async()=>{calls++;return new Response('{}',{status:429})};await assert.rejects(cloudflareRequest('whisper',{}));assert.equal(calls,0);process.env.CLOUDFLARE_FREE_PLAN_CONFIRMED='true';assert.equal(cloudflareAvailable(),true);await assert.rejects(cloudflareRequest('whisper',{}),/unavailable/);assert.equal(calls,1);

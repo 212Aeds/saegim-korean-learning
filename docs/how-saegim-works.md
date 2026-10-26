@@ -114,3 +114,6 @@ Website analytics (2026-10-24, explicitly authorized): RootLayout loads a produc
 # Private developer reporting
 
 The hosted Developer section uses the existing account session plus a server-side owner-email check. The browser's developerAccess flag only controls navigation; the guarded API controls access to existing project quota totals. The report does not expose learner records or enable new event collection. See `docs/developer-section.md` for authorization, interpretation and verification details. Beta invitation edits stay on the user's device until they choose to copy or share them.
+# Service checks and AI allowance
+
+The private developer page now puts service checks and allowance ahead of traffic/history. Its health request checks the existing API/database endpoint without spending an AI request. The quota summary reads existing UTC reservation counters without increasing them. Cloudflare request handling keeps only the latest sanitized tutor/speech outcome in process memory; it never records content or raw errors. A 429 is labeled rate/quota limited rather than confirmed free-allocation exhaustion. See `docs/developer-health.md` for evidence, limits and rollback.
