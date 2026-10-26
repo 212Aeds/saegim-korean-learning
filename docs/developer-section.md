@@ -19,3 +19,12 @@ Four focused synthetic authorization tests cover owner access, missing sessions,
 Official sources: https://docs.nestjs.com/guards and https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share . Local pinned Next.js page and use-client guidance was used for route/client boundaries. AI assisted implementation and synthetic verification. Deployment/runtime checks are recorded after publication.
 
 Rollback: remove the controller registration and developer navigation/page, rebuild and redeploy. Existing accounts and quota tables need no migration or deletion. Keep the live collector changes separate from this work.
+
+## Live verification
+
+API fd3c692 deployed as dep-dbfgd98473hc73d3b470; website 93689db deployed as dep-dbfgh4qjnfac73ca6840. The existing owner browser session loaded the aggregate report and showed the Developer navigation link. An anonymous same-origin API request returned 401, and API health returned 200. The public HTML shell contained no quota rows. The private demo opened and closed successfully; no browser warnings or errors appeared on the developer page. Render's final startup budget was 355,042 gzip bytes. The final full suite passed 241 tests.
+
+Local browser clicks verified editable invitation copying and QR expansion, with no Developer link for a guest. Local invitation layout had equal client/scroll widths of 375px. The live developer view was verified on desktop; the browser viewport override did not apply to that tab, so no physical-phone or live phone-width claim is made. No invitations were posted or sent.
+
+The release audit still reports five pre-existing high-severity production dependency findings. No dependencies changed here; these require a dedicated reviewed security patch rather than a forced upgrade.
+
