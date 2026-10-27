@@ -28,3 +28,10 @@ API 0ccce5b is live as dep-dbfgsmvavr4c73e4ascg. The matching website is live as
 
 An initial anonymous request timed out during free-host wake-up; the subsequent health request returned 200 and anonymous developer access returned 401. This is evidence of an observed cold-start delay, not a claim of zero lag or continuous uptime. Five previously reported high-severity dependency advisories remain; no dependencies changed in this work.
 
+
+## Defensive validation follow-up — October 27
+
+Synthetic testing found that Number(null) and Number('') can turn a malformed present quota row into a zero token count. The report now distinguishes an absent daily row (zero reservations) from an incomplete or malformed row (allowance unknown). This is defensive validation; no production database corruption was observed. Actual PostgreSQL token counters are non-null. It does not change inference admission, caps, billing, authentication or collected fields.
+
+The regression test failed before the patch. All 13 focused health, authorization and provider tests then passed, and the API build passed. The production dependency audit currently reports four high and one moderate finding; no dependency changes were made. This follow-up is committed for the next API deployment, not yet live. The already deployed dashboard remains in place.
+

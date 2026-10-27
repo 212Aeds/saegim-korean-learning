@@ -13,6 +13,13 @@ test('unsupported providers and invalid counters remain unknown',()=>{
  assert.equal(freeAllowance({requests:-1,tutorRequests:2,tutorTokens:'1'},{TUTOR_PROVIDER:'cloudflare'}).state,'unknown');
  assert.equal(freeAllowance({requests:2,tutorRequests:2,tutorTokens:'9007199254740992'},{TUTOR_PROVIDER:'cloudflare'}).state,'unknown');
 });
+test('a present but incomplete quota row cannot imply an unused daily allowance',()=>{
+ for(const row of [{requests:2,tutorRequests:2},{requests:2,tutorRequests:2,tutorTokens:null},{requests:2,tutorRequests:2,tutorTokens:''},{requests:2,tutorRequests:2,tutorTokens:'   '},{tutorRequests:2,tutorTokens:'32000'}]){
+  assert.equal(freeAllowance(row,{TUTOR_PROVIDER:'cloudflare'}).state,'unknown');
+ }
+ assert.equal(freeAllowance(null,{TUTOR_PROVIDER:'cloudflare'}).remaining,200);
+ assert.equal(freeAllowance({requests:0,tutorRequests:0,tutorTokens:'0'},{TUTOR_PROVIDER:'cloudflare'}).remaining,200);
+});
 const {recordProviderResult,providerResults}=require('../apps/api/src/provider-health.ts');
 test('provider observation stores only the latest sanitized result, not learner content',()=>{
  recordProviderResult('tutor','limited',1250);const first=providerResults();assert.equal(first.tutor.state,'limited');assert.equal(first.tutor.durationMs,1250);
