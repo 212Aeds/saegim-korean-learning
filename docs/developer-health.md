@@ -21,3 +21,10 @@ The final full suite passed 245 tests; focused provider/health tests also passed
 Official guidance checked: https://developers.cloudflare.com/workers-ai/platform/errors/ and https://developers.cloudflare.com/support/troubleshooting/http-status-codes/4xx-client-error/error-429/ . HTTP 429 can represent several limitations; this implementation deliberately does not equate it with confirmed daily allocation exhaustion.
 
 AI assisted implementation and synthetic testing. Rollback removes the provider observation calls and new report fields/UI; no database migration or deletion is needed.
+
+## Deployment verification — October 26 (Pacific time)
+
+API 0ccce5b is live as dep-dbfgsmvavr4c73e4ascg. The matching website is live as dep-dbfvnc142hec73d56920; Render startup gzip bytes were 355,039, below the existing 360,000-byte budget. The existing owner session loaded the new status cards, app allowance and collapsed history, and Refresh status completed with API/database responding. Browser warnings/errors were absent. No AI inference was triggered for the live check; provider observations correctly showed no observed requests in the current API process.
+
+An initial anonymous request timed out during free-host wake-up; the subsequent health request returned 200 and anonymous developer access returned 401. This is evidence of an observed cold-start delay, not a claim of zero lag or continuous uptime. Five previously reported high-severity dependency advisories remain; no dependencies changed in this work.
+
