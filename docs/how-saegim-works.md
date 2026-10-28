@@ -121,4 +121,3 @@ The private developer page now puts service checks and allowance ahead of traffi
 # A focused first session
 
 Brand-new learners see a focused Today view during the first three existing Hangul lessons. A pure helper reads the curriculum route and completion IDs; it does not create progress or skip prerequisites. The full-dashboard option is remembered only in app memory for that account. Starter lesson questions stay in their authored choice/typing form instead of being automatically replaced with speaking turns. Listening remains available. After a completion, the next lesson and an optional feedback link appear. See docs/first-session-design.md for browser-test evidence, limits and rollback. AI assisted this implementation; no new Korean content or learner tracking was introduced.
-
