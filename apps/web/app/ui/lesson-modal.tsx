@@ -1,5 +1,6 @@
 "use client";
 import {lessonTextAssessment, appendLessonRetry} from "./lesson-answer";
+import {isStarterLesson} from "../first-session";
 import { ListeningControls } from "./listening-controls";
 
 import { useEffect, useRef, useState } from "react";
@@ -112,7 +113,7 @@ export function LessonModal({
     : false;
   const tipSentences = question ? completeTipSentences(question.tip) : [];
   const speechPracticeTurn = question
-    ? !question.id.includes("-shape-") && Boolean(currentWord || currentSyllable) &&
+    ? !isStarterLesson(lesson.id) && !question.id.includes("-shape-") && Boolean(currentWord || currentSyllable) &&
       (Array.from(question.id).reduce((sum, character) => sum + character.charCodeAt(0), lesson.id.length) % 3) === 0
     : false;
   const hintText = preferences.hintLevel === "challenge"

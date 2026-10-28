@@ -12,6 +12,7 @@ test('continuing from a letter introduction releases its audio and ignores its l
   if(id==='react/jsx-runtime')return require(id);
   if(id==='./use-dialog-focus')return {useDialogFocus(){}};
   if(id==='../curriculum')return {normalizeAnswer:value=>value,shuffle:items=>items};
+  if(id==='../first-session')return {isStarterLesson:()=>false};
   if(id==='../more-lessons')return {additionalVocabulary:[],hangulLetters:[],hangulSyllableExamples:[]};
   if(id==='../word-bank')return {wordBank:[]};
   if(id==='./lesson-answer')return {lessonTextAssessment:()=>({correct:false,near:false})};

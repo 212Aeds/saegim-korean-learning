@@ -1,5 +1,7 @@
 "use client";
 import {preparePracticeSounds} from "./ui/feedback-sound";
+import {starterJourney} from "./first-session";
+import {FirstSession} from "./ui/first-session";
 import {preloadVoiceFiles,stopVoiceFilePreload} from "./ui/preload-voice-files";
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
@@ -165,6 +167,7 @@ export default function Home() {
 
   },[]);
   const [tab, setTab] = useState<Tab>("today");
+  const [fullTodayFor,setFullTodayFor]=useState<string|null>(null);
   const [progress, setProgress] = useState(initialProgress);
   const currentStreak=habitProgress(progress).current;
   const [lessonOpen, setLessonOpen] = useState(false);
@@ -494,6 +497,7 @@ export default function Home() {
   }
 
   if (!account.learningProfile?.onboardingCompleted) return <LearningOnboarding account={account} onSignOut={signOut} onSaved={updated => {setAccount(updated);setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile?.dailyMinutes??15}));}} />;
+  const starterMode=tab==="today"&&fullTodayFor!==account.id&&Boolean(starterJourney(account.learningProfile,progress.completedLessonIds));
 
   return (
     <GuestLearningContext.Provider value={guest}><main className="app-shell">
@@ -580,17 +584,17 @@ export default function Home() {
 
         <div className="page-content">
           <FeatureGuide sections={tabs} onNavigate={navigateTo} onSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}} />
-          <FeedbackBanner compact />
+          {!starterMode&&<FeedbackBanner compact />}
           <div className="greeting-row">
             <div>
               {tab === "today" && account && (
                 <p className="home-welcome">
                   <SoriMascot className="home-welcome-mascot" />
-                  <span>Welcome back, {account.displayName.trim().split(/\s+/u)[0] || "friend"}</span>
+                  <span>{progress.completedLessonIds.length?"Welcome back":"Welcome"}, {account.displayName.trim().split(/\s+/u)[0] || "friend"}</span>
                 </p>
               )}
               <h1>
-                {tab === "today" ? (
+                {starterMode?"Let’s meet Hangul.":tab === "today" ? (
                   <>
                     Ready to practice
                     <br className="mobile-break" /> your Korean?
@@ -600,12 +604,12 @@ export default function Home() {
                 )}
               </h1>
               <p className="subhead">
-                {tab === "today"
+                {starterMode?"Start with letters and sounds. Explore the other sections whenever you like.":tab === "today"
                   ? "Your pace. Your path. A free place to grow."
                   : today}
               </p>
             </div>
-            <div className="streak-chip">
+            {!starterMode&&<div className="streak-chip">
               <span className="streak-icon">
                 <Fire size={18} weight="fill" />
               </span>
@@ -632,12 +636,14 @@ export default function Home() {
                   />
                 ))}
               </span>
-            </div>
+            </div>}
           </div>
 
           <div className="section-view" key={`${tab}-${account.learningProfile?.level}`}>
           {tab === "today" && (
             <TodayView
+              showFullDashboard={fullTodayFor===account.id}
+              onShowFullDashboard={()=>setFullTodayFor(account.id)}
               onMissedReview={() => { setReviewFocus("missed"); setReviewOpen(true); }}
               learningProfile={account.learningProfile ?? defaultLearningProfile}
               progress={progress}
@@ -785,6 +791,8 @@ export default function Home() {
 }
 
 function TodayView({
+  showFullDashboard,
+  onShowFullDashboard,
   onMissedReview,
   learningProfile,
   progress,
@@ -795,6 +803,8 @@ function TodayView({
   onTab,
   onGoalChange,
 }: {
+  showFullDashboard: boolean;
+  onShowFullDashboard: () => void;
   onMissedReview: () => void;
   learningProfile: LearningProfile;
   progress: SavedProgress;
@@ -822,6 +832,8 @@ function TodayView({
   const weekly = weeklyProgress(progress.activityDates, learningProfile.weeklyGoal ?? 5, todayDate);
   const levelRoute = learningRoute(learningProfile).filter((lesson) => !placementKnowledge(learningProfile).includes(lesson.id));
   const hangulProgress = { completed: levelRoute.filter((lesson) => progress.completedLessonIds.includes(lesson.id)).length, total: levelRoute.length };
+  const starter=starterJourney(learningProfile,progress.completedLessonIds);
+  if(starter&&!showFullDashboard)return <FirstSession journey={starter} onLesson={onLesson} onShowDashboard={onShowFullDashboard}/>;
   return (
     <>
       <div className="daily-goal-row">
