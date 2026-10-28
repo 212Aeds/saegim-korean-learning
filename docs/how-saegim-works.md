@@ -121,3 +121,10 @@ The private developer page now puts service checks and allowance ahead of traffi
 # A focused first session
 
 Brand-new learners see a focused Today view during the first three existing Hangul lessons. A pure helper reads the curriculum route and completion IDs; it does not create progress or skip prerequisites. The full-dashboard option is remembered only in app memory for that account. Starter lesson questions stay in their authored choice/typing form instead of being automatically replaced with speaking turns. Listening remains available. After a completion, the next lesson and an optional feedback link appear. See docs/first-session-design.md for browser-test evidence, limits and rollback. AI assisted this implementation; no new Korean content or learner tracking was introduced.
+
+Request parser hardening (2026-10-28): the API uses patched upstream request
+parsers and validation dependencies. A disposable loopback test checks that
+malformed compressed JSON does not stop subsequent requests. Voices, pace,
+account behavior and request limits are unchanged. See
+docs/request-parser-security-2026-10-28.md for sources, verification and remaining
+development-tool audit findings.
