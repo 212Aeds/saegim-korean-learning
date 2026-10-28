@@ -35,3 +35,8 @@ Synthetic testing found that Number(null) and Number('') can turn a malformed pr
 
 The regression test failed before the patch. All 13 focused health, authorization and provider tests then passed, and the API build passed. The production dependency audit currently reports four high and one moderate finding; no dependency changes were made. This follow-up is committed for the next API deployment, not yet live. The already deployed dashboard remains in place.
 
+
+## Quota-validation deployment — October 28
+
+Completed the queued defensive validation increment. The same 13 focused tests and API build passed again before publication. Commit 51453bf deployed successfully to the existing free API as dep-dbh4l54s728c73ashm1g. Same-origin health returned HTTP 200 with database connected; anonymous developer access remained HTTP 401. No provider inference, microphone recording, learner-data fixture, credential or permission change was used. The website build was unchanged. Native dependency audit still reports four high and one moderate finding; this deployment does not resolve those advisories.
+
