@@ -20,3 +20,10 @@ A separate localhost guest fixture was onboarded as brand-new with family intere
 
 AI assisted implementation and verification. Live deployment verification is recorded after publication. Rollback removes the new Today guide and starter-question condition; no database migration or progress reset is needed.
 
+
+## Live publication
+
+Commit 91b5150 deployed successfully to the existing free static service as dep-dbh6cguk1f9s73ejpth0. Render's startup gzip budget was 356,180 bytes, below 360,000. The production homepage returned HTTP 200 and its published public JavaScript contained the starter component. Production guest onboarding was not repeated against a real account; the complete guest browser test used the separate localhost origin described above. No API deployment was necessary.
+
+A local preview remains at http://127.0.0.1:3042/ with synthetic guest progress after the first lesson, so the creator can inspect the next-step and feedback view without signing out of their real account. Reloading resets only the in-memory full-dashboard preference, not completed guest lessons. No physical-phone or increased-conversion claim is made.
+

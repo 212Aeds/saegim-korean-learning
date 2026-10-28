@@ -117,3 +117,8 @@ The hosted Developer section uses the existing account session plus a server-sid
 # Service checks and AI allowance
 
 The private developer page now puts service checks and allowance ahead of traffic/history. Its health request checks the existing API/database endpoint without spending an AI request. The quota summary reads existing UTC reservation counters without increasing them. Cloudflare request handling keeps only the latest sanitized tutor/speech outcome in process memory; it never records content or raw errors. A 429 is labeled rate/quota limited rather than confirmed free-allocation exhaustion. See `docs/developer-health.md` for evidence, limits and rollback.
+
+# A focused first session
+
+Brand-new learners see a focused Today view during the first three existing Hangul lessons. A pure helper reads the curriculum route and completion IDs; it does not create progress or skip prerequisites. The full-dashboard option is remembered only in app memory for that account. Starter lesson questions stay in their authored choice/typing form instead of being automatically replaced with speaking turns. Listening remains available. After a completion, the next lesson and an optional feedback link appear. See docs/first-session-design.md for browser-test evidence, limits and rollback. AI assisted this implementation; no new Korean content or learner tracking was introduced.
+
