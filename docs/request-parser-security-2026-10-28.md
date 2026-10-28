@@ -54,3 +54,11 @@ compatibility; no frontend change requires a new static deployment.
 If runtime incompatibility appears, use Render's prior successful API deploy as
 an emergency rollback, then investigate promptly: the prior dependency set has
 known advisories. Avoid reverting application data or account progress.
+
+Deployment verified: API commit `790b3e1`, Render deployment
+`dep-dbh6kvjl550s73caphfg`, succeeded/live after 1m10s on the existing free
+instance. Post-deploy health returned HTTP 200 with database connected, and the
+anonymous developer endpoint returned HTTP 401. The public website API proxy
+also returned health 200 and developer 401 during deployment verification.
+Paid fallbacks remained disabled according to the hosted preflight log. These
+checks do not exercise real sign-in credentials or spend inference quota.
