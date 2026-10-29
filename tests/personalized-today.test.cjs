@@ -69,7 +69,7 @@ test('focused controls open the selected lesson, settings, review and full dashb
   const buttons = nodes(exports.PersonalizedToday(props)).filter(n => n.type === 'button');
   buttons.forEach(button => button.props.onClick());
   const plan = personalizedToday(props.profile, []);
-  assert.deepEqual(calls, ['settings', plan.next.id, 'review', ...plan.alternatives.map(l => l.id), 'dashboard']);
+  assert.deepEqual(calls, [plan.next.id, 'settings', 'review', ...plan.alternatives.map(l => l.id), 'dashboard']);
   assert.equal(JSON.stringify({ profile: props.profile, completed: props.completed }), before);
   const noDue = nodes(exports.PersonalizedToday({ ...props, dueCount: 0 }));
   assert.ok(!noDue.some(n => n.type === 'button' && n.props.children === 'Review instead'));

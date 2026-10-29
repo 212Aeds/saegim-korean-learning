@@ -1,8 +1,8 @@
 .focus{max-width:860px;margin:0 auto;color:var(--ink,#293e34)}
-.context h2{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:12px 0}
+.lesson h2{font-size:clamp(1.5rem,3vw,2rem);line-height:1.25;margin:12px 0}
 .focus p{line-height:1.65}.context>p{max-width:650px}
 .note{font-size:.88rem;color:#596650;line-height:1.6}
-.lesson{padding:26px;background:#eef2e8;border:1px solid #d5dfcc;border-radius:20px;margin:24px 0}
+.lesson{padding:26px;background:#eef2e8;border:1px solid #d5dfcc;border-radius:20px;margin:16px 0}.context{margin-bottom:20px}
 .focus h3{font-size:1.2rem;line-height:1.4;margin:10px 0}
 .lesson button{margin-top:8px;max-width:100%;white-space:normal}
 .review{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:0 0 20px}

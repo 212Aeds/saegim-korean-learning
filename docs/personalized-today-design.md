@@ -50,7 +50,7 @@ stays in memory for the current account and resets with page reload.
 Verification: 255 tests passed. Tests exercise all 40 level/interest combinations,
 eight successive completions at each level, eligibility, non-mutation, completed
 route behavior, due-review visibility and every focused-view callback. Hosted
-build passed; startup JavaScript 355,840 gzip bytes (limit 360,000), up 1,006 bytes.
+build passed; startup JavaScript 355,839 gzip bytes (limit 360,000), up 1,005 bytes.
 Production dependency audit reports zero findings at verification time.
 
 Synthetic guest browser verification on loopback: basic -> Food and meals: words,
@@ -71,3 +71,12 @@ learner each find/start their next lesson and locate Settings/Review without
 coaching. Their task success and comments, not session length, should determine
 whether to keep it. A lower visible-card count is evidence of simplification,
 not proof of better learning or user preference.
+
+Visual test refinement: the initial explanation pushed Start below the desktop
+fold. Moved the lesson and primary action before the explanation and removed a
+duplicate heading. In the verified 720px-high browser viewport, the Start button
+spanned y=520–562, fully inside the first screen. This measurement is specific to
+that viewport and profile, not a guarantee for every device or long lesson title.
+Retested opening the lesson after the final build. The lazy-loaded briefing
+appeared and its Start practice control was visible; no loading-speed claim is
+made. Final local preview: http://127.0.0.1:3043/.
