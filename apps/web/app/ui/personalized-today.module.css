@@ -1,0 +1,17 @@
+.focus{max-width:860px;margin:0 auto;color:var(--ink,#293e34)}
+.context h2{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:12px 0}
+.focus p{line-height:1.65}.context>p{max-width:650px}
+.note{font-size:.88rem;color:#596650;line-height:1.6}
+.lesson{padding:26px;background:#eef2e8;border:1px solid #d5dfcc;border-radius:20px;margin:24px 0}
+.focus h3{font-size:1.2rem;line-height:1.4;margin:10px 0}
+.lesson button{margin-top:8px;max-width:100%;white-space:normal}
+.review{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:0 0 20px}
+.review p{margin:6px 0}.review button{flex-shrink:0}
+.alternatives{border-top:1px solid #dce1d6;padding:18px 0}
+.alternatives summary{cursor:pointer;font-weight:600;min-height:44px;align-content:center}
+.alternatives ul{list-style:none;margin:10px 0 0;padding:0}
+.alternatives li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #dce1d6}
+.alternatives li p{margin:5px 0}.alternatives li button{flex-shrink:0}
+.footer{border-top:1px solid #dce1d6;padding-top:20px}.footer button,.context button{min-height:44px}
+.focus button:focus-visible,.alternatives summary:focus-visible{outline:3px solid #a35134;outline-offset:3px}
+@media(max-width:600px){.lesson{padding:20px}.lesson button{width:100%}.review{align-items:stretch;flex-direction:column;gap:6px}.alternatives li{align-items:flex-start}.alternatives li p{font-size:.9rem}}

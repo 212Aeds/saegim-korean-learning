@@ -11,7 +11,7 @@ test('completion advances through prerequisites without awarding progress or mut
  const next=starterJourney(p,completed);assert.equal(next.completed,1);assert.ok(next.nextLesson.prerequisiteLessonIds.every(id=>completed.includes(id)));assert.equal(JSON.stringify(completed),before);
  const all=first.steps.map(s=>s.lesson.id);assert.equal(starterJourney(p,all),null);
 });
-test('experienced levels and learners with progress outside the starter route retain the full dashboard',()=>{
+test('experienced levels and progress outside the starter route bypass the special beginner introduction',()=>{
  for(const level of ['hangul','basic','intermediate','advanced'])assert.equal(starterJourney({level,reasons:['family']},[]),null);
  assert.equal(starterJourney({level:'new',reasons:['family']},['food-words']),null);
 });

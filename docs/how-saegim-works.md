@@ -128,3 +128,11 @@ malformed compressed JSON does not stop subsequent requests. Voices, pace,
 account behavior and request limits are unchanged. See
 docs/request-parser-security-2026-10-28.md for sources, verification and remaining
 development-tool audit findings.
+
+Personalized Today (2026-10-29): after the three-lesson beginner introduction,
+Today now starts with one eligible recommendation from the learner's existing
+level/interest route, optional due review, and collapsed alternatives. Settings
+updates the plan; the full dashboard remains optional with a return button.
+No new tracking, AI requests or progress writes were added. See
+docs/personalized-today-design.md for the code map, test evidence, tradeoffs,
+AI assistance and the real-user validation still needed.

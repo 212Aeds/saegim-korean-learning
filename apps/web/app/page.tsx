@@ -2,6 +2,7 @@
 import {preparePracticeSounds} from "./ui/feedback-sound";
 import {starterJourney} from "./first-session";
 import {FirstSession} from "./ui/first-session";
+import {PersonalizedToday} from "./ui/personalized-today";
 import {preloadVoiceFiles,stopVoiceFilePreload} from "./ui/preload-voice-files";
 import { freePublishing, tutorEnabled, publicApiUrl, deviceProfileKey, deviceProgressKey } from "./release";
 
@@ -498,6 +499,7 @@ export default function Home() {
 
   if (!account.learningProfile?.onboardingCompleted) return <LearningOnboarding account={account} onSignOut={signOut} onSaved={updated => {setAccount(updated);setProgress(current=>({...current,dailyGoalMinutes:updated.learningProfile?.dailyMinutes??15}));}} />;
   const starterMode=tab==="today"&&fullTodayFor!==account.id&&Boolean(starterJourney(account.learningProfile,progress.completedLessonIds));
+  const focusedToday=tab==="today"&&fullTodayFor!==account.id;
 
   return (
     <GuestLearningContext.Provider value={guest}><main className="app-shell">
@@ -584,7 +586,7 @@ export default function Home() {
 
         <div className="page-content">
           <FeatureGuide sections={tabs} onNavigate={navigateTo} onSettings={()=>{setAccountOpen(false);setSettingsOpen(true);}} />
-          {!starterMode&&<FeedbackBanner compact />}
+          {!focusedToday&&<FeedbackBanner compact />}
           <div className="greeting-row">
             <div>
               {tab === "today" && account && (
@@ -605,11 +607,11 @@ export default function Home() {
               </h1>
               <p className="subhead">
                 {starterMode?"Start with letters and sounds. Explore the other sections whenever you like.":tab === "today"
-                  ? "Your pace. Your path. A free place to grow."
+                  ? "A recommended next step based on your learning profile."
                   : today}
               </p>
             </div>
-            {!starterMode&&<div className="streak-chip">
+            {!focusedToday&&<div className="streak-chip">
               <span className="streak-icon">
                 <Fire size={18} weight="fill" />
               </span>
@@ -644,6 +646,8 @@ export default function Home() {
             <TodayView
               showFullDashboard={fullTodayFor===account.id}
               onShowFullDashboard={()=>setFullTodayFor(account.id)}
+              onShowFocusedDashboard={()=>setFullTodayFor(null)}
+              onSettings={()=>setSettingsOpen(true)}
               onMissedReview={() => { setReviewFocus("missed"); setReviewOpen(true); }}
               learningProfile={account.learningProfile ?? defaultLearningProfile}
               progress={progress}
@@ -793,6 +797,8 @@ export default function Home() {
 function TodayView({
   showFullDashboard,
   onShowFullDashboard,
+  onShowFocusedDashboard,
+  onSettings,
   onMissedReview,
   learningProfile,
   progress,
@@ -805,6 +811,8 @@ function TodayView({
 }: {
   showFullDashboard: boolean;
   onShowFullDashboard: () => void;
+  onShowFocusedDashboard: () => void;
+  onSettings: () => void;
   onMissedReview: () => void;
   learningProfile: LearningProfile;
   progress: SavedProgress;
@@ -834,8 +842,10 @@ function TodayView({
   const hangulProgress = { completed: levelRoute.filter((lesson) => progress.completedLessonIds.includes(lesson.id)).length, total: levelRoute.length };
   const starter=starterJourney(learningProfile,progress.completedLessonIds);
   if(starter&&!showFullDashboard)return <FirstSession journey={starter} onLesson={onLesson} onShowDashboard={onShowFullDashboard}/>;
+  if(!showFullDashboard)return <PersonalizedToday profile={learningProfile} completed={progress.completedLessonIds} dailyMinutes={progress.dailyGoalMinutes} dueCount={dueCount} onLesson={onLesson} onReview={onReview} onSettings={onSettings} onShowDashboard={onShowFullDashboard}/>;
   return (
     <>
+      <button type="button" className="button button-quiet" onClick={onShowFocusedDashboard}>Back to my recommended next step</button>
       <div className="daily-goal-row">
         <div>
           <span className="micro-label">YOUR DAILY RHYTHM</span>
