@@ -80,3 +80,13 @@ that viewport and profile, not a guarantee for every device or long lesson title
 Retested opening the lesson after the final build. The lazy-loaded briefing
 appeared and its Start practice control was visible; no loading-speed claim is
 made. Final local preview: http://127.0.0.1:3043/.
+
+Hosted verification: static site commit `e4169cc`, deployment
+`dep-dbhr5jd9fdbs73ctg5m0`, succeeded/live on the existing free Render service.
+Its startup budget passed at 357,426 gzip bytes. The public home returned HTTP
+200 and its published scripts contain both the profile-adjustment and return-to-
+recommendation controls. The public API health returned HTTP 200 with database
+connected. No API redeploy, account writes, analytics expansion or inference
+requests were needed. The unrelated unpublished feature-preview route stayed out
+of the deployment. Screenshot evidence is saved under ignored
+`work/mobile-tts-evaluation/personalized-today-live.png`.
