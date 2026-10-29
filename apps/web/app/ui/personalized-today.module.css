@@ -14,4 +14,5 @@
 .alternatives li p{margin:5px 0}.alternatives li button{flex-shrink:0}
 .footer{border-top:1px solid #dce1d6;padding-top:20px}.footer button,.context button{min-height:44px}
 .focus button:focus-visible,.alternatives summary:focus-visible{outline:3px solid #a35134;outline-offset:3px}
+.lesson button,.review button,.alternatives button{min-height:44px}
 @media(max-width:600px){.lesson{padding:20px}.lesson button{width:100%}.review{align-items:stretch;flex-direction:column;gap:6px}.alternatives li{align-items:flex-start}.alternatives li p{font-size:.9rem}}

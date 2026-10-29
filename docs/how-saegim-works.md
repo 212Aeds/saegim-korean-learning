@@ -136,3 +136,10 @@ updates the plan; the full dashboard remains optional with a return button.
 No new tracking, AI requests or progress writes were added. See
 docs/personalized-today-design.md for the code map, test evidence, tradeoffs,
 AI assistance and the real-user validation still needed.
+
+File-preview accounts (2026-10-29): a loopback-only, credential-free health check
+recognizes static previews with no account API. Their account modal offers the
+existing live website and an explicit return to guest practice. Hosted sign-in,
+cookies and learner data are unchanged. Personalized action buttons have 44px
+minimum height. See docs/preview-account-service-2026-10-29.md for the root cause,
+synthetic test evidence, Cloudflare assessment and remaining verification limits.

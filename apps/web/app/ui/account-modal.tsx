@@ -12,6 +12,7 @@ import { avatars, accountAvatar } from "../account-personalization";
 import {requestAccount} from "./account-request";
 import {StudyReminders} from "./study-reminders";
 import { ProfilePreview } from "./profile-preview";
+import { previewAccountsMissing } from "./preview-accounts";
 
 export type LearnerAccount = {
   developerAccess?: boolean;
@@ -60,6 +61,15 @@ export function AccountModal({
   const [passwordVisible,setPasswordVisible]=useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [previewWithoutAccounts, setPreviewWithoutAccounts] = useState(false);
+  useEffect(() => {
+    if (account) return;
+    let cancelled = false;
+    void previewAccountsMissing(apiUrl, window.location.hostname).then(missing => {
+      if (!cancelled) setPreviewWithoutAccounts(missing);
+    });
+    return () => { cancelled = true; };
+  }, [apiUrl, account]);
   const [profileName, setProfileName] = useState(account?.displayName ?? "");
   const [learningProfile, setLearningProfile] = useState(account?.learningProfile ?? defaultLearningProfile);
   useEffect(()=>{setPasswordVisible(false);setMessage("");setPassword("");},[mode]);
@@ -338,7 +348,14 @@ export function AccountModal({
                 Sign in
               </button>
             </div>
-            {apiUrl ? (
+            {previewWithoutAccounts ? (
+              <div className="account-message" role="status">
+                <p>This local preview supports guest practice. Account sign-in and syncing are available on the live website.</p>
+                <a className="button button-dark" href="https://saegim.onrender.com/" target="_blank" rel="noopener noreferrer">Open live Saegim to sign in</a>
+                <p>Your guest progress stays in this preview; opening the live website does not transfer it.</p>
+                <button type="button" className="button button-quiet" onClick={onClose}>Continue in this preview</button>
+              </div>
+            ) : apiUrl ? (
               <form className="account-form" onSubmit={submit}>
                 {mode === "create" && (
                   <label>
@@ -405,8 +422,7 @@ export function AccountModal({
               </form>
             ) : (
               <div className="account-message" role="status">
-                Connect the PostgreSQL account service to create or sign in.
-                Study content stays private until you have an account.
+                Accounts are not connected in this version. You can still practice as a guest.
               </div>
             )}
             <p className="account-private">
