@@ -63,3 +63,10 @@ AI assisted investigation, implementation, tests and documentation. Existing
 unpublished feature-preview files were left untouched. The change is reversible
 by removing the preview-only helper/effect/notice and minimum-height CSS rule;
 no data rollback is required.
+
+Release verified: commit `caaa5de`, static deployment
+`dep-dbhstum7bikc73fsgsag`, succeeded/live after 1m12s on existing free hosting.
+Hosted startup budget passed at 357,425 gzip bytes. After deployment, the public
+home returned 200, API health returned 200 with database connected, and the
+anonymous developer endpoint returned 401. GitHub contains the implementation
+and verification notes. No API redeploy or new Cloudflare access was necessary.
