@@ -129,9 +129,49 @@ The additional SDK chunks are lazy, not startup-script references. The existing
 recorded-audio audit passed (1,878 clips including 798 block clips).
 
 The SDK control and state transitions have synthetic fixture coverage; a real
-Google consent flow, server credentials, enabled production provider, and physical
-Safari have **not** been verified. Do not advertise the feature as enabled or claim a sign-in speedup.
+Google consent flow and physical Safari still require human verification. Do not claim a sign-in speedup.
 Firebase does not remove Render's possible free-instance cold starts.
 
 AI assisted the design, implementation, synthetic tests and documentation.
 Unpublished feature-preview files were preserved.
+
+## Credential provisioning, 2026-10-30
+
+The creator approved the dedicated project-only Firebase Authentication Admin
+service account and storage of its private credential in the existing Render API.
+The initial console key download produced no accessible file. With explicit
+creator approval, that unused key was deleted and replaced through Google
+Cloud's [public certificate upload](https://docs.cloud.google.com/iam/docs/keys-upload)
+flow. Only the public RSA X.509 certificate was uploaded to Google; the private
+key was stored in Render, never committed. A Firebase Admin lookup of a random
+nonexistent synthetic UID returned `auth/user-not-found`, verifying credentials
+and the role without reading real learner records. The certificate expires
+2027-10-30; arrange an explicitly authorized rotation before then.
+
+Google provider is enabled for the Spark project, with saegim.onrender.com
+authorized. Public web configuration and protected API configuration were saved
+in their respective existing Render services. Billing, SMS and Firebase Analytics
+remain disabled. Migration 012 created only the optional identity mapping table;
+existing account and progress data were not changed. Deployment verification is
+recorded below after both services finish.
+
+### Activation checks
+
+The API deployed commit `8ecda66` successfully in Render deployment
+`dep-dbi4l10m7kps73bsls10`. Public same-origin checks returned health 200 with
+database connected, anonymous developer access 401, and invalid synthetic Google
+proof 401. No real user identity was submitted for these checks. All 276 local
+tests passed again during activation. The temporary private PEM and service-account
+JSON were removed from this workspace after storage in Render; only the public
+certificate remains locally.
+
+The website then deployed `8ecda66` successfully in
+`dep-dbifhsu1egvs738ui4og` (1m19s). All four public Firebase settings were
+verified in the deployed lazy JavaScript assets; the account configuration is
+not expected in the initial startup chunks. The configured account chunk was
+located through the deployed webpack asset map, rather than assuming Windows
+local-build chunk names match Linux production names. The already-signed-in
+browser session was left intact. Creator action remains: sign out when ready,
+choose Continue with Google, complete Google consent, confirm the existing
+Saegim password if linking, and verify saved progress. Real OAuth completion and
+physical iPhone/Safari remain unverified.
