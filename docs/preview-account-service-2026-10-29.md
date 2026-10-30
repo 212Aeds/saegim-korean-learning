@@ -1,5 +1,9 @@
 # Preview account availability — 2026-10-29
 
+Follow-up: the creator subsequently confirmed their reported problem was on the
+live website. This preview fix is separate. See
+docs/live-account-recovery-2026-10-29.md for the live investigation and limits.
+
 The creator reported an account-service problem while viewing the file-only
 preview at http://127.0.0.1:3043/. Investigation found its `/api/v1/health`
 returns HTTP 404 HTML: Python's static file server has no Render API rewrite.

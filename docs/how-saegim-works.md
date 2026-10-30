@@ -143,3 +143,11 @@ existing live website and an explicit return to guest practice. Hosted sign-in,
 cookies and learner data are unchanged. Personalized action buttons have 44px
 minimum height. See docs/preview-account-service-2026-10-29.md for the root cause,
 synthetic test evidence, Cloudflare assessment and remaining verification limits.
+
+Live account recovery follow-up (2026-10-29): DatabaseService now handles pg idle
+connection errors so they cannot escape as unhandled pool events. It logs only
+fixed stages and allowlisted codes for failed queries, then propagates failures
+without replaying writes. The creator clarified that the original account report
+was on the live site; this is distinct from preview routing. See
+docs/live-account-recovery-2026-10-29.md for reproduction evidence and the actual
+sign-in retry still needed to confirm the reported failure is resolved.
