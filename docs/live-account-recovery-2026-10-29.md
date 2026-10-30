@@ -49,3 +49,18 @@ AI assisted the diagnosis, tests, code and documentation. No provider, billing,
 credential, permission, authentication migration or model change is included.
 Free-host cold-start delays remain possible. A real retry by the creator is
 needed to confirm whether their specific failure is resolved.
+
+## Verification and release
+
+The idle-error regression and diagnostic regression both failed before the fix;
+the final tests also verify unknown fields cannot leak into diagnostics. All
+261 tests passed, API build passed, and the production dependency audit reported
+zero findings. No frontend code changed in this follow-up.
+
+API commit `68592bc` deployed successfully through the existing free Render
+service, deployment `dep-dbi0qt8m7kps73bhu2p0` (1m18s). Public API health returned
+200 with database connected; the anonymous developer endpoint returned 401.
+Deployment screenshot: ignored
+`work/mobile-tts-evaluation/live-account-api-live.png`. The creator was asked to
+retry their live sign-in after this deployment; their result is still pending.
+These checks do not justify claiming the original account failure is resolved.
