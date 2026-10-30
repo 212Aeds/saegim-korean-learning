@@ -11,6 +11,7 @@
     "@huggingface/transformers": "4.3.1",
     "@phosphor-icons/react": "^2.1.10",
     "es-hangul": "^2.4.0",
+    "firebase": "13.1.0",
     "hangul-js": "^0.2.6",
     "next": "16.4.1",
     "onnxruntime-web": "1.30.0",

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Optional,
   Put,
   Req,
   Res,
@@ -24,6 +25,8 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import { DatabaseService } from "./database.service";
 import { progressSchema, type ProgressPayload } from "./progress.schema";
+import { FirebaseIdentityVerifier } from "./firebase-identity";
+import { resolveFirebaseAccount } from "./firebase-accounts";
 
 const scrypt = promisify(scryptCallback);
 const sessionCookie = "sori_session";
@@ -109,7 +112,22 @@ async function verifyPassword(password: string, encoded: string) {
 
 @Controller()
 export class AuthController {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService, @Optional() private readonly firebase?: FirebaseIdentityVerifier) {}
+
+  @Post("auth/firebase")
+  @Header("Cache-Control", "private, no-store")
+  async firebaseLogin(@Body() body: unknown, @Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    const input = z.strictObject({ idToken: z.string().min(1).max(10000), currentPassword: z.string().min(12).max(128).optional() }).safeParse(body);
+    if (!input.success) throw new HttpException({ message: "Start Google sign-in again." }, HttpStatus.BAD_REQUEST);
+    if (!this.firebase) throw new HttpException({ message: "Google sign-in is not enabled. Use email and password." }, HttpStatus.SERVICE_UNAVAILABLE);
+    const identity = await this.firebase.verify(input.data.idToken);
+    const identifier = `${identity.email}:${request.ip ?? "unknown"}`;
+    await this.guardRateLimit("login", identifier);
+    const row = await resolveFirebaseAccount(this.database, identity, input.data.currentPassword, { hashPassword, verifyPassword });
+    await this.database.query("DELETE FROM auth_rate_limits WHERE key_hash = $1", [this.rateKey("login", identifier)]);
+    await this.createSession(row.id, request, response);
+    return { ...this.publicAccount(row), learningProgress: await this.readProgress(row.id) };
+  }
 
   @Post("auth/register")
   async register(
@@ -353,20 +371,25 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const account = await this.requireAccount(request);
-    const token = cookieToken(request);
     try {
-      await this.database.query("DELETE FROM learner_accounts WHERE id = $1", [
-        account.id,
-      ]);
-      if (token) {
-        await this.database.query(
-          "DELETE FROM learner_sessions WHERE token_hash = $1",
-          [hash(token)],
-        );
-      }
+      await this.database.transaction(async client => {
+        // Keep existing account deletion usable while this optional schema has
+        // not been installed. Do not treat a disabled provider as absent data.
+        const schema = await client.query<{ available: boolean }>("SELECT to_regclass('public.learner_firebase_identities') IS NOT NULL AS available");
+        const identities = schema.rows[0]?.available ? await client.query<{ project_id: string; firebase_uid: string }>(
+          "SELECT project_id, firebase_uid FROM learner_firebase_identities WHERE account_id = $1 FOR UPDATE", [account.id]) : { rows: [] };
+        // Detect local SQL failures before removing the provider profile. The
+        // local deletion remains uncommitted until provider cleanup succeeds.
+        await client.query("DELETE FROM learner_accounts WHERE id = $1", [account.id]);
+        for (const identity of identities.rows) {
+          if (!this.firebase) throw new HttpException({ message: "Google account cleanup is unavailable. Please try again later." }, HttpStatus.SERVICE_UNAVAILABLE);
+          await this.firebase.deleteIdentity(identity.project_id, identity.firebase_uid);
+        }
+      });
       clearSessionCookie(response);
       return { deleted: true };
-    } catch {
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new HttpException(
         { message: "The account could not be deleted. Please try again." },
         HttpStatus.SERVICE_UNAVAILABLE,

@@ -151,3 +151,12 @@ without replaying writes. The creator clarified that the original account report
 was on the live site; this is distinct from preview routing. See
 docs/live-account-recovery-2026-10-29.md for reproduction evidence and the actual
 sign-in retry still needed to confirm the reported failure is resolved.
+
+Optional Firebase preparation (2026-10-29): the creator selected Firebase. A
+separate Google sign-in exchanges a verified Firebase token for the existing
+Saegim session. Linking an existing email requires its current password and
+never rewrites progress. The UI/SDK are lazy-loaded; guest and password flows
+remain. The new Spark project/web registration are prepared, but the provider,
+server credential and live configuration remain disabled pending approval.
+See docs/firebase-auth-design.md and docs/firebase-auth-setup.md for the code map,
+verification, deletion/recovery tradeoffs, activation permissions and AI assistance.

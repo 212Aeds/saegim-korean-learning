@@ -13,6 +13,8 @@ import {requestAccount} from "./account-request";
 import {StudyReminders} from "./study-reminders";
 import { ProfilePreview } from "./profile-preview";
 import { previewAccountsMissing } from "./preview-accounts";
+import { firebaseGoogleConfig } from "./firebase-google";
+import { FirebaseGoogleSignIn } from "./firebase-google-sign-in";
 
 export type LearnerAccount = {
   developerAccess?: boolean;
@@ -61,6 +63,8 @@ export function AccountModal({
   const [passwordVisible,setPasswordVisible]=useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [firebaseLinking, setFirebaseLinking] = useState(false);
+  useEffect(() => { setFirebaseLinking(false); }, [mode]);
   const [previewWithoutAccounts, setPreviewWithoutAccounts] = useState(false);
   useEffect(() => {
     if (account) return;
@@ -348,6 +352,7 @@ export function AccountModal({
                 Sign in
               </button>
             </div>
+            {apiUrl && !previewWithoutAccounts && !freePublishing && firebaseGoogleConfig && <FirebaseGoogleSignIn key={mode} apiUrl={apiUrl} busy={busy} onBusy={setBusy} onLinking={setFirebaseLinking} onAuthenticated={async user => { await onAuthenticated(user); onClose(); }} />}
             {previewWithoutAccounts ? (
               <div className="account-message" role="status">
                 <p>This local preview supports guest practice. Account sign-in and syncing are available on the live website.</p>
@@ -355,7 +360,7 @@ export function AccountModal({
                 <p>Your guest progress stays in this preview; opening the live website does not transfer it.</p>
                 <button type="button" className="button button-quiet" onClick={onClose}>Continue in this preview</button>
               </div>
-            ) : apiUrl ? (
+            ) : firebaseLinking ? null : apiUrl ? (
               <form className="account-form" onSubmit={submit}>
                 {mode === "create" && (
                   <label>

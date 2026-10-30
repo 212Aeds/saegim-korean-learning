@@ -4,6 +4,7 @@ import { AuthController } from "./auth.controller";
 import { LearningController, WordsController } from "./learning.controller";
 import { SessionAuthGuard } from "./session-auth.guard";
 import { DeveloperController } from "./developer.controller";
+import { FirebaseIdentityVerifier } from "./firebase-identity";
 
 import { ProviderUsageService } from "./provider-usage.service";
 import { AudioController } from "./audio/audio.controller";
@@ -19,7 +20,7 @@ import { OpenRouterTutorProvider, TutorProvider } from "./tutor/tutor-provider";
 
 @Module({
   controllers: [LearningController, WordsController, AuthController, AudioController, SpeechController, TutorController, DeveloperController],
-  providers: [DatabaseService, SessionAuthGuard, ProviderUsageService, SpeechAudioCacheService, AudioCatalogService, TutorService,
+  providers: [DatabaseService, FirebaseIdentityVerifier, SessionAuthGuard, ProviderUsageService, SpeechAudioCacheService, AudioCatalogService, TutorService,
     { provide: AudioStorage, useClass: NeonAudioStorage },
     { provide: KoreanAudioProvider, useClass: UnavailableKoreanAudioProvider },
     { provide: KoreanSpeechProvider, useClass: OpenRouterKoreanSpeechProvider },
