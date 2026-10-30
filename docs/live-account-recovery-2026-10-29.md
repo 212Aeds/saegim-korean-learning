@@ -64,3 +64,10 @@ Deployment screenshot: ignored
 `work/mobile-tts-evaluation/live-account-api-live.png`. The creator was asked to
 retry their live sign-in after this deployment; their result is still pending.
 These checks do not justify claiming the original account failure is resolved.
+
+Creator follow-up: after retrying the live site, the creator confirmed sign-in
+works, with some remaining delay. This verifies recovery for their reported
+attempt; it does not establish that the reproduced idle-pool bug was the sole
+cause or eliminate free-host startup delays. Their request for an optional
+Cloudflare sign-in experience needs clarification between Turnstile bot checks,
+social sign-in and passwordless email before changing authentication.
