@@ -8,6 +8,7 @@ export function CloudflareAnalytics() {
     try {
       installCloudflareAnalytics(document, {
         hostname: window.location.hostname,
+        pathname: window.location.pathname,
         doNotTrack: navigator.doNotTrack,
         globalPrivacyControl: (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl,
       });

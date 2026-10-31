@@ -160,3 +160,12 @@ remain. The new Spark project/web registration are prepared, but the provider,
 server credential and live configuration remain disabled pending approval.
 See docs/firebase-auth-design.md and docs/firebase-auth-setup.md for the code map,
 verification, deletion/recovery tradeoffs, activation permissions and AI assistance.
+
+### Reading the developer dashboard
+
+The private `/developer/` screen separates sources: existing API reservation
+counts and manual health checks appear inside Saegim; actual visits, referrers
+and page performance open in Cloudflare. `app/developer/report.ts` checks the
+snapshot shape and computes the labeled totals. A missing report is an error,
+not zero visitors. Internal developer/preview pages no longer install the
+Cloudflare beacon. See `docs/developer-health.md` for evidence and limitations.

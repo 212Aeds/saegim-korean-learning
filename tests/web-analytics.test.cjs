@@ -10,3 +10,10 @@ test('analytics installs once on the public hostname with no automatic lesson na
 test('analytics respects privacy signals and excludes local, preview and lookalike hosts',()=>{
  for(const hints of [{hostname:'localhost'},{hostname:'127.0.0.1'},{hostname:'preview.onrender.com'},{hostname:'saegim.onrender.com.attacker.test'},{hostname:'saegim.onrender.com',doNotTrack:'1'},{hostname:'saegim.onrender.com',doNotTrack:'yes'},{hostname:'saegim.onrender.com',globalPrivacyControl:true}]){const doc=fixture();installCloudflareAnalytics(doc,hints);assert.equal(doc.scripts.length,0,JSON.stringify(hints));}
 });
+
+test('internal developer and experiment pages do not inflate learner traffic',()=>{
+ for(const pathname of ['/developer','/developer/','/developer/settings','/analytics-preview','/feature-preview/']){
+  const doc=fixture();installCloudflareAnalytics(doc,{hostname:'saegim.onrender.com',pathname});assert.equal(doc.scripts.length,0,pathname);
+ }
+ for(const pathname of ['/','/guides/hangul/']){const doc=fixture();installCloudflareAnalytics(doc,{hostname:'saegim.onrender.com',pathname});assert.equal(doc.scripts.length,1);}
+});

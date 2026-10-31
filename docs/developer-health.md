@@ -40,3 +40,50 @@ The regression test failed before the patch. All 13 focused health, authorizatio
 
 Completed the queued defensive validation increment. The same 13 focused tests and API build passed again before publication. Commit 51453bf deployed successfully to the existing free API as dep-dbh4l54s728c73ashm1g. Same-origin health returned HTTP 200 with database connected; anonymous developer access remained HTTP 401. No provider inference, microphone recording, learner-data fixture, credential or permission change was used. The website build was unchanged. Native dependency audit still reports four high and one moderate finding; this deployment does not resolve those advisories.
 
+
+## Analytics polish — October 30, 2026
+
+Cloudflare was already configured for saegim.onrender.com. Opening its existing
+site report confirmed ingestion: the selected last-24-hours report showed 4
+visits, 6 page views, a 718 ms page-load figure and LCP p75 1,148 ms. This small
+sample included developer-page views and may include owner/tests; it is not a
+unique-person count or evidence of universal performance. No duplicate site,
+DNS change, new credential, paid plan or additional collector was created.
+
+The installed beacon now skips developer and preview paths. This prevents future
+internal-page loads from inflating learner traffic; it cannot remove historic
+counts or exclude an owner's ordinary homepage testing. Existing exact-host,
+DNT/GPC, single-install and SPA-off behavior remain. Cloudflare documentation
+checked: https://developers.cloudflare.com/web-analytics/get-started/ and
+https://developers.cloudflare.com/web-analytics/data-metrics/high-level-metrics/ .
+
+The private dashboard now owns its layout styles rather than importing the demo's
+layout. Four compact totals describe existing API reservations: UTC today, 30-day
+all requests, 30-day tutor requests and days with requests. These are explicitly
+not visitors, unique learners, successes or feature-popularity metrics. Traffic
+remains in the separately authenticated Cloudflare report; no API key is exposed
+to the browser. History and explanatory details are collapsed; the synthetic
+experiment still loads only when requested. Health response duration is one
+browser's observed check, not an average or continuous uptime claim.
+
+`app/developer/report.ts` validates the 30-day snapshot before rendering. Missing
+usage, invalid counters/dates, duplicate or future dates cannot turn into false
+zero totals or a render crash. Optional malformed provider/allowance diagnostics
+become unknown while valid reservation rows can still display. Refresh failures
+label old snapshots; 401/403 removes private statistics and the open experiment.
+No new inference or microphone capture is triggered by refreshing.
+
+Verification: the internal-route exclusion regression failed first; all six
+focused tests then passed. All 280 repository tests and the hosted production
+build passed. Startup JavaScript: 356,047 gzip bytes (360,000-byte limit). Browser
+fixture tests used synthetic responses only and exercised totals, daily history,
+refresh, malformed JSON shape, access revocation, database failure, exhausted
+allowance/provider 429, empty rows and the lazy demo. At the observed 375px client
+width, scroll width was also 375px and buttons were about 49px tall. No browser
+warnings/errors or local analytics beacon were observed. Physical iPhone testing
+and lower AI/TTS latency were not established. Existing voices, speaking pace,
+account/progress data, usage caps and authentication were unchanged.
+
+AI assisted investigation, implementation and testing. Local old analytics-preview
+servers were stopped before this task; that demo URL is not the live owner
+report. Production and GitHub verification follow after publication.
