@@ -226,3 +226,22 @@ for additional entries. These require a separate reviewed dependency patch;
 no forced update was applied during this analytics release.
 
 AI assisted implementation and synthetic testing. Production verification follows.
+
+### Embedded-traffic live verification
+
+Commit `d5d07e1` deployed successfully to the existing free services: API
+`dep-dbiktq0u01pc73d7v100` and website `dep-dbikum5g1s2s73dhu9a0`, both in 1m20s.
+The owner session received a ready response from the live protected endpoint and
+rendered real traffic: 5 visits, 7 page views, 822 ms average page load, LCP p75
+1,148 ms, INP p75 96 ms and CLS p75 0 in the selected rolling 24-hour snapshot.
+These numbers are a small, cached sample, not exact people or universal speed.
+All referral/device/browser/country lists rendered. Refresh traffic worked.
+The developer page installed no analytics beacon and reported no console warnings
+or errors. Health returned 200 with connected database, while anonymous traffic
+and overview requests each returned 401. No inference or microphone was used.
+
+The temporary credential file was confirmed absent. Setup tabs and the synthetic
+fixture were closed/stopped. Token storage remains only in Render; the January
+28 expiry needs an explicitly authorized renewal before then. GitHub includes the
+implementation, tests and decision notes. The six moderate dependency audit
+findings remain a separate follow-up; no high/critical finding was reported.
