@@ -30,7 +30,7 @@ export function LandingPage({
   const [samplePlaying,setSamplePlaying]=useState(false);
   const [sampleNotice,setSampleNotice]=useState("");
   useEffect(()=>()=>stopKoreanPlayback(),[]);
-  async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
+  async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}catch{setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
   return (
     <div className="landing-page">
       <a className="skip-learning-link" href="#your-path">Skip to learning path</a>
@@ -56,11 +56,10 @@ export function LandingPage({
             Start with the letters. Find your words. Build sentences you can use.
             A welcoming place to practice Korean, at your own pace.
           </p>
-          <a className="button button-dark landing-cta" href="#try-korean">Try a lesson — no account needed <ArrowRight size={17}/></a>
-          {onStartGuest && <button className="button button-dark" onClick={onStartGuest}>Start learning · no email needed</button>}
-          <button className="button button-quiet" onClick={onCreateAccount}>
-            {freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
+          <button className="button button-dark landing-cta" onClick={onStartGuest ?? onCreateAccount}>
+            {onStartGuest ? "Start learning · no account needed" : freeMode ? "Start learning for free" : "Create your free account"} <ArrowRight size={17} weight="bold" />
           </button>
+          <a className="button button-quiet" href="#try-korean">Try a sample first <ArrowRight size={17}/></a>
 
           <span className="landing-note">{freeMode ? "No sign-up. No subscription. Your progress stays on this device." : "Try lessons without an email. Guest progress stays on this device; an account is optional for syncing."}</span>
         </div>

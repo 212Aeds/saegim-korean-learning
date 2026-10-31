@@ -2,7 +2,7 @@ import {Controller, ForbiddenException, Get, Header, Req, UseGuards} from "@nest
 import {DatabaseService} from "./database.service";
 import {SessionAuthGuard, type SessionRequest} from "./session-auth.guard";
 import {freeAllowance} from "./developer-health";
-import {providerResults} from "./provider-health";
+import {providerResults,providerSummary} from "./provider-health";
 import {cloudflareAvailable,usesCloudflareTutor} from "./cloudflare-ai";
 
 // The owner explicitly selected this existing account. Never accept an email
@@ -35,6 +35,6 @@ export class DeveloperController {
     const measuredAt=new Date().toISOString();
     const today=usage.rows.find(day=>day.date===measuredAt.slice(0,10))??null;
     return {usage: usage.rows, measuredAt,allowance:freeAllowance(today),
-      aiConfigured:usesCloudflareTutor()?cloudflareAvailable():null,providerResults:providerResults()};
+      aiConfigured:usesCloudflareTutor()?cloudflareAvailable():null,providerResults:providerResults(),providerSummary:providerSummary()};
   }
 }

@@ -13,3 +13,11 @@ test('optional provider and allowance diagnostics are sanitized independently of
  const report=parseOverview({...base,allowance:{state:'available',limit:200,used:null,remaining:200,accountLimit:100},providerResults:{tutor:{state:'success',durationMs:-1,at:base.measuredAt}},aiConfigured:'yes'});
  assert.ok(report);assert.equal(report.allowance,null);assert.equal(report.providerResults.tutor,null);assert.equal(report.aiConfigured,null);
 });
+
+test('runtime summaries distinguish unavailable measurements from zero observed requests',()=>{
+ assert.equal(parseOverview(base).providerSummary,null);
+ const row={total:4,success:2,limited:1,error:1,p50UpperMs:1000,p95UpperMs:2000};
+ const summary={since:base.measuredAt,tutor:row,whisper:{total:0,success:0,limited:0,error:0,p50UpperMs:null,p95UpperMs:null}};
+ assert.equal(parseOverview({...base,providerSummary:summary}).providerSummary.tutor.total,4);
+ assert.equal(parseOverview({...base,providerSummary:{...summary,tutor:{...row,total:0}}}).providerSummary,null);
+});

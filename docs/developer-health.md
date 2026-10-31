@@ -102,3 +102,49 @@ Read-only public probes returned homepage 200 (289 ms), API/database health 200
 warm observations, not a benchmark or promise about cold starts/phone playback.
 No API redeploy was needed. The local synthetic fixture was stopped after checks.
 Unrelated unpublished feature-preview files were preserved.
+
+## Expanded statistics and simpler entry — October 30
+
+The creator requested the available analytics in one place plus ongoing website
+improvements. The owner report now includes fixed-size provider reliability
+summaries: counts of successful, limited and failed exchanges, plus successful
+response p50/p95 latency-bucket upper bounds. Ten fixed buckets per provider are
+kept in process memory, not a list of events. No account identifiers, prompts,
+transcripts, recordings, URLs or individual timestamps are added. The observation
+start time and counters reset on API restart; they are not 30-day or all-time
+success statistics. Limited/failed exchanges do not enter successful-latency
+estimates. Invalid timings are excluded from the timing histogram. This observes
+existing Cloudflare exchanges only and never triggers a test inference or changes
+admission caps, models, voices, speaking pace or billing.
+
+The daily history also displays the existing reserved tutor-token counter. It is
+a conservative budget reservation, not actual provider tokens or money spent.
+A coverage table explicitly identifies missing device TTS/microphone accuracy,
+feature popularity and continuous uptime measurements. No fictional zero or
+sample statistics are substituted for these gaps.
+
+The public hero now has one primary guest-start action and one quiet sample link,
+instead of competing primary starts and an extra account-creation button. Sign-in
+remains in navigation, and the optional account flow is still available there.
+Unexpected hello-audio rejection now produces the same retry message as unavailable
+audio, without changing the voice. The primary action reached guest onboarding in
+the browser fixture without an email or account request.
+
+Direct Cloudflare traffic sync remains a separate authorization step. Official
+Cloudflare guidance requires an Account Analytics: Read token for its GraphQL
+API: https://developers.cloudflare.com/analytics/graphql-api/getting-started/authentication/api-token-auth/ .
+The existing token was authorized for Workers AI only and is not broadened or
+repurposed. A new read-only token would be restricted to the existing account,
+stored only in Render, with owner-only server responses. Live schema discovery
+and aggregate query verification must precede implementation of those queries:
+https://developers.cloudflare.com/analytics/graphql-api/features/discovery/introspection/ .
+No credential or permission has changed in this increment. Do not claim traffic
+sync is active merely because the external Cloudflare report is working.
+
+Verification: new provider-summary and single-entry tests failed first. All 284
+tests, API build and configured hosted build passed. Startup budget: 356,041 gzip
+bytes. Synthetic dashboard fixtures showed 80%/100% provider-success shares and
+bucket bounds matching known outcomes; coverage and token-history tables opened.
+At the observed 375px client width, document scroll width remained 375px. A real
+microphone, private learner content or provider inference was not used in testing.
+AI assisted implementation and tests. Deployment results follow below.
