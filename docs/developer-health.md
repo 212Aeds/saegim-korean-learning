@@ -87,3 +87,18 @@ account/progress data, usage caps and authentication were unchanged.
 AI assisted investigation, implementation and testing. Local old analytics-preview
 servers were stopped before this task; that demo URL is not the live owner
 report. Production and GitHub verification follow after publication.
+
+### Live verification
+
+Commit `6f14be2` deployed successfully to the existing free static website as
+`dep-dbikeb5g1s2s73dgj0mg` in 1m22s. The existing signed-in owner session loaded
+the new layout and real aggregate rows; Refresh status worked and no browser
+warnings/errors were reported. The developer page had zero analytics-beacon
+nodes, while the public privacy page had one correctly sourced Cloudflare beacon.
+The live traffic link points to the existing verified Saegim Cloudflare site.
+
+Read-only public probes returned homepage 200 (289 ms), API/database health 200
+(186 ms) and unauthenticated developer report 401 (118 ms). These are individual
+warm observations, not a benchmark or promise about cold starts/phone playback.
+No API redeploy was needed. The local synthetic fixture was stopped after checks.
+Unrelated unpublished feature-preview files were preserved.
