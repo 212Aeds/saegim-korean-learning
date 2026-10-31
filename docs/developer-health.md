@@ -148,3 +148,22 @@ bucket bounds matching known outcomes; coverage and token-history tables opened.
 At the observed 375px client width, document scroll width remained 375px. A real
 microphone, private learner content or provider inference was not used in testing.
 AI assisted implementation and tests. Deployment results follow below.
+
+### Expanded-statistics deployment verification
+
+Both services deployed `44b104e` successfully: API
+`dep-dbikjdp42hec73aop2u0` (1m17s), website
+`dep-dbikkcgu01pc73d75t00` (1m16s). Same-origin API health returned 200 with
+connected database; anonymous developer access returned 401. The owner browser
+loaded the reliability section with zero process-local observations immediately
+after restart and correctly showed unknown latency/no samples, not perfect
+performance. No real AI request was made just to populate the report. The
+internal analytics beacon remained absent and browser warnings/errors were absent.
+The updated public entry was verified in deployed JavaScript; it is client-rendered
+and was not found by searching initial HTML alone. The local fixture was stopped.
+
+A separate Cloudflare account-token draft is prepared but NOT created: Account
+Analytics Read only, existing account only, expires January 28, 2027 (90 days).
+Explicit permission was requested to create it and store it only in Render.
+That approval remains pending; direct traffic syncing and GraphQL schema discovery
+have not been activated. Existing Workers AI token and permissions are unchanged.
