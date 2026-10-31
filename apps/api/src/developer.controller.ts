@@ -4,6 +4,7 @@ import {SessionAuthGuard, type SessionRequest} from "./session-auth.guard";
 import {freeAllowance} from "./developer-health";
 import {providerResults,providerSummary} from "./provider-health";
 import {cloudflareAvailable,usesCloudflareTutor} from "./cloudflare-ai";
+import {cloudflareTraffic} from "./cloudflare-analytics";
 
 // The owner explicitly selected this existing account. Never accept an email
 // from a request body, query parameter, browser profile or storage as authority.
@@ -16,14 +17,25 @@ export function isDeveloperEmail(email: unknown) {
 export class DeveloperController {
   constructor(private readonly database: DatabaseService) {}
 
-  @Get("overview")
-  @Header("Cache-Control", "private, no-store")
-  async overview(@Req() request: SessionRequest) {
+  private async requireOwner(request:SessionRequest){
     if (!request.soriAccountId) throw new ForbiddenException("Developer access is restricted.");
     const account = await this.database.query<{email: string}>(
       "SELECT email FROM learner_accounts WHERE id = $1", [request.soriAccountId],
     );
     if (!isDeveloperEmail(account.rows[0]?.email)) throw new ForbiddenException("Developer access is restricted.");
+  }
+
+  @Get("traffic")
+  @Header("Cache-Control", "private, no-store")
+  async traffic(@Req() request:SessionRequest){
+    await this.requireOwner(request);
+    return cloudflareTraffic();
+  }
+
+  @Get("overview")
+  @Header("Cache-Control", "private, no-store")
+  async overview(@Req() request: SessionRequest) {
+    await this.requireOwner(request);
     // Existing quota reservations only. No user identifiers or new collection.
     const usage = await this.database.query<{date: string; requests: number; tutorRequests: number;tutorTokens:string}>(
       `SELECT usage_date::text AS date, request_count AS requests,

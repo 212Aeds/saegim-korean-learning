@@ -167,3 +167,62 @@ Analytics Read only, existing account only, expires January 28, 2027 (90 days).
 Explicit permission was requested to create it and store it only in Render.
 That approval remains pending; direct traffic syncing and GraphQL schema discovery
 have not been activated. Existing Workers AI token and permissions are unchanged.
+
+## Embedded Cloudflare traffic — authorized October 30
+
+The creator explicitly authorized a separate 90-day Account Analytics Read token
+for the existing Cloudflare account, stored only in the existing Render API.
+This supersedes the pending-approval note above. The token expires January 28,
+2027. Workers AI credentials/permissions, DNS, billing, models, voices, account
+records and learner tracking remain unchanged. Temporary local credential material
+was removed after verification/storage and was never committed or printed.
+
+Cloudflare's authenticated schema introspection verified the account RUM datasets,
+filter fields and timing units before query implementation. A real aggregate read
+succeeded with all selected breakdowns. The fixed query is restricted to the Saegim
+site ID and saegim.onrender.com, excludes known bots and covers the last 24 hours.
+It reads visits/page views, page-load average/p75, LCP/INP/CLS p75, sample counts,
+and at most five referral hosts/device categories/browsers/countries each. It does
+not query paths, query strings, raw user agents, individual events or learner data.
+Microsecond timing values become milliseconds; negative unavailable vitals become
+null and zero layout shift remains zero. These are sampled aggregates, not exact
+unique-user counts or a guarantee about every device.
+
+`apps/api/src/cloudflare-analytics.ts` owns the read and normalization. It uses a
+fixed HTTPS GraphQL destination, rejects redirects, times out after five seconds,
+limits response bytes to 128 KiB, shares concurrent reads and caches successes for
+five minutes. Failures enter a one-minute cooldown; an older successful snapshot
+is clearly stale, otherwise unavailable. Neither errors nor missing configuration
+become zero visits. Raw provider errors and the credential are never returned.
+`DeveloperController.traffic` runs the same session and database-backed owner
+check as overview before reading any external data, with private/no-store responses.
+The separate endpoint prevents analytics latency from holding up account/AI status.
+
+`cloudflare-traffic.tsx` loads only inside the authorized dashboard. It validates
+responses in `traffic-report.ts`, has an independent refresh button and a bounded
+client wait, and preserves clearly labeled stale data on a failed refresh. No
+polling or extra event collection is enabled. The main website has no analytics
+credential or new request path. The external Cloudflare report remains available.
+
+References checked: Cloudflare's API-token and schema-introspection documentation
+linked above, and its live authenticated schema. That schema describes Web Vitals
+timings in microseconds and missing values as negative; CLS is a unitless score.
+
+Verification: 291 tests passed, API and configured hosted builds passed. Startup
+JavaScript: 356,042 gzip bytes, below 360,000. Tests cover owner authorization,
+fixed site/destination, credentials staying server-side, single-flight caching,
+missing configuration, upstream GraphQL/429 errors, stale cooldown, oversized or
+malformed responses, empty valid windows and client validation. Browser fixture
+checks exercised real-zero vs no-sample display, refresh, stale/malformed responses,
+unavailable data, empty counts and all four category lists. At the observed 360px
+client width, document scroll width was also 360px. No browser warnings/errors
+were observed. Physical-device testing and lower AI latency are not claimed.
+
+The release audit reports six moderate transitive production findings, zero high
+or critical. No dependency version or lockfile changed here. The root advisories
+are glob AbortSignal traversal cancellation (GHSA-3g3m-2fjr-6pw4) and minimatch
+pattern amplification DoS (GHSA-g3hv-75wg-m249); dependent Google packages account
+for additional entries. These require a separate reviewed dependency patch;
+no forced update was applied during this analytics release.
+
+AI assisted implementation and synthetic testing. Production verification follows.

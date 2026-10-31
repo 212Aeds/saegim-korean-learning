@@ -177,3 +177,12 @@ fixed counters and latency buckets. The owner report presents those as observati
 since server restart; successful provider responses do not prove correct Korean,
 accurate transcription or completed playback. Daily token reservations remain
 budget estimates. The coverage table names what has not been measured.
+
+The creator subsequently approved the read-only Cloudflare connection. Traffic
+now has a separate owner-guarded `/v1/developer/traffic` endpoint. The fixed query,
+size/time limits, five-minute cache and stale-state handling live in
+`apps/api/src/cloudflare-analytics.ts`; only the Render API holds its read token.
+The developer-only `CloudflareTraffic` component displays those aggregate visits,
+performance and category lists independently of the account-health request. No
+additional learner events are collected. See the embedded-traffic section of
+`docs/developer-health.md` for the data boundary, expiry and test evidence.

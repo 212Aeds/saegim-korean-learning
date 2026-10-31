@@ -16,4 +16,11 @@ test('HTTP route retains session authentication and private no-store caching',()
  const {SessionAuthGuard}=require('../apps/api/src/session-auth.guard.ts');
  assert.ok(Reflect.getMetadata(GUARDS_METADATA,DeveloperController).includes(SessionAuthGuard));
  assert.ok(Reflect.getMetadata(HEADERS_METADATA,DeveloperController.prototype.overview).some(h=>h.name==='Cache-Control'&&h.value==='private, no-store'));
+ assert.ok(Reflect.getMetadata(HEADERS_METADATA,DeveloperController.prototype.traffic).some(h=>h.name==='Cache-Control'&&h.value==='private, no-store'));
+});
+
+test('traffic cannot be read by missing, deleted or non-owner sessions',async()=>{
+ let calls=0;const c=new DeveloperController({query:async()=>{calls++;return {rows:[{email:'other@example.test'}]};}});
+ await assert.rejects(()=>c.traffic({}),e=>e.getStatus()===403);assert.equal(calls,0);
+ await assert.rejects(()=>c.traffic({soriAccountId:'other',email:'aeden.gray2@gmail.com'}),e=>e.getStatus()===403);assert.equal(calls,1);
 });
