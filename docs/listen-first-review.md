@@ -40,4 +40,13 @@ Listen, Reveal and Remembered controls were clicked; exactly one explicit rating
 was recorded. A rejected synthetic playback displayed the retry notice and left
 Listen enabled. The 390px-wide layout has no horizontal overflow. The fixture used
 synthetic playback, not physical iPhone audio. API code and configuration did not
-change. Release verification follows after deployment.
+change.
+
+Release: commit `4ed39f5` is pushed to GitHub and live on the existing free Render
+static service (deploy `dep-dbil6p49v7es73ftrrv0`). The public homepage, deployed
+Review chunk and existing account API health endpoint returned HTTP 200. The
+published chunk contains both the new control and rejection-recovery message.
+Only the website was deployed; API, authentication and provider settings were
+unchanged. The current production dependency audit still has six previously
+documented moderate transitive findings, with zero high/critical; no dependencies
+were changed or forced fixes applied.
