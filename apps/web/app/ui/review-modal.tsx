@@ -37,8 +37,10 @@ export function ReviewModal({
   const [rememberedCount, setRememberedCount] = useState(0);
   const [missedCards, setMissedCards] = useState<ReviewItem[]>([]);
   const [recall, setRecall] = useState("");
+  const [listenFirstMode, setListenFirstMode] = useState(false);
   const card = sessionItems[index];
   const audioText=card ? flashcardSpeechText(card.front) : undefined;
+  const listenFirst = listenFirstMode && Boolean(audioText);
   const [audioBusy,setAudioBusy]=useState(false);
   const [audioNotice,setAudioNotice]=useState("");
   const playback=useRef(0);
@@ -50,8 +52,14 @@ export function ReviewModal({
   async function listen() {
     if(!card || !audioText || audioBusy)return;
     const attempt=++playback.current;setAudioBusy(true);setAudioNotice("");
-    const result=await playElevenLabsKorean(audioText,preferences.speechVoice,preferences.speechPace,{consistentVoice:true,naturalOnly:true,waitForEnd:true});
-    if(attempt===playback.current){setAudioBusy(false);if(!result.played)setAudioNotice("That recording couldn’t play. Tap Listen to try again.");}
+    try {
+      const result=await playElevenLabsKorean(audioText,preferences.speechVoice,preferences.speechPace,{consistentVoice:true,naturalOnly:true,waitForEnd:true});
+      if(attempt===playback.current && !result.played)setAudioNotice("That recording couldn’t play. Tap Listen to try again, or reveal the card to keep reviewing.");
+    } catch {
+      if(attempt===playback.current)setAudioNotice("Audio could not start. Tap Listen to try again, or reveal the card to keep reviewing.");
+    } finally {
+      if(attempt===playback.current)setAudioBusy(false);
+    }
   }
 
   function finishCard(remembered: boolean) {
@@ -93,11 +101,12 @@ export function ReviewModal({
         <div className="review-session-progress" role="progressbar" aria-label="Cards practiced" aria-valuemin={0} aria-valuemax={sessionItems.length} aria-valuenow={index}><i style={{ transform: `scaleX(${index / sessionItems.length})` }} /></div>
         <div className="review-question" key={card.id}>
           <h2 id="review-title" className="review-session-heading">Recall, reveal, remember.</h2>
+          {audioText && <label className="review-listen-first"><input type="checkbox" checked={listenFirstMode} disabled={audioBusy} onChange={event=>setListenFirstMode(event.target.checked)} /><span>Listen first · hide the Korean until reveal</span></label>}
           <FlipCard key={card.id} flipped={revealed} front={<div className="review-face-content">
-            <span className="question-label">{card.question}</span><h3 lang="ko">{card.front}</h3>
-            <p>Try to recall the answer before you turn this card over.</p>
+            <span className="question-label">{listenFirst ? "LISTEN & RECALL" : card.question}</span><h3 lang={listenFirst ? undefined : "ko"}>{listenFirst ? "Listen first" : card.front}</h3>
+            <p>{listenFirst ? "Tap Listen to Korean below. Recall the sound or meaning, then reveal the card to compare." : "Try to recall the answer before you turn this card over."}</p>
           </div>} back={<div className="review-face-content">
-            <span className="question-label">ANSWER</span><h3>{card.answer}</h3><p>{card.note}</p>
+            <span className="question-label">{listenFirst ? card.question : "ANSWER"}</span>{listenFirst && <h3 lang="ko">{card.front}</h3>}<h3>{card.answer}</h3><p>{card.note}</p>
           </div>} />
           {!revealed && <details className="review-written-recall"><summary>Try writing your answer first</summary><KoreanInput value={recall} onChange={setRecall} label="Your recalled answer" placeholder="Your best guess — Korean or English" maxLength={300} openOnFocus={false} /><small>Compare with the card when you reveal it. Alternative wording may be valid; you choose your recall rating.</small></details>}
           {revealed && recall && <p className="review-your-answer"><strong>Your recall:</strong> {recall}</p>}

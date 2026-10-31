@@ -139,6 +139,8 @@
 .review-face-content { min-height: 230px; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .review-face-content h3 { margin: 20px 0 10px; font-size: clamp(28px,6vw,44px); line-height: 1.25; overflow-wrap: anywhere; }
 .review-modal .review-session-heading { font-size: 17px; margin: 0 0 16px; }
+.review-listen-first { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-bottom: 16px; text-align: left; font-size: 13px; line-height: 1.5; cursor: pointer; }
+.review-listen-first input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--ink, #394f43); }
 .flashcard-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 16px 0; }
 .speak-card-actions { flex-wrap: wrap; gap: 8px; }
 .review-session-progress { height: 5px; margin: 16px 24px 0; border-radius: 99px; background: var(--line); overflow: hidden; }

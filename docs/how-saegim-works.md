@@ -186,3 +186,9 @@ The developer-only `CloudflareTraffic` component displays those aggregate visits
 performance and category lists independently of the account-health request. No
 additional learner events are collected. See the embedded-traffic section of
 `docs/developer-health.md` for the data boundary, expiry and test evidence.
+
+Review also offers an optional listen-first checkbox. It hides the Korean until
+Reveal, reuses the selected voice at the same pace, and leaves recall ratings to
+the learner. It adds no homepage panel or stored preference. Playback failures now
+release the Listen button so a learner can retry or reveal and continue. See
+`docs/listen-first-review.md` for the reasoning, synthetic tests and limitations.
