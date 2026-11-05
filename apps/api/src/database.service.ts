@@ -31,7 +31,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     if (!this.pool) throw new Error("DATABASE_URL is required to start Sori API");
-    await this.pool.query("SELECT 1");
+    // Only the read-only readiness probe is retried. Application writes must
+    // propagate failures so callers never accidentally apply a change twice.
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await this.pool.query("SELECT 1");
+        return;
+      } catch (error) {
+        const failure = error as { code?: unknown; message?: unknown } | null;
+        const temporaryCode = typeof failure?.code === "string" &&
+          ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "EAI_AGAIN", "08006", "57P01", "57P02", "57P03"].includes(failure.code);
+        const connectionTimeout = !failure?.code &&
+          ["Connection terminated due to connection timeout", "timeout exceeded when trying to connect"].includes(String(failure?.message));
+        if (attempt === 3 || !(temporaryCode || connectionTimeout)) throw error;
+        this.logger.warn(`Database startup connection unavailable. Retrying readiness (${attempt}/3).`);
+        await new Promise<void>((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    }
   }
 
   async query<T extends QueryResultRow>(text: string, values: unknown[] = []) {

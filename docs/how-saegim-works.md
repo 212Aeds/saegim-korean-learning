@@ -200,3 +200,17 @@ old playback failure from changing a new lesson step. This AI-assisted fix follo
 the existing Review recovery pattern. Two synthetic regressions check failure,
 successful retry and obsolete results. All 296 tests passed. Physical iPhone
 playback and the historical Render API exit still require separate verification.
+
+API startup incident (November 5, 2026): Render logs at 13:31:20 showed
+`Connection terminated due to connection timeout` in `DatabaseService.onModuleInit`.
+The replacement process started successfully at 13:31:34. The first readiness
+query previously had one attempt with a five-second connection timeout. It now
+makes up to three attempts for recognized temporary connection failures, waiting
+one and then two seconds between attempts. Permanent errors still fail immediately.
+Only `SELECT 1` readiness is retried. Existing request queries and transactions
+retain their failure behavior. Logs use a fixed message without connection details.
+AI assisted the diagnosis and fix. Synthetic tests reproduced the startup failure
+before the patch and cover recovery, retry exhaustion, immediate authentication
+failure and sanitized diagnostics. All 298 tests and the API build passed.
+References: https://node-postgres.com/apis/pool and https://render.com/docs/health-checks.
+The underlying reason the database connection timed out is still unconfirmed.
