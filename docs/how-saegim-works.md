@@ -219,3 +219,12 @@ existing free API service. Render logged successful startup and marked it live.
 The same-origin health check returned HTTP 200 with the database connected, and
 anonymous developer access remained HTTP 401. Synthetic tests exercise timeout
 recovery; a future production timeout has not yet been observed on this release.
+
+Analytics interpretation (November 5, 2026): the owner traffic cards now compare
+their displayed p75 LCP, INP and layout shift with Google's good-range targets
+(2,500 ms, 200 ms and 0.100). Missing values show No assessment. Existing sample
+counts, snapshot dates and stale notices provide context for those labels.
+`webVitalAssessment` in `developer/traffic-report.ts` handles inclusive boundaries
+and preserves a real zero. Synthetic tests cover boundaries and invalid values.
+The source guidance is linked inside Metric definitions & privacy at
+https://web.dev/articles/vitals. AI assisted this presentation improvement.

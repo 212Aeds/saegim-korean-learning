@@ -9,3 +9,13 @@ test('traffic errors are distinct from zero traffic and invalid snapshots are re
  assert.equal(parseTraffic({state:'unavailable',data:null}).data,null);
  for(const value of [null,{}, {...report,periodStart:'invalid'}, {...report,data:{...report.data,visits:null}},{...report,data:{...report.data,devices:Array(6).fill({label:'mobile',count:1})}},{...report,data:{...report.data,lcpP75Ms:-1}}])assert.equal(parseTraffic(value),null);
 });
+
+test('Web Vitals assessments respect inclusive good thresholds and missing samples',()=>{
+ const {webVitalAssessment}=require('../apps/web/app/developer/traffic-report.ts');
+ for(const [metric,threshold] of [['lcp',2500],['inp',200],['cls',0.1]]){
+  assert.equal(webVitalAssessment(metric,0),'Within good range');
+  assert.equal(webVitalAssessment(metric,threshold),'Within good range');
+  assert.equal(webVitalAssessment(metric,threshold+0.001),'Above good range');
+  for(const missing of [null,NaN,Infinity,-1])assert.equal(webVitalAssessment(metric,missing),'No assessment');
+ }
+});

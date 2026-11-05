@@ -1,4 +1,10 @@
 type Breakdown={label:string;count:number};
+
+export function webVitalAssessment(metric: "lcp" | "inp" | "cls", value: number | null) {
+  if (value === null || !Number.isFinite(value) || value < 0) return "No assessment";
+  const goodThreshold = { lcp: 2500, inp: 200, cls: 0.1 }[metric];
+  return value <= goodThreshold ? "Within good range" : "Above good range";
+}
 type Data={visits:number;pageViews:number;performanceSamples:number;vitalSamples:number;pageLoadAvgMs:number|null;pageLoadP75Ms:number|null;lcpP75Ms:number|null;inpP75Ms:number|null;clsP75:number|null;referrals:Breakdown[];devices:Breakdown[];browsers:Breakdown[];countries:Breakdown[]};
 export type TrafficSnapshot={state:"ready"|"stale"|"unavailable"|"unconfigured";measuredAt:string|null;periodStart:string|null;periodEnd:string|null;data:Data|null};
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==="object"&&!Array.isArray(v);
