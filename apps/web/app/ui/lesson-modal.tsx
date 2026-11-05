@@ -133,10 +133,18 @@ export function LessonModal({
   async function listen(text: string, rate = preferences.speechPace) {
     const attempt = ++playbackAttempt.current;
     setAudioBusy(true); setAudioNotice("");
-    const result = await playElevenLabsKorean(text, preferences.speechVoice, rate, { consistentVoice: true, naturalOnly: true, waitForEnd: true });
-    if (attempt !== playbackAttempt.current) return;
-    setAudioBusy(false);
-    if (!result.played) setAudioNotice("The matching voice could not start. Try Listen again, or continue with writing.");
+    try {
+      const result = await playElevenLabsKorean(text, preferences.speechVoice, rate, { consistentVoice: true, naturalOnly: true, waitForEnd: true });
+      if (attempt === playbackAttempt.current && !result.played) {
+        setAudioNotice("The matching voice could not start. Try Listen again, or continue with writing.");
+      }
+    } catch {
+      if (attempt === playbackAttempt.current) {
+        setAudioNotice("Audio could not start. Try Listen again, or continue with writing.");
+      }
+    } finally {
+      if (attempt === playbackAttempt.current) setAudioBusy(false);
+    }
   }
 
   function advance() {

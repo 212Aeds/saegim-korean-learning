@@ -192,3 +192,11 @@ Reveal, reuses the selected voice at the same pace, and leaves recall ratings to
 the learner. It adds no homepage panel or stored preference. Playback failures now
 release the Listen button so a learner can retry or reveal and continue. See
 `docs/listen-first-review.md` for the reasoning, synthetic tests and limitations.
+
+Lesson playback recovery (November 5, 2026): `lesson-modal.tsx` now catches
+rejected playback promises and releases its busy state in `finally`. The learner
+can retry Listen or continue writing. The existing attempt counter prevents an
+old playback failure from changing a new lesson step. This AI-assisted fix follows
+the existing Review recovery pattern. Two synthetic regressions check failure,
+successful retry and obsolete results. All 296 tests passed. Physical iPhone
+playback and the historical Render API exit still require separate verification.
