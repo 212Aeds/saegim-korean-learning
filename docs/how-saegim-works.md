@@ -214,3 +214,8 @@ before the patch and cover recovery, retry exhaustion, immediate authentication
 failure and sanitized diagnostics. All 298 tests and the API build passed.
 References: https://node-postgres.com/apis/pool and https://render.com/docs/health-checks.
 The underlying reason the database connection timed out is still unconfirmed.
+Commit `1357ab0` deployed successfully as `dep-dbmfnvmi0phs739eeq1g` on the
+existing free API service. Render logged successful startup and marked it live.
+The same-origin health check returned HTTP 200 with the database connected, and
+anonymous developer access remained HTTP 401. Synthetic tests exercise timeout
+recovery; a future production timeout has not yet been observed on this release.
