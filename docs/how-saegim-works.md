@@ -228,3 +228,9 @@ counts, snapshot dates and stale notices provide context for those labels.
 and preserves a real zero. Synthetic tests cover boundaries and invalid values.
 The source guidance is linked inside Metric definitions & privacy at
 https://web.dev/articles/vitals. AI assisted this presentation improvement.
+GitHub publication recovered on November 6. Commit `e61a075` is live through
+Render deploy `dep-dbn32tpsrm7s73d81nq0`. The published developer JavaScript
+returned HTTP 200 and contains all three assessment labels. Eight focused
+analytics/database regressions passed before publication. The prior full suite
+passed 299 tests and the hosted build passed. The owner dashboard's live visual
+layout still needs a separate browser check.
