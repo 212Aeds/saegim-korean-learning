@@ -248,3 +248,6 @@ Browser checks covered the desktop composition, a 375px layout without horizonta
 overflow, sample-answer feedback and entry into guest onboarding. Browser warning
 and error logs were empty. Physical-phone testing and runtime emulation of the OS
 reduced-motion preference were not performed.
+
+### Landing scenery follow-up
+The landing illustration now keeps its readable white cards in separate top and bottom lanes, with decorative Hangul orbiting the central syllable. Faint background letters move with scrolling where CSS view timelines are supported; other browsers show static decoration. A scenery pause button and reduced-motion rules keep the movement optional. This was implemented with AI assistance using CSS rather than another animation dependency. Verification: 299 automated tests and the hosted build passed; desktop and 375-pixel browser layouts were inspected, including the pause control. This is responsive browser testing, not physical iPhone testing. Startup JavaScript remains within the existing budget (356,500 gzip bytes).

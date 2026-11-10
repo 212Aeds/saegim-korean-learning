@@ -29,10 +29,16 @@ export function LandingPage({
 }) {
   const [samplePlaying,setSamplePlaying]=useState(false);
   const [sampleNotice,setSampleNotice]=useState("");
+  const [sceneryPaused, setSceneryPaused] = useState(false);
   useEffect(()=>()=>stopKoreanPlayback(),[]);
   async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}catch{setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
   return (
-    <div className="landing-page">
+    <div className={`landing-page${sceneryPaused ? " scenery-paused" : ""}`}>
+      <div className="landing-atmosphere" aria-hidden="true">
+        {["ㄱ", "ㅏ", "ㅎ", "ㄴ", "ㅁ", "ㅗ", "ㅅ", "ㅇ"].map((letter, index) =>
+          <span key={letter} style={{left: index % 2 ? "94%" : "1%", top: `${8 + index * 11}%`}}>{letter}</span>
+        )}
+      </div>
       <a className="skip-learning-link" href="#your-path">Skip to learning path</a>
       <header className="landing-nav">
         <a className="landing-brand" href="#home" aria-label="Saegim home">
@@ -44,6 +50,7 @@ export function LandingPage({
           <a className="public-nav-link" href="/learn/">Guides</a>
           <a className="public-nav-link" href="/feedback/">Feedback</a>
           <span className="free-pill"><span /> Always free</span>
+          <button type="button" className="landing-motion-toggle" aria-pressed={sceneryPaused} aria-label={sceneryPaused ? "Resume background motion" : "Pause background motion"} onClick={() => setSceneryPaused(value => !value)}>{sceneryPaused ? "Resume scenery" : "Pause scenery"}</button>
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
       </header>
@@ -75,6 +82,7 @@ export function LandingPage({
           <span className="landing-orbit orbit-one" />
           <span className="landing-orbit orbit-two" />
           <span className="landing-sun" />
+          <span className="landing-orbit-track" aria-hidden="true"><i className="landing-orbit-token">ㄱ</i><i className="landing-orbit-token">ㅏ</i></span>
           <span className="landing-building-letters" aria-hidden="true"><i>ㅎ</i><i>ㅏ</i><i>ㄴ</i></span>
           <span className="landing-syllable" lang="ko">한</span>
           <span className="landing-art-note">letters into words</span>
