@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 test('the landing hero has one primary entry and keeps the optional sample separate',()=>{
  const exports={},empty=()=>null;
  vm.runInNewContext(ts.transpileModule(fs.readFileSync('apps/web/app/ui/landing-page.tsx','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,{exports,require(id){
-  if(id==='react')return {useState:v=>[v,()=>{}],useEffect:()=>{}};
+  if(id==='react')return {useState:v=>[v,()=>{}],useRef:v=>({current:v}),useEffect:()=>{}};
   if(id==='react/jsx-runtime')return require(id);
   if(id==='../curriculum')return {lessons:[]};
   if(id==='./speech')return {stopKoreanPlayback:()=>{},playKorean:async()=>({played:true})};

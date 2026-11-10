@@ -367,3 +367,23 @@ button.landing-mini-card:disabled {cursor:wait;}
 
 /* Decorative transforms must not create sideways scrolling on narrow screens. */
 .landing-page { overflow-x: clip; }
+
+/* Content keeps its space, so revealing it never shifts the page. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing-scroll-panel {
+    opacity: 0;
+    translate: 0 20px;
+    transition: opacity 420ms ease, translate 420ms cubic-bezier(.2,.7,.2,1);
+  }
+  .landing-scroll-panel.is-in-view,
+  .landing-scroll-panel:focus-within,
+  .scenery-paused .landing-scroll-panel {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .scenery-paused .landing-scroll-panel { transition: none; }
+}
+@media print {
+  .landing-scroll-panel { opacity: 1; translate: none; }
+  .landing-atmosphere { display: none; }
+}

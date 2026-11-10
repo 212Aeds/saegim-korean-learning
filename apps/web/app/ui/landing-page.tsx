@@ -7,7 +7,7 @@ import {
   SpeakerHigh,
   Sparkle,
 } from "./icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {playKorean,stopKoreanPlayback} from "./speech";
 import { SoriMascot } from "./sori-mascot";
 import { FeedbackBanner } from "./feedback-banner";
@@ -30,10 +30,29 @@ export function LandingPage({
   const [samplePlaying,setSamplePlaying]=useState(false);
   const [sampleNotice,setSampleNotice]=useState("");
   const [sceneryPaused, setSceneryPaused] = useState(false);
+  const landingRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = landingRef.current;
+    if (!root || typeof IntersectionObserver === "undefined") return;
+    const sections = Array.from(root.children).filter(element =>
+      (element.tagName === "SECTION" && element.id !== "home") || element.classList.contains("public-course-facts")
+    );
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) entry.target.classList.toggle("is-in-view", entry.isIntersecting);
+    }, { rootMargin: "-24px 0px -24px 0px", threshold: 0 });
+    for (const section of sections) {
+      section.classList.add("landing-scroll-panel");
+      observer.observe(section);
+    }
+    return () => {
+      observer.disconnect();
+      for (const section of sections) section.classList.remove("landing-scroll-panel", "is-in-view");
+    };
+  }, []);
   useEffect(()=>()=>stopKoreanPlayback(),[]);
   async function hearHello(){setSamplePlaying(true);setSampleNotice("");try{const result=await playKorean("안녕하세요",{waitForEnd:true});if(!result.played)setSampleNotice("Audio is unavailable right now. Try again shortly.");}catch{setSampleNotice("Audio is unavailable right now. Try again shortly.");}finally{setSamplePlaying(false);}}
   return (
-    <div className={`landing-page${sceneryPaused ? " scenery-paused" : ""}`}>
+    <div ref={landingRef} className={`landing-page${sceneryPaused ? " scenery-paused" : ""}`}>
       <div className="landing-atmosphere" aria-hidden="true">
         {["ㄱ", "ㅏ", "ㅎ", "ㄴ", "ㅁ", "ㅗ", "ㅅ", "ㅇ", "ㅓ", "ㄹ", "ㅜ", "ㅂ", "ㅈ", "ㅣ", "ㅋ", "ㅕ"].map((letter, index) =>
           <span key={letter} style={{left: `${3 + index * 6}%`, top: `${(index * 23) % 100}%`, animationDuration: `${26 + index % 5 * 4}s`, animationDelay: `${-index * 7}s`}}>{letter}</span>
