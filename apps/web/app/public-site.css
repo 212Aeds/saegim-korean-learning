@@ -372,18 +372,45 @@ button.landing-mini-card:disabled {cursor:wait;}
 @media (prefers-reduced-motion: no-preference) {
   .landing-scroll-panel {
     opacity: 0;
-    translate: 0 20px;
-    transition: opacity 420ms ease, translate 420ms cubic-bezier(.2,.7,.2,1);
+    translate: 0 48px;
+    scale: .97;
+    transform-origin: 50% 35%;
+    transition: opacity 240ms ease, translate 280ms ease, scale 280ms ease;
   }
   .landing-scroll-panel.is-in-view,
   .landing-scroll-panel:focus-within,
   .scenery-paused .landing-scroll-panel {
     opacity: 1;
     translate: 0 0;
+    scale: 1;
+    transition: opacity 500ms ease-out, translate 720ms cubic-bezier(.16,1.12,.3,1), scale 720ms cubic-bezier(.16,1.12,.3,1);
   }
-  .scenery-paused .landing-scroll-panel { transition: none; }
+  .landing-scroll-panel .public-path-grid > article,
+  .landing-promises.landing-scroll-panel > article {
+    opacity: 0;
+    translate: 0 28px;
+    scale: .96;
+    transition: opacity 180ms ease, translate 220ms ease, scale 220ms ease;
+  }
+  .landing-scroll-panel:is(.is-in-view, :focus-within) .public-path-grid > article,
+  .landing-promises.landing-scroll-panel:is(.is-in-view, :focus-within) > article {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    transition: opacity 450ms ease-out, translate 680ms cubic-bezier(.16,1.12,.3,1), scale 680ms cubic-bezier(.16,1.12,.3,1);
+    transition-delay: 80ms;
+  }
+  .landing-scroll-panel:is(.is-in-view, :focus-within) article:nth-child(2) { transition-delay: 160ms; }
+  .landing-scroll-panel:is(.is-in-view, :focus-within) article:nth-child(3) { transition-delay: 240ms; }
+  .scenery-paused .landing-scroll-panel,
+  .scenery-paused .landing-scroll-panel article {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    transition: none;
+  }
 }
 @media print {
-  .landing-scroll-panel { opacity: 1; translate: none; }
+  .landing-scroll-panel, .landing-scroll-panel article { opacity: 1; translate: none; scale: 1; }
   .landing-atmosphere { display: none; }
 }
