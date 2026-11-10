@@ -231,3 +231,96 @@ button.landing-mini-card:disabled {cursor:wait;}
 .speech-pause-control select:focus-visible {outline:3px solid var(--forest);outline-offset:2px;}
 
 .speech-pause-control small {flex-basis:100%;font-size:12px;line-height:1.6;}
+
+/* A sunrise and layered hills frame the existing Hangul learning illustration. */
+.landing-hero {
+  position: relative;
+  isolation: isolate;
+}
+.landing-backdrop {
+  position: absolute;
+  inset: 0 -18px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.landing-dawn {
+  position: absolute;
+  width: 46%;
+  height: 86%;
+  top: 3%;
+  right: 0;
+  border-radius: 50% 50% 12% 12%;
+  background: #f1e6d7;
+  transform: rotate(7deg);
+}
+.landing-backdrop svg {
+  position: absolute;
+  width: 100%;
+  height: 100px;
+  bottom: 0;
+  opacity: .75;
+}
+.landing-hero .landing-art {
+  border-radius: 48% 48% 28px 28px;
+  background: #e4eadb;
+  border: 1px solid #d8e0ce;
+}
+.landing-hero .landing-sun {
+  width: 56px;
+  height: 56px;
+  top: 17%;
+  right: 17%;
+  background: #f7da72;
+}
+.landing-building-letters {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.landing-building-letters i {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 26px;
+  font-style: normal;
+  color: var(--forest);
+  background: var(--paper-strong);
+  opacity: 0;
+}
+.landing-building-letters i:nth-child(1) { --from-x: -95px; --from-y: -65px; }
+.landing-building-letters i:nth-child(2) { --from-x: 100px; --from-y: -35px; }
+.landing-building-letters i:nth-child(3) { --from-x: -65px; --from-y: 80px; }
+.landing-hero .landing-mascot { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .landing-hero .landing-art { animation: none; }
+  .landing-hero .landing-syllable { animation: hangul-bloom 900ms 250ms cubic-bezier(.16,1,.3,1) both; }
+  .landing-building-letters i { animation: hangul-assemble 1000ms cubic-bezier(.16,1,.3,1) both; }
+  .landing-building-letters i:nth-child(2) { animation-delay: 90ms; }
+  .landing-building-letters i:nth-child(3) { animation-delay: 180ms; }
+  .landing-hero .landing-sun { animation: landing-sun-drift 4s ease-in-out 1; }
+  .landing-hero .landing-orbit { animation: orbit-settle 1400ms cubic-bezier(.16,1,.3,1) both; }
+  .landing-hero .landing-mini-card:focus-visible { outline: 3px solid var(--forest); outline-offset: -5px; }
+  @keyframes hangul-assemble {
+    0%, 15% { opacity: 1; transform: translate(var(--from-x), var(--from-y)) rotate(-8deg); }
+    75%, 100% { opacity: 0; transform: translate(0, 0) scale(.6); }
+  }
+  @keyframes hangul-bloom {
+    from { transform: scale(.82); }
+    to { transform: scale(1); }
+  }
+  @keyframes orbit-settle {
+    from { scale: .82; opacity: .3; }
+    to { scale: 1; opacity: 1; }
+  }
+}
+@media (max-width: 760px) {
+  .landing-backdrop { inset: 0 -10px; }
+  .landing-dawn { width: 85%; height: 44%; top: auto; bottom: 4%; right: 3%; }
+  .landing-backdrop svg { height: 65px; }
+}

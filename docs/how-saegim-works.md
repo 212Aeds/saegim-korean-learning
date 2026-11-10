@@ -234,3 +234,17 @@ returned HTTP 200 and contains all three assessment labels. Eight focused
 analytics/database regressions passed before publication. The prior full suite
 passed 299 tests and the hosted build passed. The owner dashboard's live visual
 layout still needs a separate browser check.
+
+Landing scene (November 10, 2026): the existing Hangul illustration now sits
+inside a sunrise arch with two layered hills. Decorative geometry lives in an
+aria-hidden, pointer-events-none backdrop. A short CSS sequence draws the three
+pieces of 한 toward the central syllable. Added motion runs once, finishes within
+four seconds and is enabled only with prefers-reduced-motion: no-preference.
+The static scene remains visible with reduced motion. Artwork uses existing
+colors and inline geometry, adding no external asset requests or animation library.
+AI assisted the implementation. All 299 tests and the hosted build passed.
+Startup JavaScript measured 356,285 gzip bytes against the 360,000-byte budget.
+Browser checks covered the desktop composition, a 375px layout without horizontal
+overflow, sample-answer feedback and entry into guest onboarding. Browser warning
+and error logs were empty. Physical-phone testing and runtime emulation of the OS
+reduced-motion preference were not performed.

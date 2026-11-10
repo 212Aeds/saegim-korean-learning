@@ -49,6 +49,14 @@ export function LandingPage({
       </header>
 
       <section className="landing-hero" id="home">
+        <div className="landing-backdrop" aria-hidden="true">
+          <span className="landing-dawn" />
+          <svg viewBox="0 0 1000 140" preserveAspectRatio="none" focusable="false">
+            <path d="M0 128 Q190 50 420 108 T1000 48 V140 H0Z" fill="#e8ecdf" />
+            <path d="M340 140 Q620 30 1000 114 V140Z" fill="#dce5d1" />
+            <path d="M0 120 Q240 40 490 105 T1000 38" fill="none" stroke="#a6b59a" strokeWidth="1" />
+          </svg>
+        </div>
         <div className="landing-copy">
           <span className="micro-label"><Sparkle size={14} /> YOUR KOREAN, YOUR WAY</span>
           <h1>Learn Korean.<br /><em>Make it yours.</em></h1>
@@ -67,6 +75,7 @@ export function LandingPage({
           <span className="landing-orbit orbit-one" />
           <span className="landing-orbit orbit-two" />
           <span className="landing-sun" />
+          <span className="landing-building-letters" aria-hidden="true"><i>ㅎ</i><i>ㅏ</i><i>ㄴ</i></span>
           <span className="landing-syllable" lang="ko">한</span>
           <span className="landing-art-note">letters into words</span>
           <button type="button" className="landing-mini-card" disabled={samplePlaying} aria-label={samplePlaying ? "Playing hello in Korean" : "Hear hello in Korean"} onClick={()=>void hearHello()}>
