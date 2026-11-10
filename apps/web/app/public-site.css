@@ -337,8 +337,8 @@ button.landing-mini-card:disabled {cursor:wait;}
 .landing-orbit-track { position: absolute; left: 50%; top: 43%; translate: -50% -50%; width: 74%; aspect-ratio: 1; border: 1px solid rgb(49 79 66 / 18%); border-radius: 50%; pointer-events: none; }
 .landing-orbit-token { position: absolute; top: 50%; left: 0; translate: -50% -50%; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #f4eddc; color: var(--forest); font-size: 20px; font-style: normal; }
 .landing-orbit-token + .landing-orbit-token { left: 100%; background: var(--butter); }
-.landing-atmosphere { position: absolute; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
-.landing-atmosphere span { position: absolute; color: var(--forest); opacity: .12; font-size: clamp(24px, 4vw, 48px); font-weight: 500; }
+.landing-atmosphere { position: fixed; inset: 0; overflow: clip; z-index: -1; pointer-events: none; }
+.landing-atmosphere span { position: absolute; color: var(--forest); opacity: .17; font-size: clamp(28px, 3.5vw, 48px); font-weight: 500; }
 .landing-motion-toggle { font: inherit; font-size: 11px; color: var(--forest); background: transparent; border: 1px solid var(--line); border-radius: 999px; min-height: 44px; padding: 8px 12px; cursor: pointer; }
 .landing-motion-toggle:focus-visible { outline: 3px solid var(--forest); outline-offset: 3px; }
 .landing-hero .landing-mini-card:focus-visible { outline: 3px solid var(--forest); outline-offset: -5px; }
@@ -346,9 +346,11 @@ button.landing-mini-card:disabled {cursor:wait;}
   .landing-orbit-track { animation: scenery-orbit 32s linear infinite; }
   .landing-orbit-token { animation: scenery-orbit 32s linear infinite reverse; }
   @keyframes scenery-orbit { to { transform: rotate(360deg); } }
-  @supports (animation-timeline: view()) {
-    .landing-atmosphere span { animation: scenery-fall linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
-    @keyframes scenery-fall { from { transform: translateY(-60px) rotate(-12deg); } to { transform: translateY(140px) rotate(18deg); } }
+  .landing-atmosphere span { animation-name: scenery-fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+  .landing-atmosphere span:nth-child(3n) { color: #b36b3e; }
+  @keyframes scenery-fall {
+    from { transform: translate3d(-12px, -110vh, 0) rotate(-15deg); }
+    to { transform: translate3d(24px, 110vh, 0) rotate(25deg); }
   }
 }
 .scenery-paused .landing-orbit-track,
@@ -360,11 +362,8 @@ button.landing-mini-card:disabled {cursor:wait;}
   .landing-hero .landing-art { aspect-ratio: 1 / 1.25; }
   .landing-hero .landing-mascot-card { top: 14px; right: 14px; }
   .landing-hero .landing-mini-card { left: 14px; bottom: 14px; }
-  .landing-atmosphere span { font-size: 25px; opacity: .08; }
+  .landing-atmosphere span { font-size: 28px; opacity: .14; }
 }
 
 /* Decorative transforms must not create sideways scrolling on narrow screens. */
 .landing-page { overflow-x: clip; }
-
-/* Clip decoration without creating a scroll container for view timelines. */
-.landing-atmosphere { overflow: clip; }

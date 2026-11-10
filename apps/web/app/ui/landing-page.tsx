@@ -35,8 +35,8 @@ export function LandingPage({
   return (
     <div className={`landing-page${sceneryPaused ? " scenery-paused" : ""}`}>
       <div className="landing-atmosphere" aria-hidden="true">
-        {["ㄱ", "ㅏ", "ㅎ", "ㄴ", "ㅁ", "ㅗ", "ㅅ", "ㅇ"].map((letter, index) =>
-          <span key={letter} style={{left: index % 2 ? "94%" : "1%", top: `${8 + index * 11}%`}}>{letter}</span>
+        {["ㄱ", "ㅏ", "ㅎ", "ㄴ", "ㅁ", "ㅗ", "ㅅ", "ㅇ", "ㅓ", "ㄹ", "ㅜ", "ㅂ", "ㅈ", "ㅣ", "ㅋ", "ㅕ"].map((letter, index) =>
+          <span key={letter} style={{left: `${3 + index * 6}%`, top: `${(index * 23) % 100}%`, animationDuration: `${26 + index % 5 * 4}s`, animationDelay: `${-index * 7}s`}}>{letter}</span>
         )}
       </div>
       <a className="skip-learning-link" href="#your-path">Skip to learning path</a>
