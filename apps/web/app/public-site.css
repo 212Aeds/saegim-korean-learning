@@ -414,3 +414,17 @@ button.landing-mini-card:disabled {cursor:wait;}
   .landing-scroll-panel, .landing-scroll-panel article { opacity: 1; translate: none; scale: 1; }
   .landing-atmosphere { display: none; }
 }
+
+/* Keep the same scenery with less simultaneous motion on small screens. */
+@media (max-width: 760px) {
+  .landing-hero .landing-sun { width: 36px; height: 36px; }
+  .landing-atmosphere span:nth-child(n + 9) { display: none; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .landing-scroll-panel:not(.is-in-view):not(:focus-within) { translate: 0 28px; scale: .99; }
+  .scenery-paused .landing-scroll-panel { translate: 0 0; scale: 1; }
+}
+@media (max-width: 760px) {
+  .landing-orbit-track { width: 56%; }
+  .landing-hero .landing-art-note { bottom: 84px; }
+}

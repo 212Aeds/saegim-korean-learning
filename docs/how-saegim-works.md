@@ -260,3 +260,6 @@ Landing content sections now fade and lift into view, and reset after leaving th
 
 ### Stronger entrance choreography
 At the creator's request, section entrances now lift 48 pixels with a slight scale and spring-like settling. Learning-path and promise cards follow at 80/160/240 millisecond intervals. Exit transitions remain shorter. The existing pause control shows every section and card immediately; reduced motion bypasses these effects. CSS-only change, AI assisted. Hosted production build passed, browser inspection confirmed the stagger timings and final readable state, pause disabled transitions, and the 375-pixel layout had no horizontal overflow. No physical-device performance claim is made.
+
+### Phone scenery tuning
+The yellow sun is decorative. Small screens now use a smaller sun, eight rather than sixteen falling glyphs, a shorter section entrance, and a tighter orbit that clears the caption. This reduces simultaneous decoration without adding dependencies or changing learning features. AI-assisted verification: hosted build and 320/430-pixel browser layout checks, with no horizontal overflow. These checks do not measure actual iPhone Safari performance; a connected Mac's Safari Web Inspector is the next device-testing step.
