@@ -62,6 +62,8 @@ export function AccountModal({
   const [password, setPassword] = useState("");
   const [passwordVisible,setPasswordVisible]=useState(false);
   const [message, setMessage] = useState("");
+  const [saveRevision, setSaveRevision] = useState(0);
+  const settingsSaved = message === "Settings saved on this device." || message === "Your profile is saved. Your next lesson is tailored to your level and interests.";
   const [busy, setBusy] = useState(false);
   const [firebaseLinking, setFirebaseLinking] = useState(false);
   useEffect(() => { setFirebaseLinking(false); }, [mode]);
@@ -109,7 +111,7 @@ export function AccountModal({
   async function saveProfileName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!account || !onAccountUpdated) return;
-    if (freePublishing || account?.id === "device-only") { await onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); return; }
+    if (freePublishing || account?.id === "device-only") { await onAccountUpdated({...account,displayName:profileName.trim(),learningProfile}); setMessage("Settings saved on this device."); setSaveRevision(value=>value+1); return; }
     if (!apiUrl) return;
     setBusy(true);
     setMessage("");
@@ -127,6 +129,7 @@ export function AccountModal({
       setProfileName(body.displayName);
       await onAccountUpdated(body);
       setMessage("Your profile is saved. Your next lesson is tailored to your level and interests.");
+      setSaveRevision(value=>value+1);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Your name could not be saved.");
     } finally {
@@ -310,7 +313,8 @@ export function AccountModal({
               </button>
             </div>}
             {message && (
-              <p className="account-message" role="alert">
+              <p key={saveRevision} className={`account-message${settingsSaved ? " is-saved" : ""}`} role={settingsSaved ? "status" : "alert"}>
+                {settingsSaved && <CheckCircle size={20} aria-hidden="true" />}
                 {message}
               </p>
             )}

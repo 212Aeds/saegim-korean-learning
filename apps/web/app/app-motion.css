@@ -89,3 +89,28 @@
     to { opacity: 1; transform: none; }
   }
 }
+
+.account-message.is-saved { display: flex; align-items: center; gap: 9px; color: var(--forest-deep); background: #edf3e7; }
+.account-message.is-saved svg { flex: none; }
+.lesson-unlocked-note { display: block; color: var(--forest-deep); font-weight: 650; }
+@media (prefers-reduced-motion: no-preference) {
+  .lesson-progress i, .speak-deck-progress i {
+    transition: transform 300ms cubic-bezier(.16,1,.3,1);
+  }
+  .learning-roadmap .is-newly-unlocked { animation: lesson-ready 700ms ease-out; }
+  .learning-roadmap .is-newly-unlocked .roadmap-number { animation: lesson-ready-mark 380ms cubic-bezier(.16,1,.3,1); }
+  .account-message.is-saved { animation: save-confirm 240ms ease-out; }
+  .account-message.is-saved svg { animation: lesson-ready-mark 280ms cubic-bezier(.16,1,.3,1); }
+  @keyframes lesson-ready {
+    from { background-color: #dfeccd; }
+    to { background-color: transparent; }
+  }
+  @keyframes lesson-ready-mark {
+    from { transform: scale(.7) rotate(-12deg); }
+    to { transform: none; }
+  }
+  @keyframes save-confirm {
+    from { opacity: .4; transform: translateY(5px); }
+    to { opacity: 1; transform: none; }
+  }
+}
