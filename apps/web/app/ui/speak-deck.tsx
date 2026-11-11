@@ -172,7 +172,7 @@ export function SpeakDeck({
       <PhrasePicker cards={speakingCards} current={card} completedIds={completedIds} disabled={completing}
         onChoose={id=>{setFlipped(false);onNavigate(id);}} />
 
-      <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : card.korean.length>30 ? "is-connected-card" : ""} ${flipped ? "is-flipped" : ""}`}>
+      <article className={`speak-flashcard ${card.kind === "word" ? "is-word-card" : card.korean.length>30 ? "is-connected-card" : ""} ${flipped ? "is-flipped" : ""} ${completing ? "is-advancing" : ""}`}>
         <div className="speak-card-top">
           <span>
             {String(index + 1).padStart(2, "0")} <i />{" "}
@@ -181,6 +181,7 @@ export function SpeakDeck({
           <span className="speak-card-kind">{card.kind}</span>
         </div>
         <FlipCard
+          key={`prompt-${card.id}`}
           flipped={flipped}
           front={
             <div className="speak-card-body">
@@ -267,7 +268,14 @@ export function SpeakDeck({
               if (completionInProgress.current) return;
               playCorrectAnswerSound();
               setCelebration(value => value + 1);
-              move(1);
+              completionInProgress.current = true;
+              setCompleting(true);
+              completionTimer.current = window.setTimeout(() => {
+                completionTimer.current = null;
+                completionInProgress.current = false;
+                setCompleting(false);
+                move(1);
+              }, 400);
             }}>
               Practiced · Next card <ArrowRight size={17} />
             </button>
