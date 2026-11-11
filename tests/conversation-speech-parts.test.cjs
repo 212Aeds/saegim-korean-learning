@@ -53,3 +53,9 @@ test('prepared opening downloads do not wait for inference-model readiness',asyn
  global.window={setTimeout,clearTimeout};global.fetch=async url=>{fetched++;assert.match(url,/^\/audio\/lessons\//);return new Response(new Uint8Array(44),{headers:{'content-type':'audio/wav'}});};
  try{const voices=require('../apps/web/app/ui/browser-voices.ts'),speech=require('../apps/web/app/ui/speech.ts');assert.notEqual(voices.browserVoiceState().phase,'ready');await speech.prefetchConversationKorean('그렇군요. 새로운 이야기를 해 주세요.','jessica');assert.equal(fetched,1);assert.notEqual(voices.browserVoiceState().phase,'ready');}finally{Object.assign(global,old);}
 });
+
+test('a long second sentence cannot delay the short opening audio chunk',()=>{
+ const {conversationSpeechParts}=require('../apps/web/app/ui/conversation-speech-parts.ts');
+ const long='This is a deliberately long synthetic sentence that should be prepared separately.';
+ assert.deepEqual(conversationSpeechParts('Hi! '+long),['Hi!',long]);
+});

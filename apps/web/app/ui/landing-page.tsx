@@ -69,7 +69,6 @@ export function LandingPage({
           <a className="public-nav-link" href="/learn/">Guides</a>
           <a className="public-nav-link" href="/feedback/">Feedback</a>
           <span className="free-pill"><span /> Always free</span>
-          <button type="button" className="landing-motion-toggle" aria-pressed={sceneryPaused} aria-label={sceneryPaused ? "Resume background motion" : "Pause background motion"} onClick={() => setSceneryPaused(value => !value)}>{sceneryPaused ? "Resume scenery" : "Pause scenery"}</button>
           {!freeMode && <button className="landing-signin" onClick={onSignIn}>Sign in</button>}
         </div>
       </header>
@@ -154,6 +153,7 @@ export function LandingPage({
         ["How can I check a word or report a problem?", "Open References beside a learning item to compare dictionary sources. Lessons and examples are still undergoing editorial review. Open Feedback below to share a bug or idea through our private response form; please keep personal information out of reports."],
       ].map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
       <footer className="landing-footer">
+        <details className="landing-display-preferences"><summary>Display preferences</summary><label><input type="checkbox" checked={sceneryPaused} onChange={event=>setSceneryPaused(event.target.checked)} /> Reduce scenery motion</label></details>
         <span><a href="/learn/">Learning guides</a> · <a href="/feedback/">Feedback</a> · <a href="/privacy/">Privacy</a> · <a href="/about/">About</a></span>
         <span>Built for curious learners, including people reconnecting with Korean.</span>
         <span>Learn Korean with Saegim.</span>

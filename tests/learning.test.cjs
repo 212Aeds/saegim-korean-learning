@@ -160,7 +160,10 @@ test('each proficiency starts at the intended difficulty without awarding comple
 test('conversation history bounds recent turns and API rejects injected roles and invalid sequences', () => {
  const turns = Array.from({length:20}, (_,index)=>({role: index%2===0 ? 'user' : 'assistant', content: `turn ${index}`}));
  const messages = conversationHistory(turns, ' 안녕하세요 ');
- assert.equal(messages.length, 11); assert.equal(messages[0].content, 'turn 10');
+ assert.equal(messages.length, 11); assert.equal(messages[0].content, 'turn 0');
+ assert.equal(messages[1].content, 'turn 1');
+ assert.equal(messages[2].content, 'turn 12');
+ assert.equal(messages.at(-2).content, 'turn 19');
  assert.equal(messages.at(-1).content, '안녕하세요');
  const request = {messages, level:'new', scenario:'cafe', consent:true};
  assert.equal(conversationRequestSchema.safeParse(request).success, true);

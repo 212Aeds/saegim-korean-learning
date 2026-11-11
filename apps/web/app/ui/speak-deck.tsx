@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "./icons";
 import { FeedbackToggle } from "./feedback-toggle";
+import { SoriMascot } from "./sori-mascot";
 import { PhrasePicker } from "./phrase-picker";
 import { FlipCard } from "./flip-card";
 import { WordReference } from "./word-reference";
@@ -71,6 +72,12 @@ export function SpeakDeck({
   const speakingCards = speakingCardsForProfile(profile, completedLessonIds);
   const [flipped, setFlipped] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [celebration, setCelebration] = useState(0);
+  useEffect(() => {
+    if (!celebration) return;
+    const timer = window.setTimeout(() => setCelebration(0), 1100);
+    return () => window.clearTimeout(timer);
+  }, [celebration]);
   const completionInProgress = useRef(false);
   const completionTimer = useRef<number | null>(null);
   const card = cardForCursor(currentCardId, completedIds, speakingCards);
@@ -115,6 +122,7 @@ export function SpeakDeck({
     if (completionInProgress.current || completed) return;
     completionInProgress.current = true;
     setCompleting(true);
+    setCelebration(value => value + 1);
     playCorrectAnswerSound();
     const next = nextUncompletedCard(
       card.id,
@@ -136,6 +144,7 @@ export function SpeakDeck({
       className={`speak-deck-page ${preferences.hangulSize === "large" ? "hangul-large" : ""}`}
     >
       <LevelFocus profile={profile} />
+      {celebration > 0 && <div key={celebration} className="practice-celebration" role="status"><SoriMascot delighted thumbsUp /><strong>Practiced!</strong></div>}
       <div className="speak-deck-heading">
         <div>
           <span className="micro-label">A SMALL SPEAKING PRACTICE</span>
@@ -257,6 +266,7 @@ export function SpeakDeck({
             <button className="button button-soft" onClick={() => {
               if (completionInProgress.current) return;
               playCorrectAnswerSound();
+              setCelebration(value => value + 1);
               move(1);
             }}>
               Practiced · Next card <ArrowRight size={17} />
