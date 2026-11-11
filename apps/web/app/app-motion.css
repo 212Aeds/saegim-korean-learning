@@ -1,0 +1,47 @@
+/* Brief, transform-only motion: controls never wait for an animation to finish. */
+@media (prefers-reduced-motion: no-preference) {
+  .app-shell .section-view {
+    animation: app-section-enter 360ms cubic-bezier(.16,1,.3,1) backwards;
+  }
+  .app-shell :is(.account-modal, .lesson-modal) {
+    animation: app-dialog-enter 300ms cubic-bezier(.16,1,.3,1) backwards;
+  }
+  .app-shell .conversation-turn {
+    animation: app-message-enter 260ms cubic-bezier(.16,1,.3,1) backwards;
+  }
+  .app-shell :is(.button, .nav-item, .tutor-scenario, .modal-close) {
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1),
+      scale 140ms ease-out, background-color 160ms ease, color 160ms ease,
+      border-color 160ms ease, box-shadow 180ms ease;
+  }
+  .app-shell :is(.button, .nav-item, .tutor-scenario, .modal-close):active:not(:disabled) {
+    scale: .97;
+  }
+  .app-shell .nav-item.active > svg {
+    animation: app-nav-select 280ms cubic-bezier(.16,1,.3,1) backwards;
+  }
+  @keyframes app-section-enter {
+    from { opacity: .35; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes app-dialog-enter {
+    from { opacity: .3; transform: translateY(18px) scale(.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes app-message-enter {
+    from { opacity: .3; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes app-nav-select {
+    from { transform: scale(.82) rotate(-6deg); }
+    to { transform: none; }
+  }
+}
+/* Touch has press feedback rather than a hover state that sticks after a tap. */
+@media (hover: none) {
+  .app-shell .button:hover:not(:disabled) { transform: none; box-shadow: none; }
+  .app-shell .nav-item:hover { transform: none; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .app-shell .section-view { animation-duration: 280ms; }
+}
