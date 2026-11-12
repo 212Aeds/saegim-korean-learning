@@ -63,3 +63,48 @@
  .app-shell .feedback-beta-label { font-size: 9px; }
  .app-shell .feedback-banner > a { padding: 8px 0; font-size: 11px; white-space: nowrap; }
 }
+
+/* One panel vocabulary across listening, recording and written practice. */
+.app-shell {
+ --learning-panel-border: #d8dfd0;
+ --learning-panel-inset: #f3f5ec;
+ --learning-panel-radius: 16px;
+ --learning-control-radius: 12px;
+}
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice,.lesson-speaking-exercise) {
+ box-sizing: border-box; min-width: 0; padding: 22px; margin: 20px 0;
+ border: 1px solid var(--learning-panel-border); border-radius: var(--learning-panel-radius);
+ background: var(--learning-panel-inset); color: var(--ink); box-shadow: none;
+}
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) :is(h3,h4) { font-size: 16px; line-height: 1.4; margin: 0 0 12px; }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) p { font-size: 14px; line-height: 1.65; }
+.app-shell :is(.listening-controls,.openrouter-practice-body) { min-width: 0; }
+.app-shell .listening-controls { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.app-shell :is(.listening-controls label,.openrouter-voice-picker,.openrouter-pace-picker) { display: grid; gap: 8px; min-width: 0; max-width: none; font-size: 13px; line-height: 1.5; color: var(--forest-deep); }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) select {
+ box-sizing: border-box; width: 100%; max-width: 100%; min-height: 46px; padding: 10px 12px;
+ border: 1px solid var(--learning-panel-border); border-radius: var(--learning-control-radius);
+ background: var(--paper-strong); color: var(--ink); font: inherit; font-size: 14px;
+}
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) input[type=range] { width: 100%; min-width: 0; min-height: 32px; margin: 0; padding: 0; accent-color: var(--forest); }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) input:not([type=range]):not([type=checkbox]) {
+ box-sizing: border-box; width: 100%; min-width: 0; min-height: 46px; padding: 12px;
+ border: 1px solid var(--learning-panel-border); border-radius: var(--learning-control-radius);
+ background: var(--paper-strong); color: var(--ink); font: inherit;
+}
+.app-shell :is(.speech-actions,.speech-practice-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0; }
+.app-shell :is(.speech-transcript,.speech-consent,.speech-feedback-card) { border: 1px solid var(--learning-panel-border); border-radius: var(--learning-panel-radius); padding: 16px; background: var(--paper-strong); }
+.app-shell :is(.practice-session-card,.conversation-voice-setup,.weekly-checkpoint) { border: 1px solid var(--learning-panel-border); border-radius: 20px; background: var(--paper-strong); }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) :is(select,input):focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) .word-reference { border-top: 1px solid var(--learning-panel-border); padding-top: 10px; margin-top: 18px; }
+.app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice) .word-reference summary { min-height: 44px; align-content: center; }
+@media(max-width:600px) {
+ .app-shell :is(.speech-practice,.openrouter-practice,.local-speech-practice,.lesson-speaking-exercise) { padding: 18px; margin: 16px 0; }
+ .app-shell .listening-controls { grid-template-columns: minmax(0,1fr); gap: 16px; }
+ .app-shell :is(.speech-actions,.speech-practice-actions) > .button { flex: 1 1 120px; }
+}
+/* Preserve the existing visible recording-state feedback above the shared border. */
+.app-shell .speech-practice[data-state="listening"],
+.app-shell .local-speech-practice[data-state="listening"],
+.app-shell .openrouter-practice[data-listening="true"] { border-color: #50764d; }
+.app-shell .speech-practice[data-state="stopping"] { border-color: #bd8a52; }
