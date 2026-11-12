@@ -150,6 +150,7 @@ function SectionPending(){return <p role="status" aria-live="polite">Opening you
 const LessonModal=dynamic(()=>import("./ui/lesson-modal").then(module=>module.LessonModal),{loading:SectionPending});
 const LearningOnboarding=dynamic(()=>import("./ui/learning-onboarding").then(module=>module.LearningOnboarding),{loading:SectionPending});
 const ReviewDeck=dynamic(()=>import("./ui/review-modal").then(module=>module.ReviewModal),{loading:SectionPending});
+const WeeklyCheckpoint=dynamic(()=>import("./ui/weekly-checkpoint").then(module=>module.WeeklyCheckpoint),{loading:SectionPending});
 const LearningCollection=dynamic(()=>import("./ui/learning-collection").then(module=>module.LearningCollection),{loading:SectionPending});
 const SpeakDeck=dynamic(()=>import("./ui/speak-deck").then(module=>module.SpeakDeck),{loading:SectionPending});
 const PracticePage=dynamic(()=>import("./ui/practice-page").then(module=>module.PracticePage),{loading:SectionPending});
@@ -1512,6 +1513,7 @@ function ReviewView({
   const hasLesson = progress.completed > 0;
   return (
     <div className="review-page">
+      <details className="learning-progress-details"><summary>Optional weekly checkpoint<span>A short check-in from completed lessons</span></summary><WeeklyCheckpoint completed={progress.completedLessonIds}/></details>
       <div className="review-page-intro">
         <div className="review-page-icon">
           <Lightning size={24} weight="fill" />

@@ -114,3 +114,12 @@
     to { opacity: 1; transform: none; }
   }
 }
+
+.weekly-checkpoint { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-strong); line-height: 1.6; }
+.weekly-checkpoint h3 { font-size: 23px; margin: 0 0 12px; }
+.weekly-checkpoint h4 { font-size: 18px; }
+.weekly-checkpoint .button { min-height: 44px; margin: 8px 8px 0 0; white-space: normal; }
+.weekly-checkpoint input { width: 100%; box-sizing: border-box; min-height: 44px; font: inherit; }
+.checkpoint-feedback { padding: 16px; margin: 16px 0; border-radius: 12px; background: #edf3e7; }
+.checkpoint-preview { max-width: 740px; margin: 0 auto; padding: 24px 18px; }
+.checkpoint-preview > p { line-height: 1.7; }
