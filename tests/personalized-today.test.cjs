@@ -54,6 +54,7 @@ test('focused controls open the selected lesson, settings, review and full dashb
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText, { exports, require(id) {
     if (id === '../personalized-today') return { personalizedToday };
+    if (id === './study-illustration') return { StudyIllustration: () => null };
     if (id.endsWith('.css')) return { default: {} };
     return require(id);
   }});

@@ -1,0 +1,65 @@
+/* Shared learning surfaces: the landing page's warm paper, editorial headings and sage. */
+.app-shell .page-content { max-width: 1280px; padding-top: 30px; }
+.app-shell .greeting-row { align-items: center; margin-bottom: 26px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.app-shell .greeting-row h1 { font-family: Georgia, serif; font-size: clamp(34px, 3.5vw, 48px); font-weight: 500; line-height: 1.12; letter-spacing: -.035em; text-wrap: balance; }
+.app-shell .greeting-row p { max-width: 64ch; line-height: 1.65; }
+.app-shell .button { font-size: 13px; min-height: 44px; border-radius: 12px; padding: 10px 18px; }
+.app-shell .nav-item { min-height: 46px; font-size: 13px; }
+.app-shell .topbar { background: var(--paper-strong); }
+.app-shell .home-welcome { color: #52644f; font-size: 13px; }
+.app-shell .today-first-session { max-width: 100%; }
+.app-shell .today-first-session > p { font-size: 14px; margin: -6px 0 18px; }
+.app-shell .today-recommended-lesson { position: relative; min-height: 260px; padding: 32px 230px 32px 32px; border-radius: 24px; background: #e8eedf; border-color: #d2ddc6; overflow: hidden; }
+.app-shell .today-recommended-lesson :is(h2,h3) { font-family: Georgia, serif; font-size: clamp(28px,3vw,38px); font-weight: 500; line-height: 1.2; margin: 16px 0 12px; letter-spacing: -.025em; }
+.app-shell .today-recommended-lesson p { max-width: 54ch; font-size: 14px; }
+.app-shell .today-recommended-lesson .micro-label { color: #506448; }
+.study-illustration { position: absolute; right: 24px; top: 50%; translate: 0 -50%; width: 170px; height: 210px; pointer-events: none; }
+.study-illustration-ring { position: absolute; inset: 22px 0; border: 1px solid #b8c5a7; border-radius: 50%; rotate: -20deg; }
+.study-illustration-syllable { position: absolute; top: 14px; left: 25px; display: grid; place-items: center; width: 116px; height: 116px; border-radius: 50%; background: var(--coral); color: #fffaf3; font-size: 70px; }
+.study-illustration-mascot { position: absolute; width: 85px; height: 85px; bottom: 0; right: 2px; }
+.app-shell .learning-roadmap { background: #f3f4eb; border-radius: 20px; padding: 26px; }
+.app-shell .learning-roadmap h3 { font-family: Georgia,serif; font-size: 27px; font-weight: 500; letter-spacing: -.02em; }
+.app-shell .learning-roadmap li { padding: 18px 0; }
+.app-shell .learning-roadmap p { font-size: 14px; line-height: 1.65; }
+.app-shell :is(.practice-intro, .speak-deck-heading) h2 { font-family: Georgia,serif; font-size: clamp(27px,3vw,36px); font-weight: 500; letter-spacing: -.025em; }
+.app-shell .practice-focus-grid { gap: 16px; }
+.app-shell .practice-focus-grid > button { border-radius: 16px; padding: 22px; }
+.app-shell .word-grid { gap: 18px; }
+.app-shell .word-card { border-radius: 16px; padding: 22px; background: #fffdf8; }
+.app-shell .word-meaning { font-size: 14px; line-height: 1.6; }
+.app-shell .word-category { color: #58684e; }
+.app-shell :is(.word-search, .course-view-control select, .conversation-form textarea) { border-radius: 14px; }
+.app-shell .review-page-intro { padding: 22px 0; }
+.app-shell .review-page-intro h2 { font-family: Georgia,serif; font-size: clamp(28px,3vw,37px); font-weight: 500; line-height: 1.2; }
+.app-shell .review-queue { padding: 26px; border-radius: 20px; background: #edf1e5; }
+.app-shell .conversation-card { border-radius: 20px; }
+.app-shell .speak-flashcard { border-radius: 24px; }
+@media(max-width:1000px) {
+ .app-shell .today-recommended-lesson { padding-right: 190px; }
+ .study-illustration { right: 10px; scale: .85; transform-origin: right center; }
+}
+@media(max-width:600px) {
+ .app-shell .page-content { padding: 22px 18px 28px; }
+ .app-shell .greeting-row { gap: 12px; margin-bottom: 22px; padding-bottom: 20px; }
+ .app-shell .greeting-row h1 { font-size: 34px; }
+ .app-shell .today-recommended-lesson { min-height: 0; padding: 24px; border-radius: 20px; }
+ .study-illustration { display: none; }
+ .app-shell .today-recommended-lesson :is(h2,h3) { font-size: 30px; }
+ .app-shell .learning-roadmap { padding: 20px; }
+ .app-shell .learning-roadmap h3 { font-size: 24px; }
+ .app-shell .review-queue { padding: 20px; }
+ .app-shell .word-card { padding: 18px; }
+ .app-shell .word-grid { gap: 12px; }
+ .app-shell .speak-flashcard { border-radius: 20px; }
+}
+.app-shell .feedback-banner { padding: 10px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; margin-bottom: 22px; }
+.app-shell .feedback-banner > a { background: transparent; color: var(--forest); padding: 10px 0 10px 14px; text-decoration: underline; text-underline-offset: 4px; font-size: 12px; }
+.app-shell .learning-pathways > .daily-practice h3 { font-family: Georgia,serif; font-size: 29px; font-weight: 500; }
+.app-shell .word-topic-browser summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 650; font-size: 14px; }
+.app-shell .word-topic-browser summary:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.app-shell .word-topic-browser .word-topic-buttons { margin-top: 12px; }
+@media(max-width:600px) {
+ .app-shell .feedback-banner { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; margin-bottom: 16px; }
+ .app-shell .feedback-beta-label { font-size: 9px; }
+ .app-shell .feedback-banner > a { padding: 8px 0; font-size: 11px; white-space: nowrap; }
+}

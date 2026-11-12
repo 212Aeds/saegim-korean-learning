@@ -22,7 +22,7 @@ export function WordPacks() {
         Choose a topic for contextual meanings and examples. Explore freely;
         lessons and review keep their own progress.
       </p>
-      <div className="word-topic-buttons">
+      <details className="word-topic-browser"><summary>Browse {journeyTopics.length} topics{pack ? ` · ${pack.title}` : ""}</summary><div className="word-topic-buttons">
         {journeyTopics.map((item) => (
           <button
             className="button button-soft"
@@ -33,7 +33,7 @@ export function WordPacks() {
             {item.title}
           </button>
         ))}
-      </div>
+      </div></details>
       {busy && <button type="button" className="button button-quiet" onClick={stopAudio}>Stop audio</button>}
       {pack && (
         <div className="word-pack-grid">

@@ -7,6 +7,7 @@ import "./conversation-guide.css";
 import "./learning-polish.css";
 import "./public-site.css";
 import "./app-motion.css";
+import "./app-polish.css";
 
 export const metadata: Metadata = {
   title: "Saegim — Korean, remembered",

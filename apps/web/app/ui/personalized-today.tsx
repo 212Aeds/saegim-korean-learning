@@ -2,6 +2,7 @@ import type { Lesson } from "../curriculum";
 import type { LearningProfile } from "../learning-profile";
 import { personalizedToday } from "../personalized-today";
 import styles from "./personalized-today.module.css";
+import {StudyIllustration} from "./study-illustration";
 
 export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, onLesson, onReview, onSettings, onShowDashboard }: {
   profile: LearningProfile;
@@ -16,7 +17,7 @@ export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, 
   const plan = personalizedToday(profile, completed);
   const next = plan.next;
   return <section className={styles.focus} aria-labelledby="personalized-plan-title">
-    <div className={styles.lesson}>
+    <div className={`${styles.lesson} today-recommended-lesson`}><StudyIllustration/>
       <span className="micro-label">{plan.levelLabel} · {next ? "RECOMMENDED LESSON" : "YOUR PATH"}</span>
       <h2 id="personalized-plan-title">{next?.title ?? "You’ve completed the available lessons."}</h2>
       <p>{next?.briefing?.focus ?? next?.detail ?? "Revisit what you learned in Review, or explore another section whenever you like."}</p>
