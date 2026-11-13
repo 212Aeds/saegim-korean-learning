@@ -191,7 +191,7 @@ export function AccountModal({
     >
       <section
         ref={dialogRef}
-        className="account-modal"
+        className={`account-modal account-mode-${settingsOnly ? "settings" : account ? "overview" : "auth"}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-title"
@@ -212,8 +212,7 @@ export function AccountModal({
           <div className="account-content">
             <h2 id="account-title">{settingsOnly ? "Settings, at your pace." : "Your Account."}</h2>
             <p>
-              {(freePublishing || account?.id === "device-only") ? "Practicing on this device as" : "Signed in as"} <strong>{account.displayName}</strong> ·{" "}
-              {account.email}
+              {(freePublishing || account?.id === "device-only") ? "Practicing on this device as" : "Signed in as"} <strong>{account.displayName}</strong>{account.email && <> · {account.email}</>}
             </p>
             <div className="account-benefit">
               <CheckCircle size={20} />
@@ -221,7 +220,7 @@ export function AccountModal({
                 {(freePublishing || account?.id === "device-only") ? "Progress stays in this browser and does not sync. Keep a backup before clearing browser data." : "Your lesson and review progress syncs to your account."}
               </span>
             </div>
-            {!settingsOnly && onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>⚙ Open Settings</button>}
+            {!settingsOnly && <div className="account-overview-tools">{onOpenSettings && <button className="button button-soft" onClick={onOpenSettings}>Open Settings</button>}{account.developerAccess && <a className="button button-quiet" href="/developer/">Developer dashboard</a>}</div>}
             <ProfilePreview name={settingsOnly ? profileName : account.displayName} profile={learningProfile} completed={completedLessonIds} />
             {settingsOnly && <form className="account-profile-form" onSubmit={(event) => void saveProfileName(event)}>
               <label htmlFor="profile-name">Name to use around Saegim</label>
@@ -296,7 +295,7 @@ export function AccountModal({
                 </label>
               </section>
             )}
-            {!settingsOnly && <div className="account-data-actions">
+            {!settingsOnly && <details className="account-data-controls"><summary>Data & account controls</summary><p>Download a copy of your learning data. Removing data is a separate action below.</p><div className="account-data-actions">
               <button
                 className="button button-quiet"
                 onClick={exportData}
@@ -311,7 +310,7 @@ export function AccountModal({
               >
                 {(freePublishing || account?.id === "device-only") ? "Clear this device’s learning data" : "Delete account and synced progress"}
               </button>
-            </div>}
+            </div></details>}
             {message && (
               <p key={saveRevision} className={`account-message${settingsSaved ? " is-saved" : ""}`} role={settingsSaved ? "status" : "alert"}>
                 {settingsSaved && <CheckCircle size={20} aria-hidden="true" />}

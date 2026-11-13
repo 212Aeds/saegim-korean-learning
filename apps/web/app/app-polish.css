@@ -118,3 +118,20 @@
  .app-shell .word-search input { flex-basis: 100%; font-size: 16px; }
  .app-shell .weekly-checkpoint input { font-size: 16px; }
 }
+
+.account-modal.account-mode-overview { width: min(100%,540px); }
+.account-modal:is(.account-mode-overview,.account-mode-settings) .account-modal-top { position: sticky; top: -1px; z-index: 2; padding: 10px 0; background: var(--paper-strong); }
+.account-modal:is(.account-mode-overview,.account-mode-settings) h2 { font-family: Georgia,serif; font-weight: 500; font-size: 32px; letter-spacing: -.025em; }
+.account-modal .account-content > p { overflow-wrap: anywhere; line-height: 1.65; }
+.account-overview-tools { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.account-overview-tools a { text-decoration: none; }
+.account-data-controls { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 10px; }
+.account-data-controls summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-size: 14px; font-weight: 650; }
+.account-data-controls > p { font-size: 13px; line-height: 1.6; }
+.account-data-controls .account-data-actions { display: grid; gap: 14px; }
+.account-data-controls .account-delete { padding: 14px; border: 1px solid #d9bdb4; border-radius: 12px; color: #873f32; text-align: left; }
+.account-data-controls summary:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+@media(max-width:600px) {
+ .account-overview-tools > * { flex: 1 1 160px; text-align: center; }
+ .account-modal:is(.account-mode-overview,.account-mode-settings) h2 { font-size: 28px; }
+}
