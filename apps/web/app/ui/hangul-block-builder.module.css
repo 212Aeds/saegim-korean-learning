@@ -1,1 +1,36 @@
-.panel{padding:24px;border:1px solid #d6ddcb;border-radius:22px;background:#fffdf8;max-width:780px}.panel p{line-height:1.6}.modes,.actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}.modes button,.letters button{font:inherit;min-height:44px;padding:10px 16px;border:1px solid #b9c7af;border-radius:10px;background:#f6f3e9;color:#314739;cursor:pointer}.modes button[aria-pressed=true],.letters button[aria-pressed=true]{background:#dbe7d1;border-color:#385442}.slots{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:20px 0;font-size:1.8rem}.slots strong{display:grid;place-items:center;width:94px;height:94px;font-size:3.5rem;border:2px solid #6e8b67;border-radius:18px}.letters{display:grid;grid-template-columns:1fr 1fr;gap:14px}.letters fieldset{padding:14px;border:1px solid #d6ddcb;border-radius:12px}.letters button{font-size:1.6rem;margin:4px;min-width:48px}.panel button:focus-visible{outline:3px solid #a14f38;outline-offset:3px}.feedback{padding:14px;border-radius:14px;background:#edf3e7;margin-top:18px}.mascot{width:70px;height:70px}.audio{display:grid;gap:8px;margin:18px 0}.audio audio{max-width:100%;width:330px}@media(max-width:500px){.panel{padding:17px}.letters{grid-template-columns:1fr}.slots{gap:10px}.modes button{flex:1}}
+.panel {
+ box-sizing: border-box; width: 100%; max-width: 860px; margin: 0 auto;
+ padding: 26px; border: 1px solid var(--learning-panel-border,#d8dfd0);
+ border-radius: 20px; background: var(--paper-strong,#fffdf8); color: var(--ink,#293e34);
+}
+.panel h2 { margin: 12px 0 16px; font-family: Georgia,serif; font-size: clamp(28px,3vw,36px); font-weight: 500; line-height: 1.2; letter-spacing: -.025em; }
+.panel h3 { font-size: 18px; line-height: 1.5; margin: 24px 0 12px; }
+.panel p { max-width: 65ch; font-size: 14px; line-height: 1.65; }
+.modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; margin: 24px 0; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 16px; background: var(--learning-panel-inset,#f3f5ec); }
+.modes button,.letters button { font: inherit; min-height: 46px; padding: 10px 16px; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 12px; background: var(--paper-strong,#fffdf8); color: var(--forest-deep,#314739); cursor: pointer; }
+.modes button { flex: 1 1 180px; font-size: 13px; font-weight: 650; }
+.modes button[aria-pressed=true] { color: #fffdf8; background: var(--forest,#385442); border-color: var(--forest,#385442); }
+.letters button[aria-pressed=true] { background: #dbe7d1; border-color: var(--forest,#385442); }
+.slots { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 22px 16px; margin: 20px 0; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 16px; background: var(--learning-panel-inset,#f3f5ec); }
+.slots > span { color: #5a6a51; font-size: 20px; }
+.slots > span[lang] { display: grid; place-items: center; min-width: 44px; font-size: 30px; }
+.slots strong { display: grid; place-items: center; width: 88px; height: 88px; font-size: 52px; font-weight: 500; border: 1px solid #b7c8a7; border-radius: 16px; background: var(--paper-strong,#fffdf8); }
+.letters { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.letters fieldset { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 16px; background: var(--learning-panel-inset,#f3f5ec); }
+.letters legend { padding: 0 6px; font-size: 13px; font-weight: 650; }
+.letters button { font-size: 26px; margin: 4px; min-width: 48px; }
+.panel button:focus-visible { outline: 2px solid var(--forest,#385442); outline-offset: 3px; }
+.panel button:disabled { cursor: default; opacity: .65; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+.feedback { padding: 16px; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 16px; background: #edf3e7; margin-top: 18px; }
+.mascot { width: 70px; height: 70px; }
+.audio { display: grid; gap: 12px; margin: 22px 0; padding: 18px; border: 1px solid var(--learning-panel-border,#d8dfd0); border-radius: 16px; background: var(--learning-panel-inset,#f3f5ec); font-size: 13px; font-weight: 650; }
+.audio audio { max-width: 100%; width: 100%; min-width: 0; }
+@media(max-width:600px) {
+ .panel { padding: 20px; }
+ .letters { grid-template-columns: minmax(0,1fr); }
+ .slots { gap: 8px; padding: 18px 10px; }
+ .slots strong { width: 72px; height: 72px; font-size: 44px; }
+ .actions > button { flex: 1 1 140px; }
+ .audio { padding: 16px; }
+}
