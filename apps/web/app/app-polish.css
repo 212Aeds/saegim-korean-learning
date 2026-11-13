@@ -108,3 +108,13 @@
 .app-shell .local-speech-practice[data-state="listening"],
 .app-shell .openrouter-practice[data-listening="true"] { border-color: #50764d; }
 .app-shell .speech-practice[data-state="stopping"] { border-color: #bd8a52; }
+
+.app-shell .word-search { display: flex; align-items: center; gap: 10px; }
+.app-shell .word-search input { min-width: 0; flex: 1; }
+.app-shell .word-search .button { margin: 0; flex: none; }
+.app-shell .word-empty { grid-column: 1 / -1; padding: 20px; border: 1px solid var(--learning-panel-border); border-radius: 16px; background: var(--learning-panel-inset); }
+@media(max-width:600px) {
+ .app-shell .word-search { flex-wrap: wrap; }
+ .app-shell .word-search input { flex-basis: 100%; font-size: 16px; }
+ .app-shell .weekly-checkpoint input { font-size: 16px; }
+}

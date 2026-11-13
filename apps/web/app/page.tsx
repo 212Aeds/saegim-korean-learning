@@ -1284,6 +1284,7 @@ function WordsView({
   const [category, setCategory] = useState("All words");
   const [collection, setCollection] = useState<"all" | "learned">("all");
   const [search, setSearch] = useState("");
+  const wordSearchInput = useRef<HTMLInputElement>(null);
   const [remoteWords, setRemoteWords] = useState<KoreanWord[]>([]);
   const [remoteTotal, setRemoteTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -1391,9 +1392,12 @@ function WordsView({
         </p>
       </div>
       <WordPacks/>
-      <label className="word-search">
-        <span className="sr-only">Search Korean words</span>
+      <div className="word-search">
+        <label htmlFor="word-search-input" className="sr-only">Search Korean words</label>
         <input
+          id="word-search-input"
+          ref={wordSearchInput}
+          type="search"
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
@@ -1403,7 +1407,8 @@ function WordsView({
           }}
           placeholder="Search Korean, romanization, or meaning"
         />
-      </label>
+        {search && <button type="button" className="button button-quiet" onClick={()=>{setSearch("");setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Clear search</button>}
+      </div>
       <div className="collection-tabs" role="group" aria-label="Word collection"><button type="button" aria-pressed={collection === "all"} onClick={() => setCollection("all")}>Explore all words</button><button type="button" aria-pressed={collection === "learned"} onClick={() => setCollection("learned")}>Words from your lessons · {new Set(learnedWords).size}</button></div>
       <div
         className="word-filters"
@@ -1463,9 +1468,10 @@ function WordsView({
           </article>
         ))}
         {!filtered.length && (
-          <p className="word-empty">
-            No words match that search. Try a shorter word.
-          </p>
+          <div className="word-empty" role="status">
+            <p>{collection === "learned" ? "No learned words match these filters. Complete lessons to build this collection, or explore all words." : "No words match these filters. Try a shorter search or reset your filters."}</p>
+            <button type="button" className="button button-soft" onClick={()=>{setSearch("");setCategory("All words");setCollection("all");setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Reset filters and explore words</button>
+          </div>
         )}
       </div>
       {remoteWords.length < remoteTotal && (
