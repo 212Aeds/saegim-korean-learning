@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description:
     "Learn Korean with free lessons, speaking practice, and review.",
   applicationName: "Saegim",
+  verification: {
+    google: "2Sy9NIoajj8utMfrtkxvHRfipkOkc_2kVLL18QrNGHQ",
+  },
 };
 
 export const viewport: Viewport = {
