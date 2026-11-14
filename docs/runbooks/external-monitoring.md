@@ -16,3 +16,6 @@ Sentry account creation is awaiting the creator's Terms of Service review. No Se
 AI assistance was used to configure monitoring and verification metadata. The existing 305 tests and hosted build passed; exported verification metadata was checked. This does not claim physical-device testing or continuous manual monitoring.
 
 References: https://support.google.com/webmasters/answer/9008080 and https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/ .
+
+## Activation evidence
+Render published code commit e9b1d8d successfully. The root homepage served its prior cached HTML for up to the configured 300-second shared-cache window; after expiry, the public verification tag appeared and Google confirmed ownership. The initial API monitor recorded Render's hibernate-pending-wake HTTP 503, reported the owner alert email sent successfully, and then recovered to Up on its next scheduled check. The measured monitor incident duration includes the five-minute polling interval and is not the exact application outage duration. Website monitoring also reported Up. Sentry remains pending legal acceptance; no SDK is enabled.
