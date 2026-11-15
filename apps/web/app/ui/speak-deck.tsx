@@ -14,6 +14,8 @@ import type { LearningProfile } from "../learning-profile";
 import type { LearningPreferences } from "../progress";
 import { OpenRouterListeningPractice } from "./openrouter-listening-practice";
 import type { ElevenLabsVoice } from "./speech";
+import dynamic from 'next/dynamic';
+const PronunciationComparison=dynamic(()=>import('./pronunciation-comparison').then(module=>module.PronunciationComparison));
 
 function firstUncompletedCard(
   completedIds: string[],
@@ -71,6 +73,7 @@ export function SpeakDeck({
 }) {
   const speakingCards = speakingCardsForProfile(profile, completedLessonIds);
   const [flipped, setFlipped] = useState(false);
+  const [compareVoice,setCompareVoice]=useState(false);
   const [completing, setCompleting] = useState(false);
   const [celebration, setCelebration] = useState(0);
   useEffect(() => {
@@ -229,7 +232,8 @@ export function SpeakDeck({
             {flipped ? "Back to prompt" : "Flip for meaning & tip"}
           </button>
         </div>
-        <OpenRouterListeningPractice
+        <div className="speech-actions" role="group" aria-label="Speaking practice mode"><button type="button" className="button button-quiet" aria-pressed={!compareVoice} onClick={()=>setCompareVoice(false)}>Check my wording</button><button type="button" className="button button-quiet" aria-pressed={compareVoice} onClick={()=>setCompareVoice(true)}>Compare my pronunciation</button></div>
+        {compareVoice ? <PronunciationComparison key={card.id} korean={card.korean} voice={preferences.speechVoice} pace={preferences.speechPace}/> : <OpenRouterListeningPractice
           key={card.id}
           korean={card.korean}
           expectedRomanization={card.romanization}
@@ -242,7 +246,7 @@ export function SpeakDeck({
           onPaceChange={(speechPace) =>
             onPreferencesChange({ ...preferences, speechPace })
           }
-        />
+        />}
         <div className="speak-deck-navigation">
           <button
             className="speak-arrow"

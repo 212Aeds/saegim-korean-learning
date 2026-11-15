@@ -1,0 +1,9 @@
+# Learner follow-through
+
+Approved scope: one clear continuation action, personal mistake review, completed-material recap quiz, device-only pronunciation comparison, and owner monitoring shortcuts. Extend existing views rather than adding navigation sections. Keep the next lesson selected by level/prerequisites; continuation means the next unfinished lesson, not a claim to restore a partially answered question.
+
+Implementation: save missed lesson questions into the existing review collection without saving typed answers; expose those cards in focused Today and the beginner route. Reuse the existing five-question checkpoint and describe its completed-lesson sources (there is no historical completion-date data for a true weekly vocabulary count). Add optional, mutually exclusive pronunciation-comparison mode in Speak, reusing bounded capture but never sending its audio to recognition or analytics. Put service links inside the existing owner-access branch. Existing voices, pace, authentication and free caps remain unchanged.
+
+Verification: synthetic missed-question merge/deduplication tests, completion-only quiz tests, recorder lifecycle fixtures, responsive browser checks, full repository tests and hosted build. Do not use a real microphone or learner messages for tests. AI assistance is used; physical-device and pronunciation-quality guarantees are excluded.
+
+Completed verification: 312 tests passed. Synthetic recorder fixtures prove explicit start, Stop completion, local clip discard and cancellation of a late capture after unmount. Existing capture tests remain in place. Guest browser practice showed a missed question in personal review, comparison mode without microphone activation, and recap coverage from the labeled completed-lesson demo. Owner shortcuts/checklist rendered in the labeled localhost-only developer fixture. Speak measured 360px with no body overflow. Do not interpret simulated recording tests as physical iPhone testing.

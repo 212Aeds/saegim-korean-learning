@@ -49,12 +49,14 @@ export function LessonModal({
   onClose,
   onPreferencesChange,
   onComplete,
+  onMissed,
 }: {
   lesson: Lesson;
   preferences: LearningPreferences;
   onClose: () => void;
   onPreferencesChange: (preferences: LearningPreferences) => void;
   onComplete: (lesson: Lesson, score: { correct: number; total: number }) => void;
+  onMissed?: (question:LessonQuestion) => void;
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
   useDialogFocus(dialogRef, onClose);
@@ -150,6 +152,7 @@ export function LessonModal({
   function advance() {
     const matched = speechPracticeTurn ? speechResult?.matches : correct;
     if (!matched) {
+      if (speechPracticeTurn) onMissed?.(question);
       if (phase === "practice") setPracticeQueue(current=>appendLessonRetry(current,step));
       else setQuizQueue(current=>appendLessonRetry(current,step));
     }
@@ -172,6 +175,7 @@ export function LessonModal({
     if (!showTip) {
       if (!attempted) {
         setAttempted(true);
+        if (!correct) onMissed?.(question);
         if (correct) playCorrectAnswerSound();
         if (phase === "practice" && correct && originalTurn) {
           setPracticeCorrect((count) => count + 1);

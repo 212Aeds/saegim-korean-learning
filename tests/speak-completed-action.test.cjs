@@ -8,6 +8,7 @@ test('Practiced · Next card plays feedback on every tap without awarding comple
  const cards=['one','two','three'].map(id=>({id,kind:'word',korean:'가',prompt:'가',focus:'가'}));
  const exports={};
  const requireStub=id=>{
+  if(id==='next/dynamic')return {default:()=>()=>null};
   if(id==='react')return {useState:value=>[value,()=>{}],useRef:value=>({current:value}),useEffect:()=>{}};
   if(id==='react/jsx-runtime')return require(id);
   if(id==='../speak-cards')return {speakingCardsForProfile:()=>cards};

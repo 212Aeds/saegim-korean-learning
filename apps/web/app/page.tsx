@@ -81,6 +81,7 @@ import {
   rateReviewItem,
   recordActivity,
   recordDailyPractice,
+  recordLessonMistake,
   type SavedProgress,
   type LearningPreferences,
 } from "./progress";
@@ -759,13 +760,14 @@ export default function Home() {
           onPreferencesChange={(learningPreferences) => setProgress((current) => ({ ...current, learningPreferences }))}
           onClose={() => setLessonOpen(false)}
           onComplete={finishLesson}
+          onMissed={question=>setProgress(current=>recordLessonMistake(current,selectedLesson.id,question))}
         />
       )}
       {reviewOpen && (
         <ReviewDeck
           preferences={progress.learningPreferences}
           onPreferencesChange={learningPreferences=>setProgress(current=>({...current,learningPreferences}))}
-          maxCards={reviewFocus === "practice" ? 10 : undefined}
+          maxCards={reviewFocus === "missed" ? 5 : reviewFocus === "practice" ? 10 : undefined}
           items={reviewFocus === "missed" ? progress.reviewItems.filter((item) => item.lastResult === "again") : reviewFocus === "practice" ? progress.reviewItems : dueReviewItems(progress)}
           onRate={(id, remembered) =>
             setProgress((current) => rateReviewItem(current, id, remembered))
@@ -842,8 +844,8 @@ function TodayView({
   const levelRoute = learningRoute(learningProfile).filter((lesson) => !placementKnowledge(learningProfile).includes(lesson.id));
   const hangulProgress = { completed: levelRoute.filter((lesson) => progress.completedLessonIds.includes(lesson.id)).length, total: levelRoute.length };
   const starter=starterJourney(learningProfile,progress.completedLessonIds);
-  if(starter&&!showFullDashboard)return <FirstSession journey={starter} onLesson={onLesson} onShowDashboard={onShowFullDashboard}/>;
-  if(!showFullDashboard)return <PersonalizedToday profile={learningProfile} completed={progress.completedLessonIds} dailyMinutes={progress.dailyGoalMinutes} dueCount={dueCount} onLesson={onLesson} onReview={onReview} onSettings={onSettings} onShowDashboard={onShowFullDashboard}/>;
+  if(starter&&!showFullDashboard)return <FirstSession journey={starter} onLesson={onLesson} onShowDashboard={onShowFullDashboard} missedCount={progress.reviewItems.filter(item=>item.lastResult==="again").length} onMissed={onMissedReview} onRecap={()=>onTab("review")}/>;
+  if(!showFullDashboard)return <PersonalizedToday missedCount={progress.reviewItems.filter(item=>item.lastResult==="again").length} onMissed={onMissedReview} onRecap={()=>onTab("review")} profile={learningProfile} completed={progress.completedLessonIds} dailyMinutes={progress.dailyGoalMinutes} dueCount={dueCount} onLesson={onLesson} onReview={onReview} onSettings={onSettings} onShowDashboard={onShowFullDashboard}/>;
   return (
     <>
       <button type="button" className="button button-quiet" onClick={onShowFocusedDashboard}>Back to my recommended next step</button>
@@ -874,7 +876,7 @@ function TodayView({
       <DailyPractice profile={learningProfile} progress={progress} onLesson={() => onLesson(nextLesson)} onReview={onReview} onSpeak={onSpeak} />
       <section className="weekly-plan"><div><span className="micro-label">YOUR WEEK, YOUR PACE</span><h3>{weekly.complete ? "Your weekly goal is met!" : `${weekly.studied} of ${weekly.goal} study days this week`}</h3><p>{weekly.complete ? "Keep exploring or take a well-earned break. Your progress stays here." : `${weekly.remaining} more study ${weekly.remaining === 1 ? "day" : "days"} to your goal. A lesson, review, or speaking practice counts.`}</p></div><progress value={Math.min(weekly.studied, weekly.goal)} max={weekly.goal} aria-label="Weekly study goal" /></section>
       <LearningRoadmap profile={learningProfile} completed={progress.completedLessonIds} onLesson={onLesson} />
-      {progress.reviewItems.some((item) => item.lastResult === "again") && <section className="recovery-practice"><div><span className="micro-label">A SECOND CHANCE</span><h3>Turn a missed answer into a remembered one.</h3><p>{progress.reviewItems.filter((item) => item.lastResult === "again").length} cards you marked Again. Practice now, even before the next scheduled review.</p></div><button type="button" className="button button-dark" onClick={onMissedReview}>Practice missed cards</button></section>}
+      {progress.reviewItems.some((item) => item.lastResult === "again") && <section className="recovery-practice"><div><span className="micro-label">A SECOND CHANCE</span><h3>Turn a missed answer into a remembered one.</h3><p>{progress.reviewItems.filter((item) => item.lastResult === "again").length} questions and cards to revisit. Practice now, even before the next scheduled review.</p></div><button type="button" className="button button-dark" onClick={onMissedReview}>Practice missed cards</button></section>}
       <div className="dashboard-grid">
         <div className="primary-column">
           <section className="continue-panel">
@@ -1516,7 +1518,7 @@ function ReviewView({
   const nextDue = [...progress.reviewItems].sort((left, right) =>
     left.dueAt.localeCompare(right.dueAt),
   )[0];
-  const hasLesson = progress.completed > 0;
+  const hasLesson = progress.completed > 0 || progress.reviewItems.length > 0;
   return (
     <div className="review-page">
       <details className="learning-progress-details"><summary>Optional weekly checkpoint<span>A short check-in from completed lessons</span></summary><WeeklyCheckpoint completed={progress.completedLessonIds}/></details>
@@ -1557,9 +1559,9 @@ function ReviewView({
       </div>
       <section className="review-health" aria-label="Your review collection">
         <div><strong>{overview.total}</strong><span>saved cards</span></div>
-        <div><strong>{overview.recovery}</strong><span>marked Again</span></div>
+        <div><strong>{overview.recovery}</strong><span>to revisit</span></div>
         <div><strong>{overview.established}</strong><span>recalled 3+ times in a row</span></div>
-        <p>Missed cards come first, then the oldest review dates. Repeated recall is practice history, not a mastery score.</p>
+        <p>Missed lesson questions and cards marked Again come first, then the oldest review dates. Repeated recall is practice history, not a mastery score.</p>
       </section>
       <div className="review-queue">
         <div>

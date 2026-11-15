@@ -198,6 +198,13 @@ export function dueReviewItems(progress: SavedProgress, now = new Date()) {
     .sort((left, right) => left.dueAt.localeCompare(right.dueAt));
 }
 
+export function recordLessonMistake(progress:SavedProgress, lessonId:string, question:LessonQuestion, now=new Date()):SavedProgress {
+  const fresh=createQuestionReviewItems(lessonId,[question],now)[0];
+  const same=(item:ReviewItem)=>normalizeAnswer(item.front)===normalizeAnswer(fresh.front)&&normalizeAnswer(item.answer)===normalizeAnswer(fresh.answer);
+  const exists=progress.reviewItems.some(same);
+  return {...progress,reviewItems:deduplicateReviewItems(exists ? progress.reviewItems.map(item=>same(item)?{...item,lastResult:'again',repetitions:0,dueAt:now.toISOString()}:item) : [...progress.reviewItems,{...fresh,lastResult:'again'}])};
+}
+
 export function rateReviewItem(
   progress: SavedProgress,
   id: string,

@@ -4,7 +4,10 @@ import { personalizedToday } from "../personalized-today";
 import styles from "./personalized-today.module.css";
 import {StudyIllustration} from "./study-illustration";
 
-export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, onLesson, onReview, onSettings, onShowDashboard }: {
+export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, missedCount, onMissed, onRecap, onLesson, onReview, onSettings, onShowDashboard }: {
+  missedCount:number;
+  onMissed:()=>void;
+  onRecap:()=>void;
   profile: LearningProfile;
   completed: string[];
   dailyMinutes: number;
@@ -23,7 +26,7 @@ export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, 
       <p>{next?.briefing?.focus ?? next?.detail ?? "Revisit what you learned in Review, or explore another section whenever you like."}</p>
       {next && <>
         <p className={styles.note}>{next.category} · About {next.minutes} minutes · Based on your selected level and completed lessons.</p>
-        <button type="button" className="button button-dark" onClick={() => onLesson(next)}>Start {next.title}</button>
+        <button type="button" className="button button-dark" onClick={() => onLesson(next)}>{completed.length ? "Continue learning" : "Start learning"}<span className="sr-only">: {next.title}</span></button>
         {next.minutes > dailyMinutes && <p className={styles.note}>This lesson is longer than your daily goal. You can take a break when you need to.</p>}
       </>}
     </div>
@@ -32,7 +35,7 @@ export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, 
       <p className={styles.note}>Your interests: {plan.interests || "general Korean"}. Your practice goal: {dailyMinutes} minutes.</p>
       <button type="button" className="text-link" onClick={onSettings}>Adjust my level and goals</button>
     </div>
-    {dueCount > 0 && <div className={styles.review}>
+    {missedCount > 0 ? <div className={styles.review}><div><h3>{missedCount} {missedCount===1?'question':'questions'} to revisit</h3><p>From your lessons and cards. Practice up to five, whenever you want.</p></div><button type="button" className="button button-quiet" onClick={onMissed}>Practice my mistakes</button></div> : dueCount > 0 && <div className={styles.review}>
       <div><h3>{dueCount} {dueCount === 1 ? "card ready" : "cards ready"} to review</h3><p>Revisit material you’ve already practiced.</p></div>
       <button type="button" className="button button-quiet" onClick={onReview}>Review instead</button>
     </div>}
@@ -40,6 +43,7 @@ export function PersonalizedToday({ profile, completed, dailyMinutes, dueCount, 
       <summary>Other lessons ready for you</summary>
       <ul>{plan.alternatives.map(lesson => <li key={lesson.id}><div><strong>{lesson.title}</strong><p>{lesson.detail}</p></div><button type="button" className="button button-quiet" onClick={() => onLesson(lesson)}>Start<span className="sr-only"> {lesson.title}</span></button></li>)}</ul>
     </details>}
+    {completed.length>0&&<details className={styles.alternatives}><summary>Check what I remember</summary><p>Your optional recap quiz uses completed lessons, with no timer or streak penalty.</p><button type="button" className="button button-quiet" onClick={onRecap}>Open my learning recap</button></details>}
     <div className={styles.footer}><button type="button" className="text-link" onClick={onShowDashboard}>Show the full Today dashboard</button><p className={styles.note}>All sections remain available in navigation.</p></div>
   </section>;
 }
