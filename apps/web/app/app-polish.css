@@ -135,3 +135,22 @@
  .account-overview-tools > * { flex: 1 1 160px; text-align: center; }
  .account-modal:is(.account-mode-overview,.account-mode-settings) h2 { font-size: 28px; }
 }
+.weekly-checkpoint > h3,
+.app-shell .pronunciation-comparison > h3,
+.app-shell .recovery-practice h3 {
+ font-family: Georgia, "Times New Roman", serif;
+ font-size: clamp(24px, 3vw, 30px);
+ font-weight: 500;
+ line-height: 1.2;
+ letter-spacing: -.025em;
+ text-wrap: balance;
+}
+.weekly-checkpoint > p,
+.weekly-checkpoint details,
+.app-shell .pronunciation-comparison > p,
+.app-shell .recovery-practice p {
+ font-family: inherit;
+ font-size: 15px;
+ line-height: 1.65;
+ color: var(--muted);
+}
