@@ -232,7 +232,19 @@ export function SpeakDeck({
             {flipped ? "Back to prompt" : "Flip for meaning & tip"}
           </button>
         </div>
-        <div className="speech-actions" role="group" aria-label="Speaking practice mode"><button type="button" className="button button-quiet" aria-pressed={!compareVoice} onClick={()=>setCompareVoice(false)}>Check my wording</button><button type="button" className="button button-quiet" aria-pressed={compareVoice} onClick={()=>setCompareVoice(true)}>Compare my pronunciation</button></div>
+        <div className="speak-mode-picker" role="group" aria-label="Speaking practice mode" aria-describedby="speak-mode-description">
+          <button type="button" className="button button-quiet" aria-pressed={!compareVoice} onClick={() => setCompareVoice(false)}>
+            Check my wording
+          </button>
+          <button type="button" className="button button-quiet" aria-pressed={compareVoice} onClick={() => setCompareVoice(true)}>
+            Compare my pronunciation
+          </button>
+        </div>
+        <p className="speak-mode-description" id="speak-mode-description">
+          {compareVoice
+            ? "Listen to the example, record yourself, then compare the two. You decide what to practice."
+            : "Say the word or phrase to check whether the transcript matches this card."}
+        </p>
         {compareVoice ? <PronunciationComparison key={card.id} korean={card.korean} voice={preferences.speechVoice} pace={preferences.speechPace}/> : <OpenRouterListeningPractice
           key={card.id}
           korean={card.korean}
