@@ -1294,6 +1294,7 @@ function WordsView({
   const [loadError, setLoadError] = useState("");
   const [offlineReferenceWords, setOfflineReferenceWords] = useState<KoreanWord[]>([]);
   const pageSize = 60;
+  const [visibleWordCount, setVisibleWordCount] = useState(pageSize);
 
   useEffect(() => {
     if (!loadError || offlineReferenceWords.length) return;
@@ -1383,6 +1384,7 @@ function WordsView({
   const filtered = [...new Map(
     [...localWords, ...visibleRemote].map((word) => [word.korean, word]),
   ).values()];
+  const displayedWords = filtered.slice(0, visibleWordCount);
 
   return (
     <div className="content-page words-page">
@@ -1403,15 +1405,16 @@ function WordsView({
           value={search}
           onChange={(event) => {
             setSearch(event.target.value);
+            setVisibleWordCount(pageSize);
             setOffset(0);
             setRemoteWords([]);
             setRemoteTotal(0);
           }}
           placeholder="Search Korean, romanization, or meaning"
         />
-        {search && <button type="button" className="button button-quiet" onClick={()=>{setSearch("");setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Clear search</button>}
+        {search && <button type="button" className="button button-quiet" onClick={()=>{setSearch("");setVisibleWordCount(pageSize);setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Clear search</button>}
       </div>
-      <div className="collection-tabs" role="group" aria-label="Word collection"><button type="button" aria-pressed={collection === "all"} onClick={() => setCollection("all")}>Explore all words</button><button type="button" aria-pressed={collection === "learned"} onClick={() => setCollection("learned")}>Words from your lessons · {new Set(learnedWords).size}</button></div>
+      <div className="collection-tabs" role="group" aria-label="Word collection"><button type="button" aria-pressed={collection === "all"} onClick={() => {setCollection("all");setVisibleWordCount(pageSize);}}>Explore all words</button><button type="button" aria-pressed={collection === "learned"} onClick={() => {setCollection("learned");setVisibleWordCount(pageSize);}}>Words from your lessons · {new Set(learnedWords).size}</button></div>
       <div
         className="word-filters"
         role="group"
@@ -1424,6 +1427,7 @@ function WordsView({
             onClick={() => {
               if (item === category) return;
               setCategory(item);
+              setVisibleWordCount(pageSize);
               setOffset(0);
               setRemoteWords([]);
               setRemoteTotal(0);
@@ -1435,7 +1439,7 @@ function WordsView({
         ))}
       </div>
       <p className="word-count" aria-live="polite">
-        {filtered.length} unique words shown
+        {displayedWords.length} of {filtered.length} matching words shown
       </p>
       {loadError && <p className="word-load-error" role="alert">{loadError}</p>}
       {loading && remoteWords.length === 0 && <>
@@ -1445,7 +1449,7 @@ function WordsView({
         </div>
       </>}
       <div className="word-grid">
-        {filtered.map((word) => (
+        {displayedWords.map((word) => (
           <article className="word-card" key={word.id}>
             <span className="word-category">{word.category}</span>
             <strong lang="ko">{word.korean}</strong>
@@ -1472,11 +1476,15 @@ function WordsView({
         {!filtered.length && (
           <div className="word-empty" role="status">
             <p>{collection === "learned" ? "No learned words match these filters. Complete lessons to build this collection, or explore all words." : "No words match these filters. Try a shorter search or reset your filters."}</p>
-            <button type="button" className="button button-soft" onClick={()=>{setSearch("");setCategory("All words");setCollection("all");setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Reset filters and explore words</button>
+            <button type="button" className="button button-soft" onClick={()=>{setSearch("");setVisibleWordCount(pageSize);setCategory("All words");setCollection("all");setOffset(0);setRemoteWords([]);setRemoteTotal(0);wordSearchInput.current?.focus();}}>Reset filters and explore words</button>
           </div>
         )}
       </div>
-      {remoteWords.length < remoteTotal && (
+      {displayedWords.length < filtered.length ? (
+        <button type="button" className="button button-quiet word-load-more" onClick={() => setVisibleWordCount(current => current + pageSize)}>
+          Show more words
+        </button>
+      ) : remoteWords.length < remoteTotal && (
         <button
           className="button button-quiet word-load-more"
           onClick={() => setOffset((current) => current + pageSize)}
